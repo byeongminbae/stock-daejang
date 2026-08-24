@@ -67,4 +67,8 @@ class Trade(
     @Column(name = "created_at", nullable = false, updatable = false)
     @field:Schema(description = "거래 등록 일시", example = "2026-08-20T09:30:00+09:00")
     val createdAt: OffsetDateTime = OffsetDateTime.now(),
-)
+) {
+    fun amount(): BigInteger {
+        return BigInteger.valueOf(quantity).multiply(BigInteger.valueOf(unitPrice))
+    }
+}

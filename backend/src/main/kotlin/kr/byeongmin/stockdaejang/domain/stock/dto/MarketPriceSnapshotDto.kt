@@ -7,12 +7,19 @@ import java.time.OffsetDateTime
 
 data class MarketPriceSnapshotDto(
     val itemCode: String,
+
     val marketStatus: String,
+
     val stockName: String,
+
     val regularPrice: Long,
+
     val regularTradedAt: OffsetDateTime,
+
     val overPrice: Long?,
+
     val overTradedAt: OffsetDateTime?,
+
     val session: MarketSession,
 ) {
     fun toRegularMarketPrice(

@@ -11,6 +11,7 @@ data class OwnerResponseDto(
         minimum = "1",
     )
     val id: Long,
+
     @field:Schema(
         description = "소유주명",
         example = "병민",

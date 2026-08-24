@@ -9,6 +9,7 @@ data class PositionAverageResponseDto(
         example = "10",
     )
     val heldQuantity: String,
+
     @field:Schema(
         description = "매수평균단가. 보유 수량이 0이면 null입니다.",
         nullable = true,

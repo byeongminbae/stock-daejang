@@ -12,16 +12,19 @@ data class PurchasedStockResponseDto(
         pattern = "^[0-9A-Z]{6}$",
     )
     val code: String,
+
     @field:Schema(
         description = "종목명",
         example = "삼성전자",
     )
     val name: String,
+
     @field:Schema(
         description = "시장",
         example = "코스피",
     )
     val market: String,
+
     @get:JsonProperty("isEtf")
     @get:Schema(
         name = "isEtf",

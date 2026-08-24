@@ -22,6 +22,7 @@ data class DeleteTradesRequestDto(
         ),
     )
     val ids: List<String>,
+
     @field:Schema(
         description = "삭제할 거래 구분",
         allowableValues = ["BUY", "SELL"],

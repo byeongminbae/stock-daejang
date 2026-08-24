@@ -1,5 +1,6 @@
 package kr.byeongmin.stockdaejang.domain.trade.service
 
+import kr.byeongmin.stockdaejang.domain.dashboard.repository.DashboardPositionRepository
 import kr.byeongmin.stockdaejang.domain.trade.dto.ParsedPositionDto
 import kr.byeongmin.stockdaejang.domain.trade.dto.ParsedPreviewDto
 import kr.byeongmin.stockdaejang.domain.trade.repository.TradeLedgerRepository
@@ -12,6 +13,7 @@ import java.time.Instant
 class TradeLedgerManager(
     private val tradeLedgerRepository: TradeLedgerRepository,
     private val stateCalculator: LedgerStateCalculator,
+    private val dashboardPositionRepository: DashboardPositionRepository,
 ) {
     internal fun lock(keys: List<LedgerKey>) {
         tradeLedgerRepository.lock(keys.map(LedgerKey::itemCode))
@@ -41,6 +43,13 @@ class TradeLedgerManager(
                 ?: throw BusinessException(CommonError.INTERNAL_SERVER_ERROR)
             managedTrade.realizedProfit = update.realizedProfit
         }
+        dashboardPositionRepository.replace(
+            ownerId = key.ownerId,
+            brokerageId = key.brokerageId,
+            itemCode = key.itemCode,
+            quantity = replayResult.state.heldQuantity,
+            totalBuyAmount = replayResult.state.remainingCost,
+        )
         return replayResult.state
     }
 

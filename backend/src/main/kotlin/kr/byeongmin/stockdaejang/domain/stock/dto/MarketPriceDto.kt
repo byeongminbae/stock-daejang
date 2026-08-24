@@ -5,10 +5,15 @@ import java.time.OffsetDateTime
 
 data class MarketPriceDto(
     val itemCode: String,
+
     val localTradedAt: OffsetDateTime,
+
     val marketStatus: String,
+
     val price: Long,
+
     val session: MarketSession,
+
     val stockName: String,
 ) {
     companion object {

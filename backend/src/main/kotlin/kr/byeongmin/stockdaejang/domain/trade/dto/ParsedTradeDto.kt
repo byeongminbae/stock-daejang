@@ -11,14 +11,23 @@ import java.time.ZoneOffset
 
 internal data class ParsedTradeDto(
     val brokerageCode: String,
+
     val executedAt: Instant,
+
     val isEtf: Boolean,
+
     val itemCode: String,
+
     val market: String,
+
     val ownerId: Long,
+
     val quantity: BigInteger,
+
     val securityName: String,
+
     val side: TradeSide,
+
     val unitPrice: BigInteger,
 ) {
     fun toEntity(owner: Owner, brokerage: Brokerage, security: Security): Trade {

@@ -13,18 +13,21 @@ data class UpdateTradeRequestDto(
         example = "1",
     )
     val id: String,
+
     @field:Schema(
         description = "선택한 증권사 코드. 숫자 3자리이며 240은 삼성증권입니다.",
         pattern = "^[0-9]{3}$",
         example = "240",
     )
     val brokerageCode: String,
+
     @field:Schema(
         description = "Asia/Seoul 기준의 유효한 거래 일시. yyyy-MM-dd'T'HH:mm 형식",
         pattern = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$",
         example = "2026-08-20T09:30",
     )
     val executedAt: String,
+
     @get:JsonProperty("isEtf")
     @get:Schema(
         name = "isEtf",
@@ -32,12 +35,14 @@ data class UpdateTradeRequestDto(
         example = "false",
     )
     val isEtf: Boolean,
+
     @field:Schema(
         description = "종목코드. 영문 대문자 또는 숫자 6자리",
         pattern = "^[0-9A-Z]{6}$",
         example = "005930",
     )
     val itemCode: String,
+
     @field:Schema(
         description = "시장명. 입력값의 앞뒤 공백을 제거한 뒤 1~30자",
         minLength = 1,
@@ -45,12 +50,14 @@ data class UpdateTradeRequestDto(
         example = "코스피",
     )
     val market: String,
+
     @field:Schema(
         description = "소유주 ID. 1 이상의 정수",
         minimum = "1",
         example = "1",
     )
     val ownerId: Long,
+
     @field:Schema(
         description = "거래 수량. 1 이상 2147483647 이하의 정수 문자열",
         minLength = 1,
@@ -59,6 +66,7 @@ data class UpdateTradeRequestDto(
         example = "10",
     )
     val quantity: String,
+
     @field:Schema(
         description = "종목명. 입력값의 앞뒤 공백을 제거한 뒤 1~100자",
         minLength = 1,
@@ -66,12 +74,14 @@ data class UpdateTradeRequestDto(
         example = "삼성전자",
     )
     val securityName: String,
+
     @field:Schema(
         description = "거래 구분",
         allowableValues = ["BUY", "SELL"],
         example = "BUY",
     )
     val side: String,
+
     @field:Schema(
         description = "당시 단가. 1 이상 9223372036854775807 이하의 정수 문자열",
         minLength = 1,

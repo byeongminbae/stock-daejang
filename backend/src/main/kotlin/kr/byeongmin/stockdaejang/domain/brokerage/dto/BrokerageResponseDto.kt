@@ -11,6 +11,7 @@ data class BrokerageResponseDto(
         pattern = "^[0-9]{3}$",
     )
     val code: String,
+
     @field:Schema(
         description = "증권사명",
         example = "삼성증권",

@@ -2,6 +2,7 @@ package kr.byeongmin.stockdaejang.domain.trade.service
 
 import com.querydsl.jpa.impl.JPAQueryFactory
 import kr.byeongmin.stockdaejang.domain.brokerage.entity.QBrokerage.brokerage
+import kr.byeongmin.stockdaejang.domain.dashboard.entity.QDashboardPosition.dashboardPosition
 import kr.byeongmin.stockdaejang.domain.owner.entity.QOwner.owner
 import kr.byeongmin.stockdaejang.domain.stock.entity.QSecurity.security
 import kr.byeongmin.stockdaejang.domain.trade.dto.DeleteTradesRequestDto
@@ -23,7 +24,9 @@ import org.springframework.context.annotation.Import
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.postgresql.PostgreSQLContainer
+import java.math.BigInteger
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 @SpringBootTest
 @Testcontainers
@@ -51,6 +54,7 @@ class TradeServiceIntegrationTest {
             trade(side = "SELL", quantity = "2", unitPrice = "200", executedAt = "2026-08-02T10:00"),
         )
         assertEquals("120", realizedProfit(sell.data.id))
+        assertPosition(quantity = 3, totalBuyAmount = 420)
 
         tradeService.updateTrade(
             update(
@@ -61,6 +65,7 @@ class TradeServiceIntegrationTest {
             ),
         )
         assertEquals("40", realizedProfit(sell.data.id))
+        assertPosition(quantity = 3, totalBuyAmount = 540)
         assertEquals("3", tradeService.getPositionAverage(1, "264", "TST001").data.heldQuantity)
         assertEquals(
             "보유 수량 3주를 초과할 수 없습니다.",
@@ -85,6 +90,7 @@ class TradeServiceIntegrationTest {
         )
         assertEquals(3L, tradeCount())
         assertEquals("40", realizedProfit(sell.data.id))
+        assertPosition(quantity = 3, totalBuyAmount = 540)
     }
 
     @Test
@@ -144,6 +150,14 @@ class TradeServiceIntegrationTest {
         assertEquals("2", tradeService.getPositionAverage(1, "264", "TST001").data.heldQuantity)
         assertEquals("1", tradeService.getPositionAverage(2, "238", "TST002").data.heldQuantity)
         assertEquals("50", realizedProfit(movableSell.data.id))
+        assertPosition(quantity = 2, totalBuyAmount = 200)
+        assertPosition(
+            ownerId = 2,
+            brokerageCode = "238",
+            itemCode = "TST002",
+            quantity = 1,
+            totalBuyAmount = 50,
+        )
 
         val exception = assertThrows<BusinessException> {
             tradeService.updateTrade(
@@ -190,6 +204,14 @@ class TradeServiceIntegrationTest {
                 ?.trim(),
         )
         assertEquals("50", realizedProfit(movableSell.data.id))
+        assertPosition(quantity = 2, totalBuyAmount = 200)
+        assertPosition(
+            ownerId = 2,
+            brokerageCode = "238",
+            itemCode = "TST002",
+            quantity = 1,
+            totalBuyAmount = 50,
+        )
     }
 
     @Test
@@ -201,6 +223,7 @@ class TradeServiceIntegrationTest {
 
         assertEquals(2, deleted.data.deletedCount)
         assertEquals(0L, tradeCount())
+        assertNull(position())
 
         val buy = tradeService.createTrade(trade(quantity = "2", unitPrice = "100", executedAt = "2026-08-03T10:00"))
         val sell = tradeService.createTrade(trade(side = "SELL", quantity = "1", unitPrice = "200", executedAt = "2026-08-04T10:00"))
@@ -212,6 +235,36 @@ class TradeServiceIntegrationTest {
         assertEquals(2L, tradeCount())
         assertEquals("100", realizedProfit(sell.data.id))
         assertEquals("1", tradeService.getPositionAverage(1, "264", "TST001").data.heldQuantity)
+        assertPosition(quantity = 1, totalBuyAmount = 100)
+    }
+
+    @Test
+    fun `전량 매도와 재매수와 수정 삭제마다 대시보드 포지션을 갱신한다`() {
+        tradeService.createTrade(trade(quantity = "10", unitPrice = "100", executedAt = "2026-08-01T10:00"))
+        assertPosition(quantity = 10, totalBuyAmount = 1_000)
+
+        tradeService.createTrade(
+            trade(side = "SELL", quantity = "10", unitPrice = "100", executedAt = "2026-08-02T10:00"),
+        )
+        assertNull(position())
+
+        val newBuy = tradeService.createTrade(
+            trade(quantity = "10", unitPrice = "200", executedAt = "2026-08-03T10:00"),
+        )
+        assertPosition(quantity = 10, totalBuyAmount = 2_000)
+
+        tradeService.updateTrade(
+            update(
+                id = newBuy.data.id,
+                quantity = "10",
+                unitPrice = "300",
+                executedAt = "2026-08-03T10:00",
+            ),
+        )
+        assertPosition(quantity = 10, totalBuyAmount = 3_000)
+
+        tradeService.deleteTrades(DeleteTradesRequestDto(listOf(newBuy.data.id), "BUY"))
+        assertNull(position())
     }
 
     @Test
@@ -282,6 +335,34 @@ class TradeServiceIntegrationTest {
     private fun tradeCount(): Long {
         return queryFactory.select(trade.count()).from(trade).fetchOne() ?: 0
     }
+
+    private fun assertPosition(
+        ownerId: Long = 1,
+        brokerageCode: String = "264",
+        itemCode: String = "TST001",
+        quantity: Long,
+        totalBuyAmount: Long,
+    ) {
+        val position = position(ownerId, brokerageCode, itemCode)
+        assertEquals(BigInteger.valueOf(quantity), position?.get(dashboardPosition.quantity))
+        assertEquals(BigInteger.valueOf(totalBuyAmount), position?.get(dashboardPosition.totalBuyAmount))
+    }
+
+    private fun position(
+        ownerId: Long = 1,
+        brokerageCode: String = "264",
+        itemCode: String = "TST001",
+    ) = queryFactory
+        .select(dashboardPosition.quantity, dashboardPosition.totalBuyAmount)
+        .from(dashboardPosition)
+        .join(dashboardPosition.brokerage, brokerage)
+        .join(dashboardPosition.security, security)
+        .where(
+            dashboardPosition.owner.id.eq(ownerId),
+            brokerage.code.eq(brokerageCode),
+            security.itemCode.eq(itemCode),
+        )
+        .fetchOne()
 
     private fun trade(
         side: String = "BUY",

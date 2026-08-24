@@ -2,6 +2,7 @@ package kr.byeongmin.stockdaejang.support
 
 import com.querydsl.jpa.impl.JPAQueryFactory
 import jakarta.persistence.EntityManager
+import kr.byeongmin.stockdaejang.domain.dashboard.entity.QDashboardPosition.dashboardPosition
 import kr.byeongmin.stockdaejang.domain.owner.entity.Owner
 import kr.byeongmin.stockdaejang.domain.stock.entity.QSecurity.security
 import kr.byeongmin.stockdaejang.domain.trade.entity.QTrade.trade
@@ -13,6 +14,7 @@ open class QueryDslTestData(
 ) {
     @Transactional
     open fun clearTrades() {
+        queryFactory.delete(dashboardPosition).execute()
         queryFactory.delete(trade).execute()
         queryFactory.delete(security).execute()
     }

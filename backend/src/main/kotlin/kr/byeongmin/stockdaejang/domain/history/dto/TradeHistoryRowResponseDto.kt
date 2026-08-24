@@ -13,65 +13,77 @@ data class TradeHistoryRowResponseDto(
         example = "1",
     )
     val id: String,
+
     @field:Schema(
         description = "매수/매도 일시",
         example = "2026-08-20T09:30:00Z",
         format = "date-time",
     )
     val executedAt: Instant,
+
     @field:Schema(
         description = "종목명",
         example = "삼성전자",
     )
     val stockName: String,
+
     @field:Schema(
         description = "종목코드",
         example = "005930",
         pattern = "^[0-9A-Z]{6}$",
     )
     val itemCode: String,
+
     @field:Schema(
         description = "수량",
         example = "10",
     )
     val quantity: String,
+
     @field:Schema(
         description = "당시 단가",
         example = "70000",
     )
     val unitPrice: String,
+
     @field:Schema(
         description = "매수액/매도액 (수량 × 당시 단가)",
         example = "700000",
     )
     val amount: String,
+
     @field:Schema(
         description = "소유주 ID",
         example = "1",
         minimum = "1",
     )
     val ownerId: Long,
+
     @field:Schema(
         description = "소유주",
         example = "병민",
     )
     val ownerName: String,
+
     @field:Schema(
         description = "거래 증권사 코드",
         example = "240",
         pattern = "^[0-9]{3}$",
     )
     val brokerageCode: String,
+
     @field:Schema(
         description = "거래 증권사명",
         example = "삼성증권",
     )
     val brokerageName: String,
+
     @field:Schema(
         description = "시장",
         example = "코스피",
     )
     val market: String,
+
     @get:JsonProperty("isEtf")
     @get:Schema(
         name = "isEtf",
@@ -79,6 +91,7 @@ data class TradeHistoryRowResponseDto(
         example = "false",
     )
     val isEtf: Boolean,
+
     @field:Schema(
         description = "손익. 매도 시 실현 손익이며 매수 시 null",
         example = "12345",
@@ -97,7 +110,7 @@ data class TradeHistoryRowResponseDto(
                 itemCode = trade.security.itemCode,
                 quantity = tradeQuantity.toString(),
                 unitPrice = tradeUnitPrice.toString(),
-                amount = tradeQuantity.toBigInteger().multiply(tradeUnitPrice.toBigInteger()).toString(),
+                amount = trade.amount().toString(),
                 ownerId = trade.owner.id,
                 ownerName = trade.owner.name,
                 brokerageCode = trade.brokerage.code,

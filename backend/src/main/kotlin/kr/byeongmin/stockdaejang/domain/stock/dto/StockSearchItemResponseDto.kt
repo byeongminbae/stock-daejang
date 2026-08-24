@@ -12,6 +12,7 @@ data class StockSearchItemResponseDto(
         pattern = "^[0-9A-Z]{6}$",
     )
     val code: String,
+
     @get:JsonProperty("isEtf")
     @get:Schema(
         name = "isEtf",
@@ -19,11 +20,13 @@ data class StockSearchItemResponseDto(
         example = "false",
     )
     val isEtf: Boolean,
+
     @field:Schema(
         description = "시장",
         example = "코스피",
     )
     val market: String,
+
     @field:Schema(
         description = "종목명",
         example = "삼성전자",
