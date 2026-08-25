@@ -20,10 +20,7 @@ class TradeHistoryController(
     private val tradeHistoryService: TradeHistoryService,
 ) {
     @GetMapping
-    @Operation(
-        summary = "매수/매도 거래 내역을 페이지 단위로 조회",
-        description = "매수 또는 매도 거래 내역을 선택한 필터와 페이지 크기로 조회합니다. 선택 필터가 형식에 맞지 않으면 400 오류가 발생합니다.",
-    )
+    @Operation(summary = "매수/매도 거래 내역을 페이지 단위로 조회")
     fun getHistory(
         @Valid @ParameterObject getHistoryRequestDto: GetHistoryRequestDto,
     ): SuccessDataResponse<TradeHistoryResponseDto> {

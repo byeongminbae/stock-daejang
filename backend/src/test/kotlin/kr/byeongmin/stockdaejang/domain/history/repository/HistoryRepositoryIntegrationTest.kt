@@ -44,15 +44,15 @@ class HistoryRepositoryIntegrationTest {
 
         val brokerageRows = findPage(brokerageCode = "238")
         val allRows = findPage()
-        val purchased = repository.findPurchasedStocks(TradeType.BUY)
+        val traded = repository.findTradedStocks(TradeType.BUY)
 
         assertEquals(1L, count(brokerageCode = "238"))
         assertEquals(listOf("HST001"), brokerageRows.map { it.stock.itemCode })
         assertEquals("238", brokerageRows.single().brokerage.code)
         assertEquals("미래에셋증권", brokerageRows.single().brokerage.name)
         assertEquals(3, allRows.size)
-        assertEquals(setOf("HST001", "HST002"), purchased.map { it.itemCode }.toSet())
-        assertEquals(2, purchased.size)
+        assertEquals(setOf("HST001", "HST002"), traded.map { it.itemCode }.toSet())
+        assertEquals(2, traded.size)
     }
 
     private fun findPage(brokerageCode: String? = null): List<Trade> {

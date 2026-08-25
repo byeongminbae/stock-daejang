@@ -67,7 +67,7 @@ class HistoryRepository(private val queryFactory: JPAQueryFactory) {
     }
 
     @Transactional(readOnly = true)
-    fun findPurchasedStocks(tradeType: TradeType): List<Stock> {
+    fun findTradedStocks(tradeType: TradeType): List<Stock> {
         return queryFactory
             .select(stock)
             .distinct()

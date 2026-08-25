@@ -13,8 +13,8 @@ class StockHistoryService(
 ) {
     @Transactional(readOnly = true)
     fun getTradedStocks(tradeType: TradeType): SuccessDataResponse<List<StockStatusResponseDto>> {
-        val purchasedStocks = historyRepository.findPurchasedStocks(tradeType)
+        val tradedStocks = historyRepository.findTradedStocks(tradeType)
             .map(StockStatusResponseDto::from)
-        return SuccessDataResponse(purchasedStocks)
+        return SuccessDataResponse(tradedStocks)
     }
 }

@@ -8,12 +8,13 @@ import org.springframework.transaction.annotation.Transactional
 
 @Service
 class OwnerService(
-    private val ownerRepository: OwnerRepository,
+    private val ownerRepository: OwnerRepository
 ) {
     @Transactional(readOnly = true)
     fun getList(): SuccessDataResponse<List<OwnerResponseDto>> {
         return SuccessDataResponse(
-            ownerRepository.findAll().map(OwnerResponseDto::from),
+            ownerRepository.findAllByOrderByIdAsc()
+                .map(OwnerResponseDto::from)
         )
     }
 }

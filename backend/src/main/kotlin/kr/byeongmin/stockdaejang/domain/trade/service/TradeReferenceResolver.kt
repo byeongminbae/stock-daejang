@@ -31,7 +31,7 @@ class TradeReferenceResolver(
     }
 
     fun requireOwner(ownerId: Long): Owner {
-        return ownerRepository.findById(ownerId)
+        return ownerRepository.findById(ownerId).orElse(null)
             ?: throw BusinessException(CommonError.RESOURCE_NOT_FOUND)
     }
 

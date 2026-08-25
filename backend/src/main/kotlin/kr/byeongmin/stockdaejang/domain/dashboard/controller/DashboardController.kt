@@ -12,14 +12,15 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping(value = ["/api/v1/dashboard"], produces = [MediaType.APPLICATION_JSON_VALUE])
-@Tag(name = "대시보드", description = "소유주와 증권사별 보유 종목 및 평가 손익 현황")
+@Tag(name = "대시보드")
 class DashboardController(
     private val dashboardService: DashboardService,
 ) {
     @GetMapping
     @Operation(
         summary = "대시보드 현황 조회",
-        description = "소유주·증권사별 보유 수량, 매수평균단가와 평가 손익을 조회합니다. 보유 종목의 모든 현재가가 필요하며, 시세 조회에 실패하면 부분 응답 대신 API 오류를 반환합니다.",
+        description = "소유주/증권사별 보유 수량, 매수평균단가와 평가 손익을 조회." +
+                " 보유 종목의 모든 현재가가 필요하며, 시세 조회에 실패하면 부분 응답 대신 API 오류를 반환.",
     )
     fun getDashboard(): SuccessDataResponse<DashboardResponseDto> {
         return dashboardService.getDashboard()
