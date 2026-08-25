@@ -4,7 +4,7 @@ import com.querydsl.jpa.impl.JPAQuery
 import com.querydsl.jpa.impl.JPAQueryFactory
 import jakarta.persistence.LockModeType
 import kr.byeongmin.stockdaejang.domain.brokerage.entity.QBrokerage.brokerage
-import kr.byeongmin.stockdaejang.domain.stock.entity.QSecurity.security
+import kr.byeongmin.stockdaejang.domain.stock.entity.QStock.stock
 import kr.byeongmin.stockdaejang.domain.trade.entity.QTrade.trade
 import kr.byeongmin.stockdaejang.domain.trade.entity.Trade
 import org.springframework.stereotype.Repository
@@ -15,10 +15,10 @@ class TradeLedgerRepository(private val queryFactory: JPAQueryFactory) {
     fun lock(itemCodes: List<String>) {
         val sortedItemCodes = itemCodes.distinct().sorted()
         queryFactory
-            .select(security.id)
-            .from(security)
-            .where(security.itemCode.`in`(sortedItemCodes))
-            .orderBy(security.itemCode.asc())
+            .select(stock.id)
+            .from(stock)
+            .where(stock.itemCode.`in`(sortedItemCodes))
+            .orderBy(stock.itemCode.asc())
             .setLockMode(LockModeType.PESSIMISTIC_WRITE)
             .fetch()
     }
@@ -51,12 +51,12 @@ class TradeLedgerRepository(private val queryFactory: JPAQueryFactory) {
     ): List<Trade> {
         return queryFactory
             .selectFrom(trade)
-            .join(trade.security, security)
+            .join(trade.stock, stock)
             .join(trade.brokerage, brokerage)
             .where(
                 trade.owner.id.eq(ownerId),
                 brokerage.code.eq(brokerageCode),
-                security.itemCode.eq(itemCode),
+                stock.itemCode.eq(itemCode),
             )
             .orderBy(trade.executedAt.asc(), trade.id.asc())
             .fetch()
@@ -77,10 +77,10 @@ class TradeLedgerRepository(private val queryFactory: JPAQueryFactory) {
     private fun baseLedgerQuery(ownerId: Long, brokerageId: Long, itemCode: String): JPAQuery<Trade> {
         return queryFactory
             .selectFrom(trade)
-            .join(trade.security, security)
+            .join(trade.stock, stock)
             .where(
                 trade.owner.id.eq(ownerId),
-                security.itemCode.eq(itemCode),
+                stock.itemCode.eq(itemCode),
                 trade.brokerage.id.eq(brokerageId),
             )
     }

@@ -85,8 +85,8 @@ data class DashboardStockResponseDto(
             val valuation = currentPrice.multiply(quantity, DASHBOARD_MATH_CONTEXT)
             val unrealizedProfit = valuation.subtract(totalBuyAmount, DASHBOARD_MATH_CONTEXT)
             return DashboardStockResponseDto(
-                stockCode = position.security.itemCode,
-                stockName = position.security.stockName,
+                stockCode = position.stock.itemCode,
+                stockName = position.stock.stockName,
                 quantity = quantity.intValueExact(),
                 averageBuyPrice = averageBuyPrice.toDashboardDecimal(),
                 totalBuyAmount = totalBuyAmount.toDashboardDecimal(),

@@ -47,7 +47,7 @@ class HistoryRepositoryIntegrationTest {
         val purchased = repository.findPurchasedStocks(TradeType.BUY)
 
         assertEquals(1L, count(brokerageCode = "238"))
-        assertEquals(listOf("HST001"), brokerageRows.map { it.security.itemCode })
+        assertEquals(listOf("HST001"), brokerageRows.map { it.stock.itemCode })
         assertEquals("238", brokerageRows.single().brokerage.code)
         assertEquals("미래에셋증권", brokerageRows.single().brokerage.name)
         assertEquals(3, allRows.size)
@@ -87,7 +87,7 @@ class HistoryRepositoryIntegrationTest {
             market = "KRX",
             ownerId = 1,
             quantity = "1",
-            securityName = "이력 테스트 종목",
+            stockName = "이력 테스트 종목",
             side = "BUY",
             unitPrice = "100",
         )

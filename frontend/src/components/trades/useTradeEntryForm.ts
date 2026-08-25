@@ -63,7 +63,7 @@ export type TradeFieldName =
 type TradeFieldErrors = Partial<Record<TradeFieldName, string>>;
 
 const normalizeField = (name: string): TradeFieldName | null => {
-  if (["itemCode", "securityName", "market", "isEtf"].includes(name)) return "stock";
+  if (["itemCode", "stockName", "market", "isEtf"].includes(name)) return "stock";
   if (["brokerageCode", "executedAt", "stock", "ownerId", "quantity", "unitPrice"].includes(name)) {
     return name as TradeFieldName;
   }
@@ -191,7 +191,7 @@ export function useTradeEntryForm({
       brokerageCode: parsed.data.brokerageCode,
       executedAt: `${parsed.data.executedAt}:00+09:00`,
       itemCode: stock.code,
-      securityName: stock.name,
+      stockName: stock.name,
       market: stock.market,
       isEtf: stock.isEtf,
       ownerId: Number(parsed.data.ownerId),

@@ -4,7 +4,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory
 import kr.byeongmin.stockdaejang.domain.brokerage.entity.QBrokerage.brokerage
 import kr.byeongmin.stockdaejang.domain.dashboard.entity.QDashboardPosition.dashboardPosition
 import kr.byeongmin.stockdaejang.domain.owner.entity.QOwner.owner
-import kr.byeongmin.stockdaejang.domain.stock.entity.QSecurity.security
+import kr.byeongmin.stockdaejang.domain.stock.entity.QStock.stock
 import kr.byeongmin.stockdaejang.domain.trade.dto.DeleteTradesRequestDto
 import kr.byeongmin.stockdaejang.domain.trade.dto.TradeRequestDto
 import kr.byeongmin.stockdaejang.domain.trade.dto.TradePreviewRequestDto
@@ -189,9 +189,9 @@ class TradeServiceIntegrationTest {
         )
         assertEquals(
             "TST002",
-            queryFactory.select(security.itemCode)
+            queryFactory.select(stock.itemCode)
                 .from(trade)
-                .join(trade.security, security)
+                .join(trade.stock, stock)
                 .where(trade.id.eq(movableSell.data.id.toLong()))
                 .fetchOne(),
         )
@@ -276,7 +276,7 @@ class TradeServiceIntegrationTest {
                 unitPrice = "100",
                 executedAt = "2026-08-01T10:00",
                 itemCode = "TST004",
-                securityName = "최초 한국어 종목명",
+                stockName = "최초 한국어 종목명",
             ),
         )
         val laterBuy = tradeService.createTrade(
@@ -285,7 +285,7 @@ class TradeServiceIntegrationTest {
                 unitPrice = "200",
                 executedAt = "2026-08-01T11:00",
                 itemCode = "TST004",
-                securityName = "English renamed stock",
+                stockName = "English renamed stock",
             ),
         )
         tradeService.updateTrade(
@@ -295,15 +295,15 @@ class TradeServiceIntegrationTest {
                 unitPrice = "300",
                 executedAt = "2026-08-01T11:00",
                 itemCode = "TST004",
-                securityName = "Another English name",
+                stockName = "Another English name",
             ),
         )
 
         assertEquals(
             "최초 한국어 종목명",
-            queryFactory.select(security.stockName)
-                .from(security)
-                .where(security.itemCode.eq("TST004"))
+            queryFactory.select(stock.stockName)
+                .from(stock)
+                .where(stock.itemCode.eq("TST004"))
                 .fetchOne(),
         )
     }
@@ -357,11 +357,11 @@ class TradeServiceIntegrationTest {
         .select(dashboardPosition.quantity, dashboardPosition.totalBuyAmount)
         .from(dashboardPosition)
         .join(dashboardPosition.brokerage, brokerage)
-        .join(dashboardPosition.security, security)
+        .join(dashboardPosition.stock, stock)
         .where(
             dashboardPosition.owner.id.eq(ownerId),
             brokerage.code.eq(brokerageCode),
-            security.itemCode.eq(itemCode),
+            stock.itemCode.eq(itemCode),
         )
         .fetchOne()
 
@@ -373,7 +373,7 @@ class TradeServiceIntegrationTest {
         ownerId: Long = 1,
         brokerageCode: String = "264",
         itemCode: String = "TST001",
-        securityName: String = "통합 테스트 종목",
+        stockName: String = "통합 테스트 종목",
     ): TradeRequestDto {
         return TradeRequestDto(
             brokerageCode = brokerageCode,
@@ -383,7 +383,7 @@ class TradeServiceIntegrationTest {
             market = "KRX",
             ownerId = ownerId,
             quantity = quantity,
-            securityName = securityName,
+            stockName = stockName,
             side = side,
             unitPrice = unitPrice,
         )
@@ -398,7 +398,7 @@ class TradeServiceIntegrationTest {
         ownerId: Long = 1,
         brokerageCode: String = "264",
         itemCode: String = "TST001",
-        securityName: String = "통합 테스트 종목",
+        stockName: String = "통합 테스트 종목",
     ): UpdateTradeRequestDto {
         return UpdateTradeRequestDto(
             id = id,
@@ -409,7 +409,7 @@ class TradeServiceIntegrationTest {
             market = "KRX",
             ownerId = ownerId,
             quantity = quantity,
-            securityName = securityName,
+            stockName = stockName,
             side = side,
             unitPrice = unitPrice,
         )

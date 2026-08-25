@@ -103,8 +103,8 @@ data class TradeHistoryRowResponseDto(
             return TradeHistoryRowResponseDto(
                 id = trade.id.ifNullThrow().toString(),
                 executedAt = trade.executedAt,
-                stockName = trade.security.stockName,
-                itemCode = trade.security.itemCode,
+                stockName = trade.stock.stockName,
+                itemCode = trade.stock.itemCode,
                 quantity = trade.quantity.toString(),
                 unitPrice = trade.unitPrice.toString(),
                 amount = trade.amount().toString(),
@@ -112,8 +112,8 @@ data class TradeHistoryRowResponseDto(
                 ownerName = trade.owner.name,
                 brokerageCode = trade.brokerage.code,
                 brokerageName = trade.brokerage.name,
-                market = trade.security.market,
-                isEtf = trade.security.isEtf,
+                market = trade.stock.market,
+                isEtf = trade.stock.isEtf,
                 realizedProfit = trade.realizedProfit?.toString(),
             )
         }

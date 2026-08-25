@@ -34,7 +34,7 @@ class TradeService(
             parsedTrade.toEntity(
                 resolvedTradeReferences.owner,
                 resolvedTradeReferences.brokerage,
-                resolvedTradeReferences.security,
+                resolvedTradeReferences.stock,
             ),
         )
         tradeLedgerManager.replay(ledgerKey, parsedTrade.executedAt)
@@ -68,7 +68,7 @@ class TradeService(
             parsedTrade.toEntity(
                 resolvedTradeReferences.owner,
                 resolvedTradeReferences.brokerage,
-                resolvedTradeReferences.security,
+                resolvedTradeReferences.stock,
             ),
         )
         if (updatedTradeCount != 1) throw BusinessException(CommonError.RESOURCE_NOT_FOUND)

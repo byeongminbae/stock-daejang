@@ -8,7 +8,7 @@ import kr.byeongmin.stockdaejang.domain.dashboard.entity.DashboardPosition
 import kr.byeongmin.stockdaejang.domain.dashboard.repository.DashboardPositionRepository
 import kr.byeongmin.stockdaejang.domain.owner.entity.Owner
 import kr.byeongmin.stockdaejang.domain.stock.dto.MarketPriceDto
-import kr.byeongmin.stockdaejang.domain.stock.entity.Security
+import kr.byeongmin.stockdaejang.domain.stock.entity.Stock
 import kr.byeongmin.stockdaejang.domain.stock.provider.MarketSession
 import kr.byeongmin.stockdaejang.domain.stock.service.MarketPriceService
 import kr.byeongmin.stockdaejang.global.error.CommonError
@@ -283,7 +283,7 @@ class DashboardServiceTest {
     ): DashboardPosition {
         return DashboardPosition(
             owner = owner,
-            security = Security.of(stockCode, stockName, "코스피", false),
+            stock = Stock.of(stockCode, stockName, "코스피", false),
             brokerage = brokerage,
             quantity = BigInteger.valueOf(quantity),
             totalBuyAmount = BigInteger.valueOf(totalBuyAmount),

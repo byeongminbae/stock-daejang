@@ -22,7 +22,7 @@ class DashboardService(
 ) {
     fun getDashboard(): SuccessDataResponse<DashboardResponseDto> {
         val positions = dashboardPositionRepository.findAll()
-        val itemCodes = positions.map { it.security.itemCode }.distinct()
+        val itemCodes = positions.map { it.stock.itemCode }.distinct()
         val marketPricesByItemCode = marketPriceService.getMarketPrices(itemCodes)
 
         val positionsByOwnerId = positions.groupBy { it.owner.id }
@@ -72,7 +72,7 @@ class DashboardService(
                     val dashboardStockResponseDtos = brokeragePositions.map {
                         DashboardStockResponseDto.of(
                             position = it,
-                            marketPrice = marketPricesByItemCode[it.security.itemCode].ifNullThrow(),
+                            marketPrice = marketPricesByItemCode[it.stock.itemCode].ifNullThrow(),
                             brokerageTotalBuyAmount = brokerageTotalBuyAmount,
                         )
                     }

@@ -27,7 +27,7 @@ internal data class LedgerKey(
             return LedgerKey(
                 ownerId = trade.owner.id,
                 brokerageId = trade.brokerage.id.ifNullThrow(),
-                itemCode = trade.security.itemCode,
+                itemCode = trade.stock.itemCode,
             )
         }
     }

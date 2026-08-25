@@ -214,7 +214,7 @@ class StockDaejangApplicationTests {
         assertEquals(intQuantityPattern, tradeRequest.path("properties").path("quantity").path("pattern").asString())
         val requiredTradeFields = tradeRequest.path("required").values().map { it.asString() }.toSet()
         assertEquals(
-            setOf("brokerageCode", "executedAt", "isEtf", "itemCode", "market", "ownerId", "quantity", "securityName", "side", "unitPrice"),
+            setOf("brokerageCode", "executedAt", "isEtf", "itemCode", "market", "ownerId", "quantity", "stockName", "side", "unitPrice"),
             requiredTradeFields,
         )
 

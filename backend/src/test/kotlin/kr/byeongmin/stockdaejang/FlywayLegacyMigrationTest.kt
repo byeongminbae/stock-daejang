@@ -24,14 +24,14 @@ class FlywayLegacyMigrationTest {
                         resultSet.next()
                         resultSet.getLong("id")
                     }
-                    val heldSecurityId = statement.executeQuery(
+                    val heldStockId = statement.executeQuery(
                         "INSERT INTO securities (item_code, stock_name, market) " +
                             "VALUES ('TST001', '보유 종목', 'KRX') RETURNING id",
                     ).use { resultSet ->
                         resultSet.next()
                         resultSet.getLong("id")
                     }
-                    val soldSecurityId = statement.executeQuery(
+                    val soldStockId = statement.executeQuery(
                         "INSERT INTO securities (item_code, stock_name, market) " +
                             "VALUES ('TST002', '전량 매도 종목', 'KRX') RETURNING id",
                     ).use { resultSet ->
@@ -42,11 +42,11 @@ class FlywayLegacyMigrationTest {
                         "INSERT INTO trades " +
                             "(owner_id, security_id, brokerage_id, side, executed_at, quantity, unit_price, realized_profit) " +
                             "VALUES " +
-                            "(1, $heldSecurityId, $brokerageId, 'BUY', '2026-08-01T01:00:00Z', 10, 100, NULL), " +
-                            "(1, $heldSecurityId, $brokerageId, 'SELL', '2026-08-02T01:00:00Z', 4, 150, 200), " +
-                            "(1, $heldSecurityId, $brokerageId, 'BUY', '2026-08-03T01:00:00Z', 2, 200, NULL), " +
-                            "(1, $soldSecurityId, $brokerageId, 'BUY', '2026-08-01T01:00:00Z', 1, 100, NULL), " +
-                            "(1, $soldSecurityId, $brokerageId, 'SELL', '2026-08-02T01:00:00Z', 1, 100, 0)",
+                            "(1, $heldStockId, $brokerageId, 'BUY', '2026-08-01T01:00:00Z', 10, 100, NULL), " +
+                            "(1, $heldStockId, $brokerageId, 'SELL', '2026-08-02T01:00:00Z', 4, 150, 200), " +
+                            "(1, $heldStockId, $brokerageId, 'BUY', '2026-08-03T01:00:00Z', 2, 200, NULL), " +
+                            "(1, $soldStockId, $brokerageId, 'BUY', '2026-08-01T01:00:00Z', 1, 100, NULL), " +
+                            "(1, $soldStockId, $brokerageId, 'SELL', '2026-08-02T01:00:00Z', 1, 100, 0)",
                     )
                 }
             }
@@ -69,7 +69,7 @@ class FlywayLegacyMigrationTest {
                     statement.executeQuery(
                         "SELECT dp.quantity, dp.total_buy_amount " +
                             "FROM dashboard_positions dp " +
-                            "JOIN securities s ON s.id = dp.security_id " +
+                            "JOIN stocks s ON s.id = dp.stock_id " +
                             "WHERE s.item_code = 'TST001'",
                     ).use { resultSet ->
                         resultSet.next()
@@ -78,7 +78,7 @@ class FlywayLegacyMigrationTest {
                     }
                     statement.executeQuery(
                         "SELECT COUNT(*) FROM dashboard_positions dp " +
-                            "JOIN securities s ON s.id = dp.security_id " +
+                            "JOIN stocks s ON s.id = dp.stock_id " +
                             "WHERE s.item_code = 'TST002'",
                     ).use { resultSet ->
                         resultSet.next()

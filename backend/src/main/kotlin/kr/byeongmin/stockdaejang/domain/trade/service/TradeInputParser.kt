@@ -26,7 +26,7 @@ internal object TradeInputParser {
             market = request.market,
             ownerId = request.ownerId,
             quantity = request.quantity,
-            securityName = request.securityName,
+            stockName = request.stockName,
             side = request.side,
             unitPrice = request.unitPrice,
         )
@@ -43,7 +43,7 @@ internal object TradeInputParser {
                 request.market,
                 request.ownerId,
                 request.quantity,
-                request.securityName,
+                request.stockName,
                 request.side,
                 request.unitPrice,
             ),
@@ -83,7 +83,7 @@ internal object TradeInputParser {
         market: String,
         ownerId: Long,
         quantity: String,
-        securityName: String,
+        stockName: String,
         side: String,
         unitPrice: String,
     ): ParsedTradeDto {
@@ -95,7 +95,7 @@ internal object TradeInputParser {
             market = market.trim().takeIf { it.isNotEmpty() && it.length <= 30 } ?: invalid(),
             ownerId = parseOwnerId(ownerId),
             quantity = parsePositiveQuantity(quantity),
-            securityName = securityName.trim().takeIf { it.isNotEmpty() && it.length <= 100 } ?: invalid(),
+            stockName = stockName.trim().takeIf { it.isNotEmpty() && it.length <= 100 } ?: invalid(),
             side = parseSide(side),
             unitPrice = parsePositiveBigint(unitPrice),
         )

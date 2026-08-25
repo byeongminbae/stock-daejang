@@ -4,7 +4,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory
 import jakarta.persistence.EntityManager
 import kr.byeongmin.stockdaejang.domain.dashboard.entity.QDashboardPosition.dashboardPosition
 import kr.byeongmin.stockdaejang.domain.owner.entity.Owner
-import kr.byeongmin.stockdaejang.domain.stock.entity.QSecurity.security
+import kr.byeongmin.stockdaejang.domain.stock.entity.QStock.stock
 import kr.byeongmin.stockdaejang.domain.trade.entity.QTrade.trade
 import org.springframework.transaction.annotation.Transactional
 
@@ -16,7 +16,7 @@ open class QueryDslTestData(
     open fun clearTrades() {
         queryFactory.delete(dashboardPosition).execute()
         queryFactory.delete(trade).execute()
-        queryFactory.delete(security).execute()
+        queryFactory.delete(stock).execute()
     }
 
     @Transactional

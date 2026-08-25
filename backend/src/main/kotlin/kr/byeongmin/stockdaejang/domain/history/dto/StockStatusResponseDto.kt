@@ -2,7 +2,7 @@ package kr.byeongmin.stockdaejang.domain.history.dto
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
-import kr.byeongmin.stockdaejang.domain.stock.entity.Security
+import kr.byeongmin.stockdaejang.domain.stock.entity.Stock
 
 @Schema(description = "거래 내역의 '종목명 또는 종목코드' 필터에서 선택할 수 있는 매수 종목")
 data class StockStatusResponseDto(
@@ -34,12 +34,12 @@ data class StockStatusResponseDto(
     val isEtf: Boolean,
 ) {
     companion object {
-        fun from(security: Security): StockStatusResponseDto {
+        fun from(stock: Stock): StockStatusResponseDto {
             return StockStatusResponseDto(
-                code = security.itemCode,
-                name = security.stockName,
-                market = security.market,
-                isEtf = security.isEtf,
+                code = stock.itemCode,
+                name = stock.stockName,
+                market = stock.market,
+                isEtf = stock.isEtf,
             )
         }
     }

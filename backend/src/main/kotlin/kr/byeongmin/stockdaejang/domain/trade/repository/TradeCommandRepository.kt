@@ -25,7 +25,7 @@ class TradeCommandRepository(
         val updateClause = queryFactory
             .update(trade)
             .set(trade.owner, replacementTrade.owner)
-            .set(trade.security, replacementTrade.security)
+            .set(trade.stock, replacementTrade.stock)
             .set(trade.brokerage, replacementTrade.brokerage)
             .set(trade.executedAt, replacementTrade.executedAt)
             .set(trade.quantity, replacementTrade.quantity)

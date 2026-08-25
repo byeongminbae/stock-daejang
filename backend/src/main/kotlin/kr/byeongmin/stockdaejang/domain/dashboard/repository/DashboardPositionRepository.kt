@@ -8,7 +8,7 @@ import kr.byeongmin.stockdaejang.domain.dashboard.entity.DashboardPosition
 import kr.byeongmin.stockdaejang.domain.dashboard.entity.QDashboardPosition.dashboardPosition
 import kr.byeongmin.stockdaejang.domain.owner.entity.QOwner.owner
 import kr.byeongmin.stockdaejang.domain.owner.entity.Owner
-import kr.byeongmin.stockdaejang.domain.stock.entity.QSecurity.security
+import kr.byeongmin.stockdaejang.domain.stock.entity.QStock.stock
 import kr.byeongmin.stockdaejang.global.util.ifNullThrow
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
@@ -24,14 +24,14 @@ class DashboardPositionRepository(
         return queryFactory
             .selectFrom(dashboardPosition)
             .join(dashboardPosition.owner, owner).fetchJoin()
-            .join(dashboardPosition.security, security).fetchJoin()
+            .join(dashboardPosition.stock, stock).fetchJoin()
             .join(dashboardPosition.brokerage, brokerage).fetchJoin()
             .orderBy(
                 owner.id.asc(),
                 brokerage.name.asc(),
                 brokerage.code.asc(),
-                security.stockName.asc(),
-                security.itemCode.asc(),
+                stock.stockName.asc(),
+                stock.itemCode.asc(),
             )
             .fetch()
     }
@@ -45,20 +45,20 @@ class DashboardPositionRepository(
     ) {
         val existingPosition = queryFactory
             .selectFrom(dashboardPosition)
-            .join(dashboardPosition.security, security)
+            .join(dashboardPosition.stock, stock)
             .where(
                 dashboardPosition.owner.id.eq(ownerId),
                 dashboardPosition.brokerage.id.eq(brokerageId),
-                security.itemCode.eq(itemCode),
+                stock.itemCode.eq(itemCode),
             )
             .fetchOne()
 
         if (removePositionIfQuantityEmpty(quantity, existingPosition)) return
         if (replacePositionIfNotNull(existingPosition, quantity, totalBuyAmount)) return
 
-        val positionSecurity = queryFactory
-            .selectFrom(security)
-            .where(security.itemCode.eq(itemCode))
+        val positionStock = queryFactory
+            .selectFrom(stock)
+            .where(stock.itemCode.eq(itemCode))
             .fetchOne()
             .ifNullThrow()
 
@@ -66,7 +66,7 @@ class DashboardPositionRepository(
             DashboardPosition(
                 owner = entityManager.getReference(Owner::class.java, ownerId),
                 brokerage = entityManager.getReference(Brokerage::class.java, brokerageId),
-                security = positionSecurity,
+                stock = positionStock,
                 quantity = quantity,
                 totalBuyAmount = totalBuyAmount,
             ),

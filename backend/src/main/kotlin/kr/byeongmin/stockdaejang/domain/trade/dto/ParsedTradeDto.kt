@@ -2,7 +2,7 @@ package kr.byeongmin.stockdaejang.domain.trade.dto
 
 import kr.byeongmin.stockdaejang.domain.brokerage.entity.Brokerage
 import kr.byeongmin.stockdaejang.domain.owner.entity.Owner
-import kr.byeongmin.stockdaejang.domain.stock.entity.Security
+import kr.byeongmin.stockdaejang.domain.stock.entity.Stock
 import kr.byeongmin.stockdaejang.domain.trade.entity.Trade
 import kr.byeongmin.stockdaejang.domain.trade.entity.TradeType
 import java.math.BigInteger
@@ -23,16 +23,16 @@ internal data class ParsedTradeDto(
 
     val quantity: BigInteger,
 
-    val securityName: String,
+    val stockName: String,
 
     val side: TradeType,
 
     val unitPrice: BigInteger,
 ) {
-    fun toEntity(owner: Owner, brokerage: Brokerage, security: Security): Trade {
+    fun toEntity(owner: Owner, brokerage: Brokerage, stock: Stock): Trade {
         return Trade(
             owner = owner,
-            security = security,
+            stock = stock,
             brokerage = brokerage,
             side = side,
             executedAt = executedAt,

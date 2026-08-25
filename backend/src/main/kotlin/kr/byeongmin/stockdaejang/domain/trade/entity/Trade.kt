@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.persistence.*
 import kr.byeongmin.stockdaejang.domain.brokerage.entity.Brokerage
 import kr.byeongmin.stockdaejang.domain.owner.entity.Owner
-import kr.byeongmin.stockdaejang.domain.stock.entity.Security
+import kr.byeongmin.stockdaejang.domain.stock.entity.Stock
 import kr.byeongmin.stockdaejang.global.entity.Base
 import java.math.BigInteger
 import java.time.OffsetDateTime
@@ -25,9 +25,9 @@ class Trade(
     var owner: Owner,
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "security_id", nullable = false)
+    @JoinColumn(name = "stock_id", nullable = false)
     @field:Schema(description = "종목")
-    var security: Security,
+    var stock: Stock,
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "brokerage_id", nullable = false)

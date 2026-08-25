@@ -3,7 +3,7 @@ package kr.byeongmin.stockdaejang.domain.trade.service
 import kr.byeongmin.stockdaejang.domain.brokerage.entity.Brokerage
 import kr.byeongmin.stockdaejang.domain.dashboard.repository.DashboardPositionRepository
 import kr.byeongmin.stockdaejang.domain.owner.entity.Owner
-import kr.byeongmin.stockdaejang.domain.stock.entity.Security
+import kr.byeongmin.stockdaejang.domain.stock.entity.Stock
 import kr.byeongmin.stockdaejang.domain.trade.entity.Trade
 import kr.byeongmin.stockdaejang.domain.trade.entity.TradeType
 import kr.byeongmin.stockdaejang.domain.trade.repository.TradeLedgerRepository
@@ -49,7 +49,7 @@ class TradeLedgerManagerTest {
         return Trade(
             id = id,
             owner = Owner(1, "테스트 소유주"),
-            security = Security(1, "TST001", "테스트 종목", "KRX"),
+            stock = Stock(1, "TST001", "테스트 종목", "KRX"),
             brokerage = Brokerage(1, "264", "테스트 증권사"),
             side = side,
             executedAt = executedAt,

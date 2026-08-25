@@ -74,7 +74,7 @@ data class UpdateTradeRequestDto(
         maxLength = 100,
         example = "삼성전자",
     )
-    val securityName: String,
+    val stockName: String,
 
     @field:Schema(
         description = "거래 구분",

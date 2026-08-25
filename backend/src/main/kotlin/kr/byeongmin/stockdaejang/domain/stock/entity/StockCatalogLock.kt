@@ -5,14 +5,14 @@ import jakarta.persistence.*
 import kr.byeongmin.stockdaejang.global.entity.Base
 
 @Entity
-@Table(name = "security_catalog_locks")
+@Table(name = "stock_catalog_locks")
 @Schema(description = "내부 동시성 잠금용이며 공개 API 모델이 아님")
-class SecurityCatalogLock(
+class StockCatalogLock(
     @Id
     @Enumerated(EnumType.STRING)
     @Column(name = "name", nullable = false)
     @field:Schema(description = "종목 기준 정보 갱신 잠금 이름", example = "CATALOG")
-    val name: SecurityCatalogLockName,
+    val name: StockCatalogLockName,
     @Transient
     override val id: Long? = null,
 ) : Base()

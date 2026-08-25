@@ -12,7 +12,7 @@ import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
 import kr.byeongmin.stockdaejang.domain.brokerage.entity.Brokerage
 import kr.byeongmin.stockdaejang.domain.owner.entity.Owner
-import kr.byeongmin.stockdaejang.domain.stock.entity.Security
+import kr.byeongmin.stockdaejang.domain.stock.entity.Stock
 import kr.byeongmin.stockdaejang.global.entity.Base
 import java.math.BigInteger
 
@@ -22,7 +22,7 @@ import java.math.BigInteger
     uniqueConstraints = [
         UniqueConstraint(
             name = "dashboard_positions_identity_unique",
-            columnNames = ["owner_id", "brokerage_id", "security_id"],
+            columnNames = ["owner_id", "brokerage_id", "stock_id"],
         ),
     ],
 )
@@ -41,8 +41,8 @@ class DashboardPosition(
     val brokerage: Brokerage,
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "security_id", nullable = false)
-    val security: Security,
+    @JoinColumn(name = "stock_id", nullable = false)
+    val stock: Stock,
 
     @Column(name = "quantity", nullable = false, precision = 38, scale = 0)
     var quantity: BigInteger,

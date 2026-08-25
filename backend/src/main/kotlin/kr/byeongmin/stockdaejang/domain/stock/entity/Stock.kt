@@ -11,9 +11,9 @@ import jakarta.persistence.Table
 import kr.byeongmin.stockdaejang.global.entity.Base
 
 @Entity
-@Table(name = "securities")
+@Table(name = "stocks")
 @Schema(description = "종목 기준 정보")
-class Security(
+class Stock(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -43,8 +43,8 @@ class Security(
             stockName: String,
             market: String,
             isEtf: Boolean,
-        ): Security {
-            return Security(
+        ): Stock {
+            return Stock(
                 itemCode = itemCode,
                 stockName = stockName,
                 market = market,

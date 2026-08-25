@@ -4,8 +4,8 @@ import com.querydsl.core.types.Predicate
 import com.querydsl.jpa.impl.JPAQueryFactory
 import kr.byeongmin.stockdaejang.domain.brokerage.entity.QBrokerage.brokerage
 import kr.byeongmin.stockdaejang.domain.owner.entity.QOwner.owner
-import kr.byeongmin.stockdaejang.domain.stock.entity.QSecurity.security
-import kr.byeongmin.stockdaejang.domain.stock.entity.Security
+import kr.byeongmin.stockdaejang.domain.stock.entity.QStock.stock
+import kr.byeongmin.stockdaejang.domain.stock.entity.Stock
 import kr.byeongmin.stockdaejang.domain.trade.entity.QTrade.trade
 import kr.byeongmin.stockdaejang.domain.trade.entity.Trade
 import kr.byeongmin.stockdaejang.domain.trade.entity.TradeType
@@ -29,7 +29,7 @@ class HistoryRepository(private val queryFactory: JPAQueryFactory) {
             .select(trade.count())
             .from(trade)
             .join(trade.owner, owner)
-            .join(trade.security, security)
+            .join(trade.stock, stock)
             .join(trade.brokerage, brokerage)
             .where(*predicates(side, stockNameOrCode, from, to, ownerId, brokerageCode))
             .fetchOne() ?: 0
@@ -57,7 +57,7 @@ class HistoryRepository(private val queryFactory: JPAQueryFactory) {
         return queryFactory
             .selectFrom(trade)
             .join(trade.owner, owner).fetchJoin()
-            .join(trade.security, security).fetchJoin()
+            .join(trade.stock, stock).fetchJoin()
             .join(trade.brokerage, brokerage).fetchJoin()
             .where(*predicates(side, stockNameOrCode, from, to, ownerId, brokerageCode))
             .orderBy(trade.executedAt.desc(), trade.id.desc())
@@ -67,14 +67,14 @@ class HistoryRepository(private val queryFactory: JPAQueryFactory) {
     }
 
     @Transactional(readOnly = true)
-    fun findPurchasedStocks(tradeType: TradeType): List<Security> {
+    fun findPurchasedStocks(tradeType: TradeType): List<Stock> {
         return queryFactory
-            .select(security)
+            .select(stock)
             .distinct()
             .from(trade)
-            .join(trade.security, security)
+            .join(trade.stock, stock)
             .where(trade.side.eq(tradeType))
-            .orderBy(security.stockName.asc(), security.itemCode.asc())
+            .orderBy(stock.stockName.asc(), stock.itemCode.asc())
             .fetch()
     }
 
@@ -89,7 +89,7 @@ class HistoryRepository(private val queryFactory: JPAQueryFactory) {
         return arrayOf(
             trade.side.eq(side),
             stockNameOrCode?.let {
-                security.stockName.containsIgnoreCase(it).or(security.itemCode.containsIgnoreCase(it))
+                stock.stockName.containsIgnoreCase(it).or(stock.itemCode.containsIgnoreCase(it))
             },
             from?.let { trade.executedAt.goe(it) },
             to?.let { trade.executedAt.lt(it) },

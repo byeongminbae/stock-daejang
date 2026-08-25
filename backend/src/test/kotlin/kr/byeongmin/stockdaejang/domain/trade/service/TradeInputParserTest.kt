@@ -75,7 +75,7 @@ class TradeInputParserTest {
             market = "KOSPI",
             ownerId = ownerId,
             quantity = quantity,
-            securityName = "삼성전자",
+            stockName = "삼성전자",
             side = "BUY",
             unitPrice = unitPrice,
         )
@@ -91,7 +91,7 @@ class TradeInputParserTest {
             market = "KOSPI",
             ownerId = 1,
             quantity = quantity,
-            securityName = "삼성전자",
+            stockName = "삼성전자",
             side = "BUY",
             unitPrice = "70000",
         )
