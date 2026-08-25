@@ -26,7 +26,7 @@ export default async function BuyHistoryPage({ searchParams }: BuyHistoryPagePro
     listTradeHistory("BUY", rawSearchParams),
     listBrokerages(),
     listOwners(),
-    listPurchasedStocks(),
+    listPurchasedStocks("BUY"),
   ]);
   const showFilteredEmptyState = result.hasFilters && result.unfilteredTotal > 0;
 
@@ -63,7 +63,7 @@ export default async function BuyHistoryPage({ searchParams }: BuyHistoryPagePro
           owners={owners}
         />
         <Suspense fallback={null}>
-          <HistoryPagination page={result.page} totalPages={result.totalPages} />
+          <HistoryPagination page={result.currentPage} totalPages={result.totalPages} />
         </Suspense>
       </section>
     </div>

@@ -17,40 +17,41 @@ const brokerageSchema = z.strictObject({
   code: z.string().regex(/^\d{3}$/),
   name: z.string().min(1),
 });
-const historyFiltersSchema = z.strictObject({
-  brokerageCode: z.string().nullable(),
-  from: z.string().nullable(),
-  ownerId: ownerIdSchema.nullable(),
-  page: z.number().int().positive(),
-  q: z.string().nullable(),
-  to: z.string().nullable(),
-});
-const historyRowSchema = z.strictObject({
-  amount: financeTextSchema,
-  brokerageCode: z.string().regex(/^\d{3}$/),
-  brokerageName: z.string().min(1),
-  executedAt: z.string().min(1),
-  id: z.string().regex(/^[1-9]\d*$/),
-  isEtf: z.boolean(),
-  itemCode: z.string().regex(/^[0-9A-Z]{6}$/),
-  market: z.string().min(1),
-  ownerId: ownerIdSchema,
-  ownerName: z.string().min(1),
-  profit: financeTextSchema.nullable(),
-  quantity: financeTextSchema,
-  stockName: z.string().min(1),
-  unitPrice: financeTextSchema,
-});
-const historySchema = z.strictObject({
-  filters: historyFiltersSchema,
-  hasFilters: z.boolean(),
-  page: z.number().int().positive(),
-  pageSize: z.number().int().positive(),
-  rows: z.array(historyRowSchema),
-  total: z.number().int().nonnegative(),
-  totalPages: z.number().int().positive(),
-  unfilteredTotal: z.number().int().nonnegative(),
-});
+const historyRowSchema = z
+  .strictObject({
+    amount: financeTextSchema,
+    brokerageCode: z.string().regex(/^\d{3}$/),
+    brokerageName: z.string().min(1),
+    executedAt: z.string().min(1),
+    id: z.string().regex(/^[1-9]\d*$/),
+    isEtf: z.boolean(),
+    itemCode: z.string().regex(/^[0-9A-Z]{6}$/),
+    market: z.string().min(1),
+    ownerId: ownerIdSchema,
+    ownerName: z.string().min(1),
+    quantity: financeTextSchema,
+    realizedProfit: financeTextSchema.nullable(),
+    stockName: z.string().min(1),
+    unitPrice: financeTextSchema,
+  })
+  .transform(({ realizedProfit, ...row }) => ({ ...row, profit: realizedProfit }));
+const historySchema = z
+  .strictObject({
+    currentPage: z.number().int().positive(),
+    hasFilters: z.boolean(),
+    totalCount: z.number().int().nonnegative(),
+    totalMatchedCount: z.number().int().nonnegative(),
+    totalPages: z.number().int().positive(),
+    tradeHistoryRowResponseDtos: z.array(historyRowSchema),
+  })
+  .transform((data) => ({
+    currentPage: data.currentPage,
+    hasFilters: data.hasFilters,
+    rows: data.tradeHistoryRowResponseDtos,
+    total: data.totalMatchedCount,
+    totalPages: data.totalPages,
+    unfilteredTotal: data.totalCount,
+  }));
 const purchasedStockSchema = z.strictObject({
   code: z.string().regex(/^[0-9A-Z]{6}$/),
   isEtf: z.boolean(),
@@ -73,18 +74,41 @@ export function getDashboard(): Promise<DashboardResponse> {
   return getInternalApiData("dashboard", dashboardResponseSchema);
 }
 
+const DEFAULT_PAGE_SIZE = 25;
+
+const seoulDayStart = (date: string): string => `${date}T00:00:00+09:00`;
+
+const seoulNextDayStart = (date: string): string => {
+  const [year = 0, month = 0, day = 0] = date.split("-").map(Number);
+  const nextDay = new Date(Date.UTC(year, month - 1, day + 1));
+  const iso = nextDay.toISOString().slice(0, 10);
+  return seoulDayStart(iso);
+};
+
 export function listTradeHistory(
   side: "BUY" | "SELL",
   rawSearchParams: Readonly<Record<string, string | string[] | undefined>>,
 ): Promise<TradeHistoryResult> {
-  const searchParams = new URLSearchParams({ side });
-  for (const key of ["q", "from", "to", "ownerId", "brokerageCode", "page"] as const) {
+  const searchParams = new URLSearchParams({
+    side,
+    page: "1",
+    pageSize: String(DEFAULT_PAGE_SIZE),
+  });
+  for (const key of ["stockNameOrCode", "ownerId", "brokerageCode", "page"] as const) {
     const value = rawSearchParams[key];
     if (typeof value === "string") searchParams.set(key, value);
   }
-  return getInternalApiData("trades/history", historySchema, searchParams);
+  const from = rawSearchParams.from;
+  if (typeof from === "string" && from) searchParams.set("from", seoulDayStart(from));
+  const to = rawSearchParams.to;
+  if (typeof to === "string" && to) searchParams.set("to", seoulNextDayStart(to));
+  return getInternalApiData("history/trades", historySchema, searchParams);
 }
 
-export function listPurchasedStocks(): Promise<readonly PurchasedStock[]> {
-  return getInternalApiData("stocks/purchased", z.array(purchasedStockSchema));
+export function listPurchasedStocks(tradeType: "BUY" | "SELL"): Promise<readonly PurchasedStock[]> {
+  return getInternalApiData(
+    "history/stocks",
+    z.array(purchasedStockSchema),
+    new URLSearchParams({ tradeType }),
+  );
 }

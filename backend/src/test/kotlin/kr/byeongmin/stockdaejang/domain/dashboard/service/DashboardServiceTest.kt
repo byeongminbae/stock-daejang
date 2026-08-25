@@ -7,7 +7,6 @@ import kr.byeongmin.stockdaejang.domain.dashboard.dto.DashboardResponseDto
 import kr.byeongmin.stockdaejang.domain.dashboard.entity.DashboardPosition
 import kr.byeongmin.stockdaejang.domain.dashboard.repository.DashboardPositionRepository
 import kr.byeongmin.stockdaejang.domain.owner.entity.Owner
-import kr.byeongmin.stockdaejang.domain.owner.repository.OwnerRepository
 import kr.byeongmin.stockdaejang.domain.stock.dto.MarketPriceDto
 import kr.byeongmin.stockdaejang.domain.stock.entity.Security
 import kr.byeongmin.stockdaejang.domain.stock.provider.MarketSession
@@ -28,9 +27,8 @@ import kotlin.test.assertNull
 class DashboardServiceTest {
     private val owners = listOf(Owner(1, "병민"), Owner(2, "할머니"), Owner(3, "아빠"))
     private val dashboardPositionRepository = mock(DashboardPositionRepository::class.java)
-    private val ownerRepository = mock(OwnerRepository::class.java)
     private val marketPriceService = mock(MarketPriceService::class.java)
-    private val dashboardService = DashboardService(dashboardPositionRepository, ownerRepository, marketPriceService)
+    private val dashboardService = DashboardService(dashboardPositionRepository, marketPriceService)
 
     @Test
     fun `대시보드와 소유주와 증권사와 종목 단계의 금액과 종목 비중을 반환한다`() {
@@ -77,15 +75,10 @@ class DashboardServiceTest {
     }
 
     @Test
-    fun `보유 포지션이 없으면 모든 단계의 금액은 영이고 적용 시세 정보는 없다`() {
+    fun `보유 포지션이 없으면 소유주도 없고 적용 시세 정보도 없다`() {
         val dashboard = getDashboardResponse(emptyList(), emptyMap())
 
-        val owner = dashboard.owner("병민")
-        assertEquals(emptyList(), owner.brokerages)
-        assertEquals(0, owner.stockCount)
-        assertEquals(BigDecimal.ZERO, owner.totalBuyAmount)
-        assertEquals(BigDecimal.ZERO, owner.valuation)
-        assertEquals(BigDecimal.ZERO, owner.unrealizedProfit)
+        assertEquals(emptyList(), dashboard.owners)
         assertEquals(0, dashboard.stockCount)
         assertEquals(0, dashboard.checkedStockCount)
         assertEquals(BigDecimal.ZERO, dashboard.totalBuyAmount)
@@ -93,7 +86,6 @@ class DashboardServiceTest {
         assertEquals(BigDecimal.ZERO, dashboard.unrealizedProfit)
         assertNull(dashboard.quoteFetchedAt)
         assertNull(dashboard.valuationSession)
-        assertEquals(owners.map(Owner::id), dashboard.owners.map(DashboardOwnerResponseDto::ownerId))
     }
 
     @Test
@@ -277,7 +269,6 @@ class DashboardServiceTest {
         requestedStockCodes: List<String>,
         marketPricesByItemCode: Map<String, MarketPriceDto>,
     ) {
-        `when`(ownerRepository.findAll()).thenReturn(owners)
         `when`(dashboardPositionRepository.findAll()).thenReturn(positions)
         `when`(marketPriceService.getMarketPrices(requestedStockCodes)).thenReturn(marketPricesByItemCode)
     }

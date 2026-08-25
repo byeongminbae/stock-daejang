@@ -15,7 +15,7 @@ import kr.byeongmin.stockdaejang.global.response.SuccessDataResponse
 import kr.byeongmin.stockdaejang.global.util.ifNullThrow
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.time.Instant
+import java.time.OffsetDateTime
 
 @Service
 class TradeService(
@@ -55,7 +55,7 @@ class TradeService(
         val updatedLedgerKey = LedgerKey.from(parsedTrade, resolvedTradeReferences.brokerage)
         val affectedLedgers = earliestByLedger(
             listOf(
-                previousLedgerKey to selectedTrade.executedAt.toInstant(),
+                previousLedgerKey to selectedTrade.executedAt,
                 updatedLedgerKey to parsedTrade.executedAt,
             ),
         )
@@ -83,7 +83,7 @@ class TradeService(
         val selectedTrades = tradeCommandRepository.find(parsedDelete.ids, parsedDelete.side)
         if (selectedTrades.size != parsedDelete.ids.size) throw BusinessException(CommonError.RESOURCE_NOT_FOUND)
         val affectedLedgers = earliestByLedger(
-            selectedTrades.map { LedgerKey.from(it) to it.executedAt.toInstant() },
+            selectedTrades.map { LedgerKey.from(it) to it.executedAt },
         )
         tradeLedgerManager.lock(affectedLedgers.map(AffectedLedger::key))
         if (
@@ -120,7 +120,7 @@ class TradeService(
         )
     }
 
-    private fun earliestByLedger(entries: List<Pair<LedgerKey, Instant>>): List<AffectedLedger> {
+    private fun earliestByLedger(entries: List<Pair<LedgerKey, OffsetDateTime>>): List<AffectedLedger> {
         return entries.groupBy { it.first.lockText() }
             .values
             .map { ledgerEntries ->
@@ -132,5 +132,5 @@ class TradeService(
             .sortedBy { it.key.lockText() }
     }
 
-    private data class AffectedLedger(val key: LedgerKey, val updateFrom: Instant)
+    private data class AffectedLedger(val key: LedgerKey, val updateFrom: OffsetDateTime)
 }

@@ -189,7 +189,7 @@ export function useTradeEntryForm({
     const payload = {
       side,
       brokerageCode: parsed.data.brokerageCode,
-      executedAt: parsed.data.executedAt,
+      executedAt: `${parsed.data.executedAt}:00+09:00`,
       itemCode: stock.code,
       securityName: stock.name,
       market: stock.market,

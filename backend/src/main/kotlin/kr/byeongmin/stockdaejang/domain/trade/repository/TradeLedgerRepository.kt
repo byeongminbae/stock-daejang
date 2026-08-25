@@ -8,8 +8,7 @@ import kr.byeongmin.stockdaejang.domain.stock.entity.QSecurity.security
 import kr.byeongmin.stockdaejang.domain.trade.entity.QTrade.trade
 import kr.byeongmin.stockdaejang.domain.trade.entity.Trade
 import org.springframework.stereotype.Repository
-import java.time.Instant
-import java.time.ZoneOffset
+import java.time.OffsetDateTime
 
 @Repository
 class TradeLedgerRepository(private val queryFactory: JPAQueryFactory) {
@@ -28,7 +27,7 @@ class TradeLedgerRepository(private val queryFactory: JPAQueryFactory) {
         ownerId: Long,
         brokerageId: Long,
         itemCode: String,
-        beforeExclusive: Instant,
+        beforeExclusive: OffsetDateTime,
     ): List<Trade> {
         return findEntries(ownerId, brokerageId, itemCode, beforeExclusive)
     }
@@ -37,10 +36,10 @@ class TradeLedgerRepository(private val queryFactory: JPAQueryFactory) {
         ownerId: Long,
         brokerageId: Long,
         itemCode: String,
-        fromInclusive: Instant,
+        fromInclusive: OffsetDateTime,
     ): List<Trade> {
         return baseLedgerQuery(ownerId, brokerageId, itemCode)
-            .where(trade.executedAt.goe(fromInclusive.atOffset(ZoneOffset.UTC)))
+            .where(trade.executedAt.goe(fromInclusive))
             .orderBy(trade.executedAt.asc(), trade.id.asc())
             .fetch()
     }
@@ -67,10 +66,10 @@ class TradeLedgerRepository(private val queryFactory: JPAQueryFactory) {
         ownerId: Long,
         brokerageId: Long,
         itemCode: String,
-        beforeExclusive: Instant,
+        beforeExclusive: OffsetDateTime,
     ): List<Trade> {
         return baseLedgerQuery(ownerId, brokerageId, itemCode)
-            .where(trade.executedAt.lt(beforeExclusive.atOffset(ZoneOffset.UTC)))
+            .where(trade.executedAt.lt(beforeExclusive))
             .orderBy(trade.executedAt.asc(), trade.id.asc())
             .fetch()
     }

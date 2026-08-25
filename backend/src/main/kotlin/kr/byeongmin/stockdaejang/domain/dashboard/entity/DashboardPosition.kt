@@ -13,6 +13,7 @@ import jakarta.persistence.UniqueConstraint
 import kr.byeongmin.stockdaejang.domain.brokerage.entity.Brokerage
 import kr.byeongmin.stockdaejang.domain.owner.entity.Owner
 import kr.byeongmin.stockdaejang.domain.stock.entity.Security
+import kr.byeongmin.stockdaejang.global.entity.Base
 import java.math.BigInteger
 
 @Entity
@@ -29,7 +30,7 @@ class DashboardPosition(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
-    val id: Long? = null,
+    override val id: Long? = null,
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "owner_id", nullable = false)
@@ -48,4 +49,4 @@ class DashboardPosition(
 
     @Column(name = "total_buy_amount", nullable = false, precision = 38, scale = 0)
     var totalBuyAmount: BigInteger,
-)
+) : Base()

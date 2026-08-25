@@ -1,34 +1,19 @@
 package kr.byeongmin.stockdaejang.domain.trade.service
 
-import kr.byeongmin.stockdaejang.domain.trade.dto.DeleteTradesRequestDto
-import kr.byeongmin.stockdaejang.domain.trade.dto.ParsedPositionDto
-import kr.byeongmin.stockdaejang.domain.trade.dto.ParsedPreviewDto
-import kr.byeongmin.stockdaejang.domain.trade.dto.ParsedTradeDto
-import kr.byeongmin.stockdaejang.domain.trade.dto.TradePreviewRequestDto
-import kr.byeongmin.stockdaejang.domain.trade.dto.TradeRequestDto
-import kr.byeongmin.stockdaejang.domain.trade.dto.UpdateTradeRequestDto
-import kr.byeongmin.stockdaejang.domain.trade.entity.TradeSide
+import kr.byeongmin.stockdaejang.domain.trade.dto.*
+import kr.byeongmin.stockdaejang.domain.trade.entity.TradeType
 import kr.byeongmin.stockdaejang.global.error.CommonError
 import kr.byeongmin.stockdaejang.global.exception.BusinessException
 import java.math.BigInteger
-import java.time.DateTimeException
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.ResolverStyle
+import java.time.OffsetDateTime
 
 internal object TradeInputParser {
-    internal data class ParsedDeleteTradesDto(val ids: List<Long>, val side: TradeSide)
+    internal data class ParsedDeleteTradesDto(val ids: List<Long>, val side: TradeType)
     internal data class ParsedUpdateTradeDto(val id: Long, val trade: ParsedTradeDto)
 
     private val positiveInteger = Regex("^[1-9]\\d*$")
     private val brokerageCode = Regex("^\\d{3}$")
     private val itemCode = Regex("^[0-9A-Z]{6}$")
-    private val localDateTime = Regex("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$")
-    private val formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm")
-        .withResolverStyle(ResolverStyle.STRICT)
-    private val seoul = ZoneId.of("Asia/Seoul")
     private val maxBigint = BigInteger.valueOf(Long.MAX_VALUE)
     private val maxQuantity = BigInteger.valueOf(Int.MAX_VALUE.toLong())
 
@@ -92,7 +77,7 @@ internal object TradeInputParser {
 
     private fun parseTrade(
         brokerageCode: String,
-        executedAt: String,
+        executedAt: OffsetDateTime,
         isEtf: Boolean,
         itemCode: String,
         market: String,
@@ -104,7 +89,7 @@ internal object TradeInputParser {
     ): ParsedTradeDto {
         return ParsedTradeDto(
             brokerageCode = parseBrokerageCode(brokerageCode),
-            executedAt = parseExecutedAt(executedAt),
+            executedAt = executedAt,
             isEtf = isEtf,
             itemCode = parseItemCode(itemCode),
             market = market.trim().takeIf { it.isNotEmpty() && it.length <= 30 } ?: invalid(),
@@ -128,8 +113,8 @@ internal object TradeInputParser {
         return rawOwnerId?.takeIf { it > 0 } ?: invalid()
     }
 
-    private fun parseSide(rawSide: String?): TradeSide {
-        return runCatching { TradeSide.valueOf(rawSide ?: "") }.getOrElse { invalid() }
+    private fun parseSide(rawSide: String?): TradeType {
+        return runCatching { TradeType.valueOf(rawSide ?: "") }.getOrElse { invalid() }
     }
 
     private fun parsePositiveLong(rawPositiveInteger: String?): Long {
@@ -145,15 +130,6 @@ internal object TradeInputParser {
 
     private fun parsePositiveQuantity(rawQuantity: String?): BigInteger {
         return parsePositiveBigint(rawQuantity).takeIf { it <= maxQuantity } ?: invalid()
-    }
-
-    private fun parseExecutedAt(rawExecutedAt: String?): Instant {
-        if (rawExecutedAt == null || !localDateTime.matches(rawExecutedAt)) invalid()
-        return try {
-            LocalDateTime.parse(rawExecutedAt, formatter).atZone(seoul).toInstant()
-        } catch (_: DateTimeException) {
-            invalid()
-        }
     }
 
     private fun invalid(): Nothing {

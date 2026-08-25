@@ -5,16 +5,12 @@ import kr.byeongmin.stockdaejang.domain.dashboard.repository.DashboardPositionRe
 import kr.byeongmin.stockdaejang.domain.owner.entity.Owner
 import kr.byeongmin.stockdaejang.domain.stock.entity.Security
 import kr.byeongmin.stockdaejang.domain.trade.entity.Trade
-import kr.byeongmin.stockdaejang.domain.trade.entity.TradeSide
+import kr.byeongmin.stockdaejang.domain.trade.entity.TradeType
 import kr.byeongmin.stockdaejang.domain.trade.repository.TradeLedgerRepository
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
-import org.mockito.Mockito.mock
+import org.mockito.Mockito.*
 import java.math.BigInteger
-import java.time.Instant
 import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import kotlin.test.assertEquals
 
 class TradeLedgerManagerTest {
@@ -23,10 +19,10 @@ class TradeLedgerManagerTest {
         val repository = mock(TradeLedgerRepository::class.java)
         val dashboardPositionRepository = mock(DashboardPositionRepository::class.java)
         val manager = TradeLedgerManager(repository, LedgerStateCalculator(), dashboardPositionRepository)
-        val updateFrom = Instant.parse("2026-08-01T00:00:00Z")
+        val updateFrom = OffsetDateTime.parse("2026-08-01T00:00:00+09:00")
         val ledgerKey = LedgerKey(1, 1, "TST001")
-        val buy = trade(1, TradeSide.BUY, updateFrom, 2, 100)
-        val sell = trade(2, TradeSide.SELL, updateFrom.plusSeconds(60), 1, 200)
+        val buy = trade(1, TradeType.BUY, updateFrom, 2, 100)
+        val sell = trade(2, TradeType.SELL, updateFrom.plusSeconds(60), 1, 200)
 
         `when`(repository.findEntriesBefore(1, 1, "TST001", updateFrom)).thenReturn(emptyList())
         `when`(repository.findTradesFrom(1, 1, "TST001", updateFrom)).thenReturn(listOf(buy, sell))
@@ -45,8 +41,8 @@ class TradeLedgerManagerTest {
 
     private fun trade(
         id: Long,
-        side: TradeSide,
-        executedAt: Instant,
+        side: TradeType,
+        executedAt: OffsetDateTime,
         quantity: Long,
         unitPrice: Long,
     ): Trade {
@@ -56,7 +52,7 @@ class TradeLedgerManagerTest {
             security = Security(1, "TST001", "테스트 종목", "KRX"),
             brokerage = Brokerage(1, "264", "테스트 증권사"),
             side = side,
-            executedAt = OffsetDateTime.ofInstant(executedAt, ZoneOffset.UTC),
+            executedAt = executedAt,
             quantity = quantity,
             unitPrice = unitPrice,
         )

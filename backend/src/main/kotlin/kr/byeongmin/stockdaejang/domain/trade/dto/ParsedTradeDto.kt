@@ -4,15 +4,14 @@ import kr.byeongmin.stockdaejang.domain.brokerage.entity.Brokerage
 import kr.byeongmin.stockdaejang.domain.owner.entity.Owner
 import kr.byeongmin.stockdaejang.domain.stock.entity.Security
 import kr.byeongmin.stockdaejang.domain.trade.entity.Trade
-import kr.byeongmin.stockdaejang.domain.trade.entity.TradeSide
+import kr.byeongmin.stockdaejang.domain.trade.entity.TradeType
 import java.math.BigInteger
-import java.time.Instant
-import java.time.ZoneOffset
+import java.time.OffsetDateTime
 
 internal data class ParsedTradeDto(
     val brokerageCode: String,
 
-    val executedAt: Instant,
+    val executedAt: OffsetDateTime,
 
     val isEtf: Boolean,
 
@@ -26,7 +25,7 @@ internal data class ParsedTradeDto(
 
     val securityName: String,
 
-    val side: TradeSide,
+    val side: TradeType,
 
     val unitPrice: BigInteger,
 ) {
@@ -36,10 +35,10 @@ internal data class ParsedTradeDto(
             security = security,
             brokerage = brokerage,
             side = side,
-            executedAt = executedAt.atOffset(ZoneOffset.UTC),
+            executedAt = executedAt,
             quantity = quantity.longValueExact(),
             unitPrice = unitPrice.longValueExact(),
-            realizedProfit = if (side == TradeSide.SELL) BigInteger.ZERO else null,
+            realizedProfit = if (side == TradeType.SELL) BigInteger.ZERO else null,
         )
     }
 }

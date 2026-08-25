@@ -107,7 +107,7 @@ export function HistoryFilterFields({
   return (
     <>
       <HistoryDateRange value={value} />
-      <HistoryStockCombobox initialValue={value("q")} stocks={stocks} />
+      <HistoryStockCombobox initialValue={value("stockNameOrCode")} stocks={stocks} />
       <div className="field">
         <label className="field-label" htmlFor="filter-owner">
           소유주

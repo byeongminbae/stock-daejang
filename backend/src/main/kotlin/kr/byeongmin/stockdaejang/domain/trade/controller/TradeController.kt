@@ -1,26 +1,14 @@
 package kr.byeongmin.stockdaejang.domain.trade.controller
 
 import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.parameters.RequestBody as SwaggerRequestBody
 import io.swagger.v3.oas.annotations.tags.Tag
-import kr.byeongmin.stockdaejang.domain.trade.dto.DeleteTradesRequestDto
-import kr.byeongmin.stockdaejang.domain.trade.dto.DeleteTradesResponseDto
-import kr.byeongmin.stockdaejang.domain.trade.dto.TradeIdResponseDto
-import kr.byeongmin.stockdaejang.domain.trade.dto.TradePreviewRequestDto
-import kr.byeongmin.stockdaejang.domain.trade.dto.TradePreviewResponseDto
-import kr.byeongmin.stockdaejang.domain.trade.dto.TradeRequestDto
-import kr.byeongmin.stockdaejang.domain.trade.dto.UpdateTradeRequestDto
+import kr.byeongmin.stockdaejang.domain.trade.dto.*
 import kr.byeongmin.stockdaejang.domain.trade.service.TradeService
 import kr.byeongmin.stockdaejang.global.response.SuccessDataResponse
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.PatchMapping
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.ResponseStatus
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
+import io.swagger.v3.oas.annotations.parameters.RequestBody as SwaggerRequestBody
 
 @RestController
 @RequestMapping(value = ["/api/v1/trades"], produces = [MediaType.APPLICATION_JSON_VALUE])
@@ -31,7 +19,10 @@ class TradeController(
     @PostMapping(consumes = [MediaType.APPLICATION_JSON_VALUE])
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "거래 등록", description = "소유주, 증권사, 종목명·종목코드, 매수/매도 일시와 수량·단가를 등록합니다.")
-    @SwaggerRequestBody(description = "등록할 매수 또는 매도 거래입니다. 종목명, 종목코드, 소유주, 증권사, 매수/매도 일시, 수량과 단가를 포함합니다.", required = true)
+    @SwaggerRequestBody(
+        description = "등록할 매수 또는 매도 거래입니다. 종목명, 종목코드, 소유주, 증권사, 매수/매도 일시, 수량과 단가를 포함합니다.",
+        required = true
+    )
     fun createTrade(@RequestBody request: TradeRequestDto): SuccessDataResponse<TradeIdResponseDto> {
         return tradeService.createTrade(request)
     }

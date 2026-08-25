@@ -1,13 +1,13 @@
 package kr.byeongmin.stockdaejang.domain.trade.service
 
 import kr.byeongmin.stockdaejang.domain.trade.entity.Trade
-import kr.byeongmin.stockdaejang.domain.trade.entity.TradeSide
+import kr.byeongmin.stockdaejang.domain.trade.entity.TradeType
 import kr.byeongmin.stockdaejang.domain.trade.error.TradeError
 import kr.byeongmin.stockdaejang.global.error.CommonError
 import kr.byeongmin.stockdaejang.global.exception.BusinessException
 import kr.byeongmin.stockdaejang.global.util.ifNullThrow
 import java.math.BigInteger
-import java.time.Instant
+import java.time.OffsetDateTime
 
 internal object LedgerReplayCalculator {
     fun replay(initialLedgerState: LedgerState, ledgerTrades: List<LedgerTradeDto>): LedgerReplayResultDto {
@@ -17,12 +17,12 @@ internal object LedgerReplayCalculator {
 
         for (trade in ledgerTrades.sortedWith(compareBy(LedgerTradeDto::executedAt, LedgerTradeDto::id))) {
             when (trade.side) {
-                TradeSide.BUY -> {
+                TradeType.BUY -> {
                     heldQuantity += trade.quantity
                     remainingCost += trade.quantity * trade.unitPrice
                 }
 
-                TradeSide.SELL -> {
+                TradeType.SELL -> {
                     if (heldQuantity < trade.quantity) {
                         throw BusinessException(
                             TradeError.INSUFFICIENT_HOLDING,
@@ -63,8 +63,8 @@ internal object LedgerReplayCalculator {
 
     internal data class LedgerTradeDto(
         val id: Long,
-        val side: TradeSide,
-        val executedAt: Instant,
+        val side: TradeType,
+        val executedAt: OffsetDateTime,
         val quantity: BigInteger,
         val unitPrice: BigInteger,
     ) {
@@ -73,7 +73,7 @@ internal object LedgerReplayCalculator {
                 return LedgerTradeDto(
                     id = trade.id.ifNullThrow(),
                     side = trade.side,
-                    executedAt = trade.executedAt.toInstant(),
+                    executedAt = trade.executedAt,
                     quantity = BigInteger.valueOf(trade.quantity),
                     unitPrice = BigInteger.valueOf(trade.unitPrice),
                 )

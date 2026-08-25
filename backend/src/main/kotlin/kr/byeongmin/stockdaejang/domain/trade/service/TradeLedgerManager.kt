@@ -7,7 +7,7 @@ import kr.byeongmin.stockdaejang.domain.trade.repository.TradeLedgerRepository
 import kr.byeongmin.stockdaejang.global.error.CommonError
 import kr.byeongmin.stockdaejang.global.exception.BusinessException
 import org.springframework.stereotype.Component
-import java.time.Instant
+import java.time.OffsetDateTime
 
 @Component
 class TradeLedgerManager(
@@ -19,7 +19,7 @@ class TradeLedgerManager(
         tradeLedgerRepository.lock(keys.map(LedgerKey::itemCode))
     }
 
-    internal fun replay(key: LedgerKey, updateFrom: Instant): LedgerState {
+    internal fun replay(key: LedgerKey, updateFrom: OffsetDateTime): LedgerState {
         val initialLedgerState = stateCalculator.calculate(
             tradeLedgerRepository.findEntriesBefore(key.ownerId, key.brokerageId, key.itemCode, updateFrom)
                 .map(LedgerStateCalculator.PersistedLedgerEntryDto::from),

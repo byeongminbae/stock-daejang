@@ -1,12 +1,8 @@
 package kr.byeongmin.stockdaejang.domain.stock.entity
 
 import io.swagger.v3.oas.annotations.media.Schema
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.EnumType
-import jakarta.persistence.Enumerated
-import jakarta.persistence.Id
-import jakarta.persistence.Table
+import jakarta.persistence.*
+import kr.byeongmin.stockdaejang.global.entity.Base
 
 @Entity
 @Table(name = "security_catalog_locks")
@@ -17,4 +13,6 @@ class SecurityCatalogLock(
     @Column(name = "name", nullable = false)
     @field:Schema(description = "종목 기준 정보 갱신 잠금 이름", example = "CATALOG")
     val name: SecurityCatalogLockName,
-)
+    @Transient
+    override val id: Long? = null,
+) : Base()

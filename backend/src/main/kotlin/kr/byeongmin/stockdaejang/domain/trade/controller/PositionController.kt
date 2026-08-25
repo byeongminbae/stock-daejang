@@ -28,7 +28,11 @@ class PositionController(
         @RequestParam(required = false) ownerId: Long?,
         @Parameter(description = "증권사 코드입니다. 숫자 3자리가 아니거나 누락하면 400 오류가 발생합니다.", example = "240", required = true)
         @RequestParam(required = false) brokerageCode: String?,
-        @Parameter(description = "종목코드입니다. 영문 대문자·숫자 6자리가 아니거나 누락하면 400 오류가 발생합니다.", example = "005930", required = true)
+        @Parameter(
+            description = "종목코드입니다. 영문 대문자·숫자 6자리가 아니거나 누락하면 400 오류가 발생합니다.",
+            example = "005930",
+            required = true
+        )
         @RequestParam(required = false) itemCode: String?,
     ): SuccessDataResponse<PositionAverageResponseDto> {
         return tradeService.getPositionAverage(ownerId, brokerageCode, itemCode)

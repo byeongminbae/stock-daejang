@@ -1,14 +1,15 @@
 package kr.byeongmin.stockdaejang.domain.history.repository
 
-import com.querydsl.core.BooleanBuilder
+import com.querydsl.core.types.Predicate
 import com.querydsl.jpa.impl.JPAQueryFactory
 import kr.byeongmin.stockdaejang.domain.brokerage.entity.QBrokerage.brokerage
 import kr.byeongmin.stockdaejang.domain.owner.entity.QOwner.owner
-import kr.byeongmin.stockdaejang.domain.stock.entity.Security
 import kr.byeongmin.stockdaejang.domain.stock.entity.QSecurity.security
+import kr.byeongmin.stockdaejang.domain.stock.entity.Security
 import kr.byeongmin.stockdaejang.domain.trade.entity.QTrade.trade
 import kr.byeongmin.stockdaejang.domain.trade.entity.Trade
-import kr.byeongmin.stockdaejang.domain.trade.entity.TradeSide
+import kr.byeongmin.stockdaejang.domain.trade.entity.TradeType
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 import java.time.OffsetDateTime
@@ -17,10 +18,10 @@ import java.time.OffsetDateTime
 class HistoryRepository(private val queryFactory: JPAQueryFactory) {
     @Transactional(readOnly = true)
     fun count(
-        side: TradeSide,
-        searchQuery: String?,
-        fromInclusive: OffsetDateTime?,
-        toExclusive: OffsetDateTime?,
+        side: TradeType,
+        stockNameOrCode: String?,
+        from: OffsetDateTime?,
+        to: OffsetDateTime?,
         ownerId: Long?,
         brokerageCode: String?,
     ): Long {
@@ -30,12 +31,12 @@ class HistoryRepository(private val queryFactory: JPAQueryFactory) {
             .join(trade.owner, owner)
             .join(trade.security, security)
             .join(trade.brokerage, brokerage)
-            .where(predicate(side, searchQuery, fromInclusive, toExclusive, ownerId, brokerageCode))
+            .where(*predicates(side, stockNameOrCode, from, to, ownerId, brokerageCode))
             .fetchOne() ?: 0
     }
 
     @Transactional(readOnly = true)
-    fun countAll(side: TradeSide): Long {
+    fun countAll(side: TradeType): Long {
         return queryFactory
             .select(trade.count())
             .from(trade)
@@ -45,58 +46,55 @@ class HistoryRepository(private val queryFactory: JPAQueryFactory) {
 
     @Transactional(readOnly = true)
     fun findPage(
-        side: TradeSide,
-        searchQuery: String?,
-        fromInclusive: OffsetDateTime?,
-        toExclusive: OffsetDateTime?,
+        side: TradeType,
+        stockNameOrCode: String?,
+        from: OffsetDateTime?,
+        to: OffsetDateTime?,
         ownerId: Long?,
         brokerageCode: String?,
-        offset: Long,
-        limit: Long,
+        pageable: Pageable,
     ): List<Trade> {
         return queryFactory
             .selectFrom(trade)
             .join(trade.owner, owner).fetchJoin()
             .join(trade.security, security).fetchJoin()
             .join(trade.brokerage, brokerage).fetchJoin()
-            .where(predicate(side, searchQuery, fromInclusive, toExclusive, ownerId, brokerageCode))
+            .where(*predicates(side, stockNameOrCode, from, to, ownerId, brokerageCode))
             .orderBy(trade.executedAt.desc(), trade.id.desc())
-            .offset(offset)
-            .limit(limit)
+            .offset(pageable.offset)
+            .limit(pageable.pageSize.toLong())
             .fetch()
     }
 
     @Transactional(readOnly = true)
-    fun findPurchasedStocks(): List<Security> {
+    fun findPurchasedStocks(tradeType: TradeType): List<Security> {
         return queryFactory
             .select(security)
             .distinct()
             .from(trade)
             .join(trade.security, security)
-            .where(trade.side.eq(TradeSide.BUY))
+            .where(trade.side.eq(tradeType))
             .orderBy(security.stockName.asc(), security.itemCode.asc())
             .fetch()
     }
 
-    private fun predicate(
-        side: TradeSide,
-        searchQuery: String?,
-        fromInclusive: OffsetDateTime?,
-        toExclusive: OffsetDateTime?,
+    private fun predicates(
+        side: TradeType,
+        stockNameOrCode: String?,
+        from: OffsetDateTime?,
+        to: OffsetDateTime?,
         ownerId: Long?,
         brokerageCode: String?,
-    ): BooleanBuilder {
-        return BooleanBuilder(trade.side.eq(side)).apply {
-            searchQuery?.let { normalizedSearchQuery ->
-                and(
-                    security.stockName.containsIgnoreCase(normalizedSearchQuery)
-                        .or(security.itemCode.containsIgnoreCase(normalizedSearchQuery)),
-                )
-            }
-            fromInclusive?.let { and(trade.executedAt.goe(it)) }
-            toExclusive?.let { and(trade.executedAt.lt(it)) }
-            ownerId?.let { and(owner.id.eq(it)) }
-            brokerageCode?.let { and(brokerage.code.eq(it)) }
-        }
+    ): Array<Predicate?> {
+        return arrayOf(
+            trade.side.eq(side),
+            stockNameOrCode?.let {
+                security.stockName.containsIgnoreCase(it).or(security.itemCode.containsIgnoreCase(it))
+            },
+            from?.let { trade.executedAt.goe(it) },
+            to?.let { trade.executedAt.lt(it) },
+            ownerId?.let { owner.id.eq(it) },
+            brokerageCode?.let { brokerage.code.eq(it) },
+        )
     }
 }

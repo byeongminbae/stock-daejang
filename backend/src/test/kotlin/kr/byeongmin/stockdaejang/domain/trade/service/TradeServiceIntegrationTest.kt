@@ -25,6 +25,7 @@ import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.postgresql.PostgreSQLContainer
 import java.math.BigInteger
+import java.time.OffsetDateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
@@ -376,7 +377,7 @@ class TradeServiceIntegrationTest {
     ): TradeRequestDto {
         return TradeRequestDto(
             brokerageCode = brokerageCode,
-            executedAt = executedAt,
+            executedAt = OffsetDateTime.parse("$executedAt:00+09:00"),
             isEtf = false,
             itemCode = itemCode,
             market = "KRX",
@@ -402,7 +403,7 @@ class TradeServiceIntegrationTest {
         return UpdateTradeRequestDto(
             id = id,
             brokerageCode = brokerageCode,
-            executedAt = executedAt,
+            executedAt = OffsetDateTime.parse("$executedAt:00+09:00"),
             isEtf = false,
             itemCode = itemCode,
             market = "KRX",

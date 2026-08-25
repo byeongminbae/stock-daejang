@@ -2,6 +2,7 @@ package kr.byeongmin.stockdaejang.domain.trade.dto
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
+import java.time.OffsetDateTime
 
 @Schema(description = "기존 매수 또는 매도 거래 수정 요청. 모든 필드는 필수이며 누락하거나 null이면 400 오류가 발생합니다.")
 data class UpdateTradeRequestDto(
@@ -22,11 +23,11 @@ data class UpdateTradeRequestDto(
     val brokerageCode: String,
 
     @field:Schema(
-        description = "Asia/Seoul 기준의 유효한 거래 일시. yyyy-MM-dd'T'HH:mm 형식",
-        pattern = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$",
-        example = "2026-08-20T09:30",
+        description = "거래 일시",
+        example = "2026-08-20T09:30:00+09:00",
+        format = "date-time",
     )
-    val executedAt: String,
+    val executedAt: OffsetDateTime,
 
     @get:JsonProperty("isEtf")
     @get:Schema(

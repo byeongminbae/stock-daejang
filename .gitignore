@@ -17,6 +17,7 @@ playwright/.auth/
 # Editor and local tool state
 .idea/
 .omo/
+.omc/
 .codegraph
 .agents/
 .codex/

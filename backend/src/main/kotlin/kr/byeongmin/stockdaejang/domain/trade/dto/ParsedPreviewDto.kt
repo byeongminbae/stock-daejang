@@ -1,6 +1,6 @@
 package kr.byeongmin.stockdaejang.domain.trade.dto
 
-import kr.byeongmin.stockdaejang.domain.trade.entity.TradeSide
+import kr.byeongmin.stockdaejang.domain.trade.entity.TradeType
 import java.math.BigInteger
 
 internal data class ParsedPreviewDto(
@@ -12,7 +12,7 @@ internal data class ParsedPreviewDto(
 
     val quantity: BigInteger,
 
-    val side: TradeSide,
+    val side: TradeType,
 
     val unitPrice: BigInteger,
 )

@@ -144,7 +144,7 @@ export function HistoryFilters({ brokerages, owners, stocks, side }: HistoryFilt
                 ? ownerFilterName(owners, value)
                 : key === "brokerageCode"
                   ? brokerageFilterName(brokerages, value)
-                  : key === "q"
+                  : key === "stockNameOrCode"
                     ? (stocks.find((stock) => stock.code === value)?.name ?? value)
                     : value}{" "}
               <span aria-hidden="true">×</span>

@@ -1,7 +1,7 @@
 package kr.byeongmin.stockdaejang.domain.trade.service
 
 import kr.byeongmin.stockdaejang.domain.trade.entity.Trade
-import kr.byeongmin.stockdaejang.domain.trade.entity.TradeSide
+import kr.byeongmin.stockdaejang.domain.trade.entity.TradeType
 import kr.byeongmin.stockdaejang.global.util.ifNullThrow
 import org.springframework.stereotype.Component
 import java.math.BigInteger
@@ -14,12 +14,12 @@ class LedgerStateCalculator {
         entries.forEach { entry ->
             val amount = entry.quantity * entry.unitPrice
             when (entry.side) {
-                TradeSide.BUY -> {
+                TradeType.BUY -> {
                     heldQuantity += entry.quantity
                     remainingCost += amount
                 }
 
-                TradeSide.SELL -> {
+                TradeType.SELL -> {
                     heldQuantity -= entry.quantity
                     val realizedProfit = entry.realizedProfit.ifNullThrow()
                     remainingCost -= amount - realizedProfit
@@ -30,7 +30,7 @@ class LedgerStateCalculator {
     }
 
     internal data class PersistedLedgerEntryDto(
-        val side: TradeSide,
+        val side: TradeType,
         val quantity: BigInteger,
         val unitPrice: BigInteger,
         val realizedProfit: BigInteger?,

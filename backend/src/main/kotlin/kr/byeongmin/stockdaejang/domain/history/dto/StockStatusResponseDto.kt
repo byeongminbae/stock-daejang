@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import kr.byeongmin.stockdaejang.domain.stock.entity.Security
 
 @Schema(description = "거래 내역의 '종목명 또는 종목코드' 필터에서 선택할 수 있는 매수 종목")
-data class PurchasedStockResponseDto(
+data class StockStatusResponseDto(
     @field:Schema(
         description = "종목코드",
         example = "005930",
@@ -34,8 +34,8 @@ data class PurchasedStockResponseDto(
     val isEtf: Boolean,
 ) {
     companion object {
-        fun from(security: Security): PurchasedStockResponseDto {
-            return PurchasedStockResponseDto(
+        fun from(security: Security): StockStatusResponseDto {
+            return StockStatusResponseDto(
                 code = security.itemCode,
                 name = security.stockName,
                 market = security.market,

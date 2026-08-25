@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 import kr.byeongmin.stockdaejang.domain.trade.entity.Trade
 import kr.byeongmin.stockdaejang.global.util.ifNullThrow
-import java.time.Instant
+import java.time.OffsetDateTime
 
 @Schema(description = "거래 내역")
 data class TradeHistoryRowResponseDto(
@@ -16,10 +16,9 @@ data class TradeHistoryRowResponseDto(
 
     @field:Schema(
         description = "매수/매도 일시",
-        example = "2026-08-20T09:30:00Z",
-        format = "date-time",
+        example = "2026-08-20T09:30:00+09:00",
     )
-    val executedAt: Instant,
+    val executedAt: OffsetDateTime,
 
     @field:Schema(
         description = "종목명",
@@ -97,19 +96,17 @@ data class TradeHistoryRowResponseDto(
         example = "12345",
         nullable = true,
     )
-    val profit: String?,
+    val realizedProfit: String?,
 ) {
     companion object {
         fun from(trade: Trade): TradeHistoryRowResponseDto {
-            val tradeQuantity = trade.quantity
-            val tradeUnitPrice = trade.unitPrice
             return TradeHistoryRowResponseDto(
                 id = trade.id.ifNullThrow().toString(),
-                executedAt = trade.executedAt.toInstant(),
+                executedAt = trade.executedAt,
                 stockName = trade.security.stockName,
                 itemCode = trade.security.itemCode,
-                quantity = tradeQuantity.toString(),
-                unitPrice = tradeUnitPrice.toString(),
+                quantity = trade.quantity.toString(),
+                unitPrice = trade.unitPrice.toString(),
                 amount = trade.amount().toString(),
                 ownerId = trade.owner.id,
                 ownerName = trade.owner.name,
@@ -117,7 +114,7 @@ data class TradeHistoryRowResponseDto(
                 brokerageName = trade.brokerage.name,
                 market = trade.security.market,
                 isEtf = trade.security.isEtf,
-                profit = trade.realizedProfit?.toString(),
+                realizedProfit = trade.realizedProfit?.toString(),
             )
         }
     }

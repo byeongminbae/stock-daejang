@@ -7,6 +7,7 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import kr.byeongmin.stockdaejang.global.entity.Base
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
 
@@ -18,7 +19,7 @@ class Brokerage(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     @field:Schema(description = "증권사 내부 대리키", example = "1")
-    val id: Long? = null,
+    override val id: Long? = null,
 
     @Column(name = "code", nullable = false, unique = true)
     @JdbcTypeCode(SqlTypes.CHAR)
@@ -28,4 +29,4 @@ class Brokerage(
     @Column(name = "name", nullable = false, unique = true)
     @field:Schema(description = "증권사명", example = "삼성증권")
     val name: String,
-)
+) : Base()

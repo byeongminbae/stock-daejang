@@ -1,8 +1,8 @@
 package kr.byeongmin.stockdaejang.domain.history.repository
 
-import kr.byeongmin.stockdaejang.domain.trade.entity.Trade
 import kr.byeongmin.stockdaejang.domain.trade.dto.TradeRequestDto
-import kr.byeongmin.stockdaejang.domain.trade.entity.TradeSide
+import kr.byeongmin.stockdaejang.domain.trade.entity.Trade
+import kr.byeongmin.stockdaejang.domain.trade.entity.TradeType
 import kr.byeongmin.stockdaejang.domain.trade.service.TradeService
 import kr.byeongmin.stockdaejang.support.QueryDslTestData
 import org.junit.jupiter.api.BeforeEach
@@ -11,9 +11,11 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import org.springframework.context.annotation.Import
+import org.springframework.data.domain.PageRequest
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.postgresql.PostgreSQLContainer
+import java.time.OffsetDateTime
 import kotlin.test.assertEquals
 
 @SpringBootTest
@@ -42,7 +44,7 @@ class HistoryRepositoryIntegrationTest {
 
         val brokerageRows = findPage(brokerageCode = "238")
         val allRows = findPage()
-        val purchased = repository.findPurchasedStocks()
+        val purchased = repository.findPurchasedStocks(TradeType.BUY)
 
         assertEquals(1L, count(brokerageCode = "238"))
         assertEquals(listOf("HST001"), brokerageRows.map { it.security.itemCode })
@@ -55,23 +57,22 @@ class HistoryRepositoryIntegrationTest {
 
     private fun findPage(brokerageCode: String? = null): List<Trade> {
         return repository.findPage(
-            side = TradeSide.BUY,
-            searchQuery = null,
-            fromInclusive = null,
-            toExclusive = null,
+            side = TradeType.BUY,
+            stockNameOrCode = null,
+            from = null,
+            to = null,
             ownerId = null,
             brokerageCode = brokerageCode,
-            offset = 0,
-            limit = 25,
+            pageable = PageRequest.of(0, 25),
         )
     }
 
     private fun count(brokerageCode: String? = null): Long {
         return repository.count(
-            side = TradeSide.BUY,
-            searchQuery = null,
-            fromInclusive = null,
-            toExclusive = null,
+            side = TradeType.BUY,
+            stockNameOrCode = null,
+            from = null,
+            to = null,
             ownerId = null,
             brokerageCode = brokerageCode,
         )
@@ -80,7 +81,7 @@ class HistoryRepositoryIntegrationTest {
     private fun trade(itemCode: String, brokerageCode: String, executedAt: String): TradeRequestDto {
         return TradeRequestDto(
             brokerageCode = brokerageCode,
-            executedAt = executedAt,
+            executedAt = OffsetDateTime.parse("$executedAt:00+09:00"),
             isEtf = false,
             itemCode = itemCode,
             market = "KRX",

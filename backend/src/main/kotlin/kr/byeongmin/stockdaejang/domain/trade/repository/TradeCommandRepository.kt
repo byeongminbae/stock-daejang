@@ -5,7 +5,8 @@ import jakarta.persistence.EntityManager
 import jakarta.persistence.LockModeType
 import kr.byeongmin.stockdaejang.domain.trade.entity.QTrade.trade
 import kr.byeongmin.stockdaejang.domain.trade.entity.Trade
-import kr.byeongmin.stockdaejang.domain.trade.entity.TradeSide
+import kr.byeongmin.stockdaejang.domain.trade.entity.TradeType
+import kr.byeongmin.stockdaejang.global.util.seoulNow
 import org.springframework.stereotype.Repository
 import java.math.BigInteger
 
@@ -29,9 +30,10 @@ class TradeCommandRepository(
             .set(trade.executedAt, replacementTrade.executedAt)
             .set(trade.quantity, replacementTrade.quantity)
             .set(trade.unitPrice, replacementTrade.unitPrice)
+            .set(trade.updatedAt, seoulNow())
             .where(trade.id.eq(tradeId), trade.side.eq(replacementTrade.side))
 
-        if (replacementTrade.side == TradeSide.SELL) {
+        if (replacementTrade.side == TradeType.SELL) {
             updateClause.set(trade.realizedProfit, BigInteger.ZERO)
         } else {
             updateClause.setNull(trade.realizedProfit)
@@ -41,7 +43,7 @@ class TradeCommandRepository(
         return updatedTradeCount
     }
 
-    fun delete(tradeIds: List<Long>, side: TradeSide): Int {
+    fun delete(tradeIds: List<Long>, side: TradeType): Int {
         return queryFactory
             .delete(trade)
             .where(trade.id.`in`(tradeIds), trade.side.eq(side))
@@ -59,7 +61,7 @@ class TradeCommandRepository(
             .fetch()
     }
 
-    fun find(tradeIds: List<Long>, side: TradeSide): List<Trade> {
+    fun find(tradeIds: List<Long>, side: TradeType): List<Trade> {
         return queryFactory
             .selectFrom(trade)
             .where(trade.id.`in`(tradeIds), trade.side.eq(side))

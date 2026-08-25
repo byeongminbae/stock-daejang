@@ -1,32 +1,23 @@
 package kr.byeongmin.stockdaejang.domain.trade.entity
 
 import io.swagger.v3.oas.annotations.media.Schema
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.EnumType
-import jakarta.persistence.Enumerated
-import jakarta.persistence.FetchType
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.ManyToOne
-import jakarta.persistence.Table
+import jakarta.persistence.*
 import kr.byeongmin.stockdaejang.domain.brokerage.entity.Brokerage
 import kr.byeongmin.stockdaejang.domain.owner.entity.Owner
 import kr.byeongmin.stockdaejang.domain.stock.entity.Security
+import kr.byeongmin.stockdaejang.global.entity.Base
 import java.math.BigInteger
 import java.time.OffsetDateTime
 
 @Entity
 @Table(name = "trades")
-@Schema(description = "매수/매도 거래 원장 항목")
+@Schema(description = "매수/매도 거래")
 class Trade(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     @field:Schema(description = "거래 내부 대리키", example = "1")
-    val id: Long? = null,
+    override val id: Long? = null,
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "owner_id", nullable = false)
@@ -45,29 +36,25 @@ class Trade(
 
     @Enumerated(EnumType.STRING)
     @Column(name = "side", nullable = false)
-    @field:Schema(description = "매수/매도 구분. BUY는 매수, SELL은 매도", example = "BUY")
-    var side: TradeSide,
+    @field:Schema(description = "매수/매도 구분. BUY, SELL", example = "BUY")
+    var side: TradeType,
 
     @Column(name = "executed_at", nullable = false)
     @field:Schema(description = "매수/매도 일시", example = "2026-08-20T09:30:00+09:00")
     var executedAt: OffsetDateTime,
 
     @Column(name = "quantity", nullable = false)
-    @field:Schema(description = "거래 수량. 0보다 큰 정수", example = "10", minimum = "1")
+    @field:Schema(description = "거래 수량", example = "10", minimum = "1")
     var quantity: Long,
 
     @Column(name = "unit_price", nullable = false)
-    @field:Schema(description = "당시 단가. 0보다 큰 정수", example = "55000", minimum = "1")
+    @field:Schema(description = "당시 단가", example = "55000", minimum = "1")
     var unitPrice: Long,
 
     @Column(name = "realized_profit", precision = 38, scale = 0)
-    @field:Schema(description = "실현 손익. 매수 거래이면 null이고 매도 거래에만 존재합니다.", example = "250000", nullable = true)
+    @field:Schema(description = "실현 손익. 매수 거래이면 null이고 매도 거래에만 존재", example = "250000", nullable = true)
     var realizedProfit: BigInteger? = null,
-
-    @Column(name = "created_at", nullable = false, updatable = false)
-    @field:Schema(description = "거래 등록 일시", example = "2026-08-20T09:30:00+09:00")
-    val createdAt: OffsetDateTime = OffsetDateTime.now(),
-) {
+) : Base() {
     fun amount(): BigInteger {
         return BigInteger.valueOf(quantity).multiply(BigInteger.valueOf(unitPrice))
     }

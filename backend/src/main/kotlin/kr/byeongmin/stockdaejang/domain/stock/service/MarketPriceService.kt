@@ -6,9 +6,9 @@ import kr.byeongmin.stockdaejang.domain.stock.provider.MarketPriceProvider
 import kr.byeongmin.stockdaejang.domain.stock.provider.MarketSession
 import kr.byeongmin.stockdaejang.global.error.CommonError
 import kr.byeongmin.stockdaejang.global.exception.BusinessException
+import kr.byeongmin.stockdaejang.global.util.atStartOfSeoulDay
 import org.springframework.stereotype.Service
 import java.time.Clock
-import java.time.ZoneOffset
 
 @Service
 class MarketPriceService(
@@ -63,8 +63,7 @@ class MarketPriceService(
                     ?: throw BusinessException(CommonError.EXTERNAL_API_ERROR)
                 val expiresAt = overTradedAt
                     .toLocalDate()
-                    .atStartOfDay()
-                    .atOffset(SEOUL_OFFSET)
+                    .atStartOfSeoulDay()
                     .plusHours(AFTER_MARKET_EXPIRY_HOURS)
                 if (clock.instant().isBefore(expiresAt.toInstant())) {
                     marketPriceSnapshot.toOverMarketPrice()
@@ -79,6 +78,5 @@ class MarketPriceService(
         const val MAX_PRICE_CODES = 500
         const val AFTER_MARKET_EXPIRY_HOURS = 27L
         val ITEM_CODE = Regex("^[0-9A-Z]{6}$")
-        val SEOUL_OFFSET: ZoneOffset = ZoneOffset.ofHours(9)
     }
 }

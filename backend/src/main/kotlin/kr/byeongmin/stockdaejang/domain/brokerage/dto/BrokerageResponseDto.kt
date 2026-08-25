@@ -3,7 +3,7 @@ package kr.byeongmin.stockdaejang.domain.brokerage.dto
 import io.swagger.v3.oas.annotations.media.Schema
 import kr.byeongmin.stockdaejang.domain.brokerage.entity.Brokerage
 
-@Schema(description = "거래 입력과 내역 필터에서 선택하는 증권사 정보")
+@Schema(description = "거래 기록 저장 또는 조회 필터에서 선택하는 증권사 정보")
 data class BrokerageResponseDto(
     @field:Schema(
         description = "증권사 코드",

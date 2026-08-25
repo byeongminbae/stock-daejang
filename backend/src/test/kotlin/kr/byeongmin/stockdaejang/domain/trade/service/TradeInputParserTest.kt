@@ -8,21 +8,16 @@ import kr.byeongmin.stockdaejang.global.error.CommonError
 import kr.byeongmin.stockdaejang.global.exception.BusinessException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import java.time.Instant
+import java.time.OffsetDateTime
 import kotlin.test.assertEquals
 
 class TradeInputParserTest {
     @Test
-    fun `한국 로컬 거래일시는 서울 시간의 실제 존재하는 분 단위 시각만 허용한다`() {
-        val parsedTrade = TradeInputParser.trade(validRequest(executedAt = "2024-02-29T23:59"))
+    fun `거래 일시는 변환 없이 그대로 전달된다`() {
+        val executedAt = OffsetDateTime.parse("2024-02-29T23:59:00+09:00")
+        val parsedTrade = TradeInputParser.trade(validRequest(executedAt = executedAt))
 
-        assertEquals(Instant.parse("2024-02-29T14:59:00Z"), parsedTrade.executedAt)
-        assertThrows<BusinessException> {
-            TradeInputParser.trade(validRequest(executedAt = "2023-02-29T12:00"))
-        }
-        assertThrows<BusinessException> {
-            TradeInputParser.trade(validRequest(executedAt = "2024-02-29T23:59:00"))
-        }
+        assertEquals(executedAt, parsedTrade.executedAt)
     }
 
     @Test
@@ -67,7 +62,7 @@ class TradeInputParserTest {
 
     private fun validRequest(
         brokerageCode: String = "264",
-        executedAt: String = "2026-08-14T12:30",
+        executedAt: OffsetDateTime = OffsetDateTime.parse("2026-08-14T12:30:00+09:00"),
         ownerId: Long = 1,
         quantity: String = "3",
         unitPrice: String = "70000",
@@ -90,7 +85,7 @@ class TradeInputParserTest {
         return UpdateTradeRequestDto(
             id = "1",
             brokerageCode = "264",
-            executedAt = "2026-08-14T12:30",
+            executedAt = OffsetDateTime.parse("2026-08-14T12:30:00+09:00"),
             isEtf = false,
             itemCode = "005930",
             market = "KOSPI",

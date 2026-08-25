@@ -112,7 +112,7 @@ export function HistoryStockCombobox({ stocks, initialValue }: HistoryStockCombo
         종목명 또는 종목코드
       </label>
       <div className={styles.stockAnchor}>
-        <input name="q" type="hidden" value={selected?.code ?? query.trim()} />
+        <input name="stockNameOrCode" type="hidden" value={selected?.code ?? query.trim()} />
         <input
           id={inputId}
           className="control"

@@ -44,8 +44,8 @@ class StockDaejangApplicationTests {
         val operations = mapOf(
             "/api/v1/brokerages" to mapOf("get" to "200"),
             "/api/v1/dashboard" to mapOf("get" to "200"),
-            "/api/v1/trades/history" to mapOf("get" to "200"),
-            "/api/v1/stocks/purchased" to mapOf("get" to "200"),
+            "/api/v1/history/trades" to mapOf("get" to "200"),
+            "/api/v1/history/stocks" to mapOf("get" to "200"),
             "/api/v1/owners" to mapOf("get" to "200"),
             "/api/v1/stocks/search" to mapOf("get" to "200"),
             "/api/v1/positions/average" to mapOf("get" to "200"),
@@ -111,7 +111,7 @@ class StockDaejangApplicationTests {
 
         // Then
         val schemasWithIsEtf = listOf(
-            "PurchasedStockResponseDto",
+            "StockStatusResponseDto",
             "StockSearchItemResponseDto",
             "TradeHistoryRowResponseDto",
             "TradeRequestDto",
@@ -129,8 +129,7 @@ class StockDaejangApplicationTests {
             "DashboardOwnerResponseDto",
             "DashboardResponseDto",
             "DashboardStockResponseDto",
-            "HistoryFiltersResponseDto",
-            "PurchasedStockResponseDto",
+            "StockStatusResponseDto",
             "TradeHistoryResponseDto",
             "TradeHistoryRowResponseDto",
             "OwnerResponseDto",
@@ -200,7 +199,7 @@ class StockDaejangApplicationTests {
         assertFalse(schemas.toString().contains("KIWOOM"), "존재하지 않는 영문 증권사 코드 KIWOOM이 문서에 남아 있습니다.")
 
         val tradeRequest = schemas.path("TradeRequestDto")
-        assertEquals("2026-08-20T09:30", tradeRequest.path("properties").path("executedAt").path("example").asString())
+        assertEquals("2026-08-20T09:30:00+09:00", tradeRequest.path("properties").path("executedAt").path("example").asString())
         assertEquals("005930", tradeRequest.path("properties").path("itemCode").path("example").asString())
         assertEquals("10", tradeRequest.path("properties").path("quantity").path("example").asString())
         val intQuantityPattern = "^(?:[1-9][0-9]{0,8}|1[0-9]{9}|20[0-9]{8}|21[0-3][0-9]{7}|214[0-6][0-9]{6}|2147[0-3][0-9]{5}|21474[0-7][0-9]{4}|214748[0-2][0-9]{3}|2147483[0-5][0-9]{2}|21474836[0-3][0-9]|214748364[0-7])$"
@@ -221,7 +220,7 @@ class StockDaejangApplicationTests {
 
         val historySideParameter = document
             .path("paths")
-            .path("/api/v1/trades/history")
+            .path("/api/v1/history/trades")
             .path("get")
             .path("parameters")
             .values()
@@ -239,9 +238,6 @@ class StockDaejangApplicationTests {
             listOf("PREOPEN", "PRE_MARKET", "REGULAR_MARKET", "AFTER_MARKET"),
             valuationSessionValues,
         )
-        val pageSize = schemas.path("TradeHistoryResponseDto").path("properties").path("pageSize")
-        assertEquals(25, pageSize.path("minimum").intValue())
-        assertEquals(25, pageSize.path("maximum").intValue())
     }
 
     private fun openApiDocument() = objectMapper.readTree(

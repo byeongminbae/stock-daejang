@@ -1,12 +1,12 @@
 package kr.byeongmin.stockdaejang.domain.trade.service
 
-import kr.byeongmin.stockdaejang.domain.trade.entity.TradeSide
+import kr.byeongmin.stockdaejang.domain.trade.entity.TradeType
 import kr.byeongmin.stockdaejang.domain.trade.error.TradeError
 import kr.byeongmin.stockdaejang.global.exception.BusinessException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.math.BigInteger
-import java.time.Instant
+import java.time.OffsetDateTime
 import kotlin.test.assertEquals
 
 class LedgerReplayCalculatorTest {
@@ -18,13 +18,13 @@ class LedgerReplayCalculatorTest {
 
     @Test
     fun `같은 시각의 거래를 ID 순서로 재생하면 매도 손익이 가중평균 원가로 계산된다`() {
-        val sharedExecutionTime = Instant.parse("2026-08-01T00:00:00Z")
+        val sharedExecutionTime = OffsetDateTime.parse("2026-08-01T00:00:00+09:00")
         val replayResult = LedgerReplayCalculator.replay(
             initialLedgerState = LedgerState(BigInteger.ZERO, BigInteger.ZERO),
             ledgerTrades = listOf(
-                trade(3, TradeSide.SELL, sharedExecutionTime, 2, 200),
-                trade(2, TradeSide.BUY, sharedExecutionTime, 2, 200),
-                trade(1, TradeSide.BUY, sharedExecutionTime, 3, 100),
+                trade(3, TradeType.SELL, sharedExecutionTime, 2, 200),
+                trade(2, TradeType.BUY, sharedExecutionTime, 2, 200),
+                trade(1, TradeType.BUY, sharedExecutionTime, 3, 100),
             ),
         )
 
@@ -37,7 +37,7 @@ class LedgerReplayCalculatorTest {
     fun `비례 배분 매도 원가의 정확한 절반은 HALF_UP으로 올림한다`() {
         val replayResult = LedgerReplayCalculator.replay(
             initialLedgerState = LedgerState(BigInteger.valueOf(2), BigInteger.ONE),
-            ledgerTrades = listOf(trade(1, TradeSide.SELL, Instant.EPOCH, 1, 2)),
+            ledgerTrades = listOf(trade(1, TradeType.SELL, OffsetDateTime.parse("1970-01-01T00:00:00+09:00"), 1, 2)),
         )
 
         assertEquals(BigInteger.ONE, replayResult.updates.single().realizedProfit)
@@ -49,7 +49,15 @@ class LedgerReplayCalculatorTest {
         val exception = assertThrows<BusinessException> {
             LedgerReplayCalculator.replay(
                 initialLedgerState = LedgerState(BigInteger.ZERO, BigInteger.ZERO),
-                ledgerTrades = listOf(trade(1, TradeSide.SELL, Instant.EPOCH, 1, 100)),
+                ledgerTrades = listOf(
+                    trade(
+                        1,
+                        TradeType.SELL,
+                        OffsetDateTime.parse("1970-01-01T00:00:00+09:00"),
+                        1,
+                        100
+                    )
+                ),
             )
         }
         assertEquals(TradeError.INSUFFICIENT_HOLDING, exception.errorType)
@@ -57,8 +65,8 @@ class LedgerReplayCalculatorTest {
 
     private fun trade(
         id: Long,
-        side: TradeSide,
-        executedAt: Instant,
+        side: TradeType,
+        executedAt: OffsetDateTime,
         quantity: Long,
         unitPrice: Long,
     ): LedgerReplayCalculator.LedgerTradeDto {
