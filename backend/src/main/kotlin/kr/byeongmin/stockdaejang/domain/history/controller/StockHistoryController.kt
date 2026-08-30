@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import kr.byeongmin.stockdaejang.domain.history.dto.StockStatusResponseDto
 import kr.byeongmin.stockdaejang.domain.history.service.StockHistoryService
-import kr.byeongmin.stockdaejang.domain.trade.entity.TradeType
+import kr.byeongmin.stockdaejang.domain.trade.enums.TradeType
 import kr.byeongmin.stockdaejang.global.response.SuccessDataResponse
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.GetMapping

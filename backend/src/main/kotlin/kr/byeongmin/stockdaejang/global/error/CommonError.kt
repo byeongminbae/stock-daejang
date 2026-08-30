@@ -12,6 +12,7 @@ enum class CommonError(
     RESOURCE_NOT_FOUND("RES_001", "리소스를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     RESOURCE_CONFLICT("RES_002", "이미 존재하는 리소스입니다.", HttpStatus.CONFLICT),
     EXTERNAL_API_ERROR("EXT_000", "외부 API에서 오류가 발생했습니다.", HttpStatus.BAD_GATEWAY),
+    EXTERNAL_API_RESPONSE_FIELD_ERROR("EXT_001", "외부 API에서 필요한 필드가 넘어오지 않았습니다.", HttpStatus.BAD_GATEWAY),
     INTERNAL_SERVER_ERROR("SER_000", "서버 내부 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
     NULL_CASTING_ERROR("SER_001", "NULL 캐스팅 오류입니다.", HttpStatus.INTERNAL_SERVER_ERROR),
 }

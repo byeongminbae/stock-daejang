@@ -1,35 +1,31 @@
 package kr.byeongmin.stockdaejang.domain.stock.controller
 
-import kr.byeongmin.stockdaejang.domain.stock.dto.StockSearchResultDto
 import kr.byeongmin.stockdaejang.domain.stock.provider.StockSearchProvider
 import kr.byeongmin.stockdaejang.domain.stock.service.StockService
+import kr.byeongmin.stockdaejang.external.naver.dto.StockSearchResultDto
 import kr.byeongmin.stockdaejang.global.error.CommonError
 import kr.byeongmin.stockdaejang.global.exception.BusinessException
 import kr.byeongmin.stockdaejang.global.exception.GlobalExceptionHandler
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.header
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 
 class StockControllerTest {
     @Test
-    fun `returns the success envelope and does not call Naver for one character`() {
+    fun `rejects a query under two characters with a validation error`() {
         var invocationCount = 0
         val mockMvc = mockMvc(StockSearchProvider {
             invocationCount += 1
-            listOf(stockSearchResult())
+            emptyList()
         })
 
-        mockMvc.perform(get("/api/v1/stocks/search").param("q", "삼"))
-            .andExpect(status().isOk)
-            .andExpect(header().string("Cache-Control", "no-store"))
-            .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.data").isArray)
-            .andExpect(jsonPath("$.data.length()").value(0))
-            .andExpect(jsonPath("$.timestamp").exists())
+        mockMvc.perform(get("/api/v1/stocks").param("stockName", "삼"))
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.success").value(false))
+            .andExpect(jsonPath("$.statusCode").value("REQ_001"))
 
         kotlin.test.assertEquals(0, invocationCount)
     }
@@ -40,9 +36,8 @@ class StockControllerTest {
             listOf(stockSearchResult())
         })
 
-        mockMvc.perform(get("/api/v1/stocks/search").param("q", "삼성"))
+        mockMvc.perform(get("/api/v1/stocks").param("stockName", "삼성"))
             .andExpect(status().isOk)
-            .andExpect(header().string("Cache-Control", "no-store"))
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data[0].code").value("005930"))
             .andExpect(jsonPath("$.data[0].isEtf").value(false))
@@ -56,10 +51,26 @@ class StockControllerTest {
             throw BusinessException(CommonError.EXTERNAL_API_ERROR)
         })
 
-        mockMvc.perform(get("/api/v1/stocks/search").param("q", "삼성"))
+        mockMvc.perform(get("/api/v1/stocks").param("stockName", "삼성"))
             .andExpect(status().isBadGateway)
             .andExpect(jsonPath("$.success").value(false))
             .andExpect(jsonPath("$.statusCode").value("EXT_000"))
+    }
+
+    @Test
+    fun `rejects a query over eighty characters with a validation error`() {
+        var invocationCount = 0
+        val mockMvc = mockMvc(StockSearchProvider {
+            invocationCount += 1
+            emptyList()
+        })
+
+        mockMvc.perform(get("/api/v1/stocks").param("stockName", "가".repeat(81)))
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.success").value(false))
+            .andExpect(jsonPath("$.statusCode").value("REQ_001"))
+
+        kotlin.test.assertEquals(0, invocationCount)
     }
 
     private fun mockMvc(provider: StockSearchProvider): MockMvc {

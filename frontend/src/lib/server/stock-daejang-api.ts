@@ -25,7 +25,7 @@ const historyRowSchema = z
     executedAt: z.string().min(1),
     id: z.string().regex(/^[1-9]\d*$/),
     isEtf: z.boolean(),
-    itemCode: z.string().regex(/^[0-9A-Z]{6}$/),
+    stockCode: z.string().regex(/^[0-9A-Z]{6}$/),
     market: z.string().min(1),
     ownerId: ownerIdSchema,
     ownerName: z.string().min(1),

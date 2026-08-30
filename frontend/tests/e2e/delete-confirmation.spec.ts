@@ -7,7 +7,7 @@ if (process.env.PLAYWRIGHT_BASE_URL === undefined) {
 interface BuyFixture {
   readonly brokerageCode: "240" | "264";
   readonly executedAt: string;
-  readonly itemCode: string;
+  readonly stockCode: string;
   readonly stockName: string;
 }
 
@@ -15,13 +15,13 @@ const fixtures = [
   {
     brokerageCode: "240",
     executedAt: "2026-08-09T08:15",
-    itemCode: "DEL001",
+    stockCode: "DEL001",
     stockName: "삭제확인 삼성 종목",
   },
   {
     brokerageCode: "264",
     executedAt: "2026-08-09T09:30",
-    itemCode: "DEL002",
+    stockCode: "DEL002",
     stockName: "삭제확인 키움 종목",
   },
 ] as const satisfies readonly BuyFixture[];
@@ -34,7 +34,7 @@ async function createBuy(request: APIRequestContext, fixture: BuyFixture): Promi
       brokerageCode: fixture.brokerageCode,
       executedAt: fixture.executedAt,
       isEtf: false,
-      itemCode: fixture.itemCode,
+      stockCode: fixture.stockCode,
       market: "KOSPI",
       ownerId: 1,
       quantity: "1",

@@ -21,27 +21,40 @@ const inputSchema = z.object({
   unitPrice: z.string().regex(/^[1-9]\d*$/, "단가는 1원 이상의 정수여야 합니다."),
 });
 
-const tradeResponseSchema = z.discriminatedUnion("success", [
+const tradeErrorResponseSchema = z.object({
+  success: z.literal(false),
+  timestamp: z.string(),
+  statusCode: z.string(),
+  message: z.string(),
+  fieldErrors: z.record(z.string(), z.string()).nullable().optional(),
+});
+
+const createTradeResponseSchema = z.discriminatedUnion("success", [
   z.object({ success: z.literal(true), timestamp: z.string(), data: z.object({ id: z.string() }) }),
-  z.object({
-    success: z.literal(false),
-    timestamp: z.string(),
-    statusCode: z.string(),
-    message: z.string(),
-    fieldErrors: z.record(z.string(), z.string()).nullable().optional(),
-  }),
+  tradeErrorResponseSchema,
+]);
+
+const updateTradeResponseSchema = z.discriminatedUnion("success", [
+  z.object({ success: z.literal(true), timestamp: z.string() }),
+  tradeErrorResponseSchema,
 ]);
 
 const previewRequestSchema = z.object({
   brokerageCode: z.string().regex(/^\d{3}$/),
-  itemCode: z.string().regex(/^[0-9A-Z]{6}$/),
+  stockCode: z.string().regex(/^[0-9A-Z]{6}$/),
   ownerId: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER),
-  quantity: z.string().regex(/^[1-9]\d*$/),
+  quantity: z
+    .string()
+    .regex(/^[1-9]\d*$/)
+    .transform(Number),
   side: z.enum(["BUY", "SELL"]),
-  unitPrice: z.string().regex(/^[1-9]\d*$/),
+  unitPrice: z
+    .string()
+    .regex(/^[1-9]\d*$/)
+    .transform(Number),
 });
 
-const previewResponseSchema = z.object({
+const previewSuccessResponseSchema = z.object({
   success: z.literal(true),
   timestamp: z.string(),
   data: z.object({
@@ -49,9 +62,13 @@ const previewResponseSchema = z.object({
     averageBuyPrice: z.string().nullable(),
     expectedProfit: z.string().nullable(),
     heldQuantity: z.string().regex(/^\d+$/),
-    quantityError: z.string().nullable(),
   }),
 });
+
+const previewResponseSchema = z.discriminatedUnion("success", [
+  previewSuccessResponseSchema,
+  tradeErrorResponseSchema,
+]);
 
 export type TradeFieldName =
   | "brokerageCode"
@@ -63,7 +80,7 @@ export type TradeFieldName =
 type TradeFieldErrors = Partial<Record<TradeFieldName, string>>;
 
 const normalizeField = (name: string): TradeFieldName | null => {
-  if (["itemCode", "stockName", "market", "isEtf"].includes(name)) return "stock";
+  if (["stockCode", "stockName", "market", "isEtf"].includes(name)) return "stock";
   if (["brokerageCode", "executedAt", "stock", "ownerId", "quantity", "unitPrice"].includes(name)) {
     return name as TradeFieldName;
   }
@@ -106,10 +123,11 @@ export function useTradeEntryForm({
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [messageTone, setMessageTone] = useState<"success" | "error" | null>(null);
-  const [preview, setPreview] = useState<z.infer<typeof previewResponseSchema>["data"] | null>(
-    null,
-  );
+  const [preview, setPreview] = useState<
+    z.infer<typeof previewSuccessResponseSchema>["data"] | null
+  >(null);
   const [previewUnavailable, setPreviewUnavailable] = useState(false);
+  const [previewQuantityError, setPreviewQuantityError] = useState<string | null>(null);
   const editing = tradeId !== undefined;
 
   useEffect(() => {
@@ -119,7 +137,7 @@ export function useTradeEntryForm({
   useEffect(() => {
     const parsed = previewRequestSchema.safeParse({
       brokerageCode,
-      itemCode: stock?.code,
+      stockCode: stock?.code,
       ownerId: Number(ownerId),
       quantity,
       side,
@@ -128,19 +146,29 @@ export function useTradeEntryForm({
     if (!parsed.success) {
       setPreview(null);
       setPreviewUnavailable(false);
+      setPreviewQuantityError(null);
       return;
     }
     const controller = new AbortController();
     setPreview(null);
     setPreviewUnavailable(false);
+    setPreviewQuantityError(null);
     void ky
       .post("/api/v1/trades/preview", {
         json: parsed.data,
         signal: controller.signal,
         timeout: 8_000,
+        throwHttpErrors: false,
       })
       .json<unknown>()
-      .then((payload) => setPreview(previewResponseSchema.parse(payload).data))
+      .then((payload) => {
+        const result = previewResponseSchema.parse(payload);
+        if (result.success) {
+          setPreview(result.data);
+        } else {
+          setPreviewQuantityError(result.fieldErrors?.quantity ?? result.message);
+        }
+      })
       .catch(() => {
         if (!controller.signal.aborted) setPreviewUnavailable(true);
       });
@@ -175,8 +203,8 @@ export function useTradeEntryForm({
       }
     }
     if (stock === null) nextErrors.stock = "검색 결과에서 종목을 선택해 주세요.";
-    if (!editing && side === "SELL" && preview?.quantityError) {
-      nextErrors.quantity = preview.quantityError;
+    if (!editing && side === "SELL" && previewQuantityError) {
+      nextErrors.quantity = previewQuantityError;
     }
     if (!parsed.success || stock === null || Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors);
@@ -187,16 +215,15 @@ export function useTradeEntryForm({
     setErrors({});
     setSubmitting(true);
     const payload = {
-      side,
       brokerageCode: parsed.data.brokerageCode,
       executedAt: `${parsed.data.executedAt}:00+09:00`,
-      itemCode: stock.code,
+      stockCode: stock.code,
       stockName: stock.name,
       market: stock.market,
       isEtf: stock.isEtf,
       ownerId: Number(parsed.data.ownerId),
-      quantity: parsed.data.quantity,
-      unitPrice: parsed.data.unitPrice,
+      quantity: Number(parsed.data.quantity),
+      unitPrice: Number(parsed.data.unitPrice),
     };
     try {
       const response = editing
@@ -208,9 +235,11 @@ export function useTradeEntryForm({
         : await ky.post("/api/v1/trades", {
             throwHttpErrors: false,
             timeout: 10_000,
-            json: payload,
+            json: { side, ...payload },
           });
-      const result = tradeResponseSchema.parse(await response.json<unknown>());
+      const result = editing
+        ? updateTradeResponseSchema.parse(await response.json<unknown>())
+        : createTradeResponseSchema.parse(await response.json<unknown>());
       if (!response.ok || !result.success) {
         if (!result.success && result.fieldErrors) {
           const mapped: TradeFieldErrors = {};
@@ -231,7 +260,11 @@ export function useTradeEntryForm({
         setQuantity("");
         setUnitPrice("");
       }
-      onSaved?.(result.data.id);
+      if (tradeId !== undefined) {
+        onSaved?.(tradeId);
+      } else if ("data" in result) {
+        onSaved?.(result.data.id);
+      }
       router.refresh();
     } catch {
       fail(`저장하지 못했습니다. 입력값을 유지했으니 다시 시도해 주세요.`);

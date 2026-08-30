@@ -14,7 +14,7 @@ import kr.byeongmin.stockdaejang.domain.brokerage.entity.Brokerage
 import kr.byeongmin.stockdaejang.domain.owner.entity.Owner
 import kr.byeongmin.stockdaejang.domain.stock.entity.Stock
 import kr.byeongmin.stockdaejang.global.entity.Base
-import java.math.BigInteger
+import java.math.BigDecimal
 
 @Entity
 @Table(
@@ -44,9 +44,9 @@ class DashboardPosition(
     @JoinColumn(name = "stock_id", nullable = false)
     val stock: Stock,
 
-    @Column(name = "quantity", nullable = false, precision = 38, scale = 0)
-    var quantity: BigInteger,
+    @Column(name = "quantity", nullable = false)
+    var quantity: BigDecimal,
 
-    @Column(name = "total_buy_amount", nullable = false, precision = 38, scale = 0)
-    var totalBuyAmount: BigInteger,
+    @Column(name = "total_buy_amount", nullable = false)
+    var totalBuyAmount: BigDecimal,
 ) : Base()

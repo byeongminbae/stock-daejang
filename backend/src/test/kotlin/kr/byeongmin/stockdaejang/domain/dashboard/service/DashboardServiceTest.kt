@@ -5,18 +5,17 @@ import kr.byeongmin.stockdaejang.domain.dashboard.dto.DashboardBrokerageResponse
 import kr.byeongmin.stockdaejang.domain.dashboard.dto.DashboardOwnerResponseDto
 import kr.byeongmin.stockdaejang.domain.dashboard.dto.DashboardResponseDto
 import kr.byeongmin.stockdaejang.domain.dashboard.entity.DashboardPosition
-import kr.byeongmin.stockdaejang.domain.dashboard.repository.DashboardPositionRepository
+import kr.byeongmin.stockdaejang.domain.dashboard.repository.DashboardPositionQuerydslRepository
 import kr.byeongmin.stockdaejang.domain.owner.entity.Owner
+import kr.byeongmin.stockdaejang.domain.stock.dto.MarketStockCodesDto
 import kr.byeongmin.stockdaejang.domain.stock.dto.MarketPriceDto
 import kr.byeongmin.stockdaejang.domain.stock.entity.Stock
-import kr.byeongmin.stockdaejang.domain.stock.provider.MarketSession
-import kr.byeongmin.stockdaejang.domain.stock.service.MarketPriceService
+import kr.byeongmin.stockdaejang.domain.stock.enums.DomesticMarketSession
+import kr.byeongmin.stockdaejang.domain.stock.service.DomesticMarketPriceService
 import kr.byeongmin.stockdaejang.global.error.CommonError
 import kr.byeongmin.stockdaejang.global.exception.BusinessException
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
+import org.mockito.Mockito.*
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.time.OffsetDateTime
@@ -26,9 +25,9 @@ import kotlin.test.assertNull
 
 class DashboardServiceTest {
     private val owners = listOf(Owner(1, "병민"), Owner(2, "할머니"), Owner(3, "아빠"))
-    private val dashboardPositionRepository = mock(DashboardPositionRepository::class.java)
-    private val marketPriceService = mock(MarketPriceService::class.java)
-    private val dashboardService = DashboardService(dashboardPositionRepository, marketPriceService)
+    private val dashboardPositionQuerydslRepository = mock(DashboardPositionQuerydslRepository::class.java)
+    private val domesticMarketPriceService = mock(DomesticMarketPriceService::class.java)
+    private val dashboardService = DashboardService(dashboardPositionQuerydslRepository, domesticMarketPriceService)
 
     @Test
     fun `대시보드와 소유주와 증권사와 종목 단계의 금액과 종목 비중을 반환한다`() {
@@ -41,12 +40,12 @@ class DashboardServiceTest {
                 stockName = "SK하이닉스",
             ),
         )
-        val marketPricesByItemCode = linkedMapOf(
-            "005930" to marketPrice("005930", "삼성전자", 2_000, MarketSession.REGULAR_MARKET),
-            "000660" to marketPrice("000660", "SK하이닉스", 2_500, MarketSession.REGULAR_MARKET),
+        val marketPricesByStockCode = linkedMapOf(
+            "005930" to marketPrice("005930", "삼성전자", 2_000, DomesticMarketSession.REGULAR_MARKET),
+            "000660" to marketPrice("000660", "SK하이닉스", 2_500, DomesticMarketSession.REGULAR_MARKET),
         )
 
-        val dashboard = getDashboardResponse(positions, marketPricesByItemCode)
+        val dashboard = getDashboardResponse(positions, marketPricesByStockCode)
 
         val owner = dashboard.owner("병민")
         val brokerage = owner.brokerages.single()
@@ -100,10 +99,10 @@ class DashboardServiceTest {
             ),
         )
         val requestedStockCodes = listOf("005930", "000660")
-        val marketPricesByItemCode = mapOf(
-            "005930" to marketPrice("005930", "삼성전자", 1_500, MarketSession.PRE_MARKET),
+        val marketPricesByStockCode = mapOf(
+            "005930" to marketPrice("005930", "삼성전자", 1_500, DomesticMarketSession.PRE_MARKET),
         )
-        prepareDashboard(positions, requestedStockCodes, marketPricesByItemCode)
+        prepareDashboard(positions, requestedStockCodes, marketPricesByStockCode)
 
         val exception = assertFailsWith<BusinessException> {
             dashboardService.getDashboard()
@@ -123,27 +122,27 @@ class DashboardServiceTest {
                 stockName = "SK하이닉스",
             ),
         )
-        val marketPricesByItemCode = linkedMapOf(
+        val marketPricesByStockCode = linkedMapOf(
             "005930" to marketPrice(
                 "005930",
                 "삼성전자",
                 1_500,
-                MarketSession.PRE_MARKET,
+                DomesticMarketSession.PRE_MARKET,
                 "2026-08-14T08:30:00+09:00",
             ),
             "000660" to marketPrice(
                 "000660",
                 "SK하이닉스",
                 2_500,
-                MarketSession.AFTER_MARKET,
+                DomesticMarketSession.AFTER_MARKET,
                 "2026-08-14T18:00:00+09:00",
             ),
         )
 
-        val dashboard = getDashboardResponse(positions, marketPricesByItemCode)
+        val dashboard = getDashboardResponse(positions, marketPricesByStockCode)
 
         assertEquals("2026-08-14T18:00+09:00", dashboard.quoteFetchedAt)
-        assertEquals(MarketSession.AFTER_MARKET, dashboard.valuationSession)
+        assertEquals(DomesticMarketSession.AFTER_MARKET, dashboard.valuationSession)
     }
 
     @Test
@@ -160,11 +159,11 @@ class DashboardServiceTest {
                 brokerage = Brokerage(2, "238", "미래에셋증권"),
             ),
         )
-        val marketPricesByItemCode = mapOf(
-            "005930" to marketPrice("005930", "삼성전자", 1_500, MarketSession.REGULAR_MARKET),
+        val marketPricesByStockCode = mapOf(
+            "005930" to marketPrice("005930", "삼성전자", 1_500, DomesticMarketSession.REGULAR_MARKET),
         )
 
-        val dashboard = getDashboardResponse(positions, marketPricesByItemCode)
+        val dashboard = getDashboardResponse(positions, marketPricesByStockCode)
 
         val owner = dashboard.owner("병민")
         assertEquals(2, owner.brokerages.size)
@@ -179,43 +178,15 @@ class DashboardServiceTest {
     }
 
     @Test
-    fun `증권사 코드 공백을 제거하고 같은 증권사와 종목도 소유주별로 분리한다`() {
-        val positions = listOf(
-            position(
-                quantity = 3,
-                totalBuyAmount = 3_000,
-                brokerage = Brokerage(1, "264   ", "키움증권"),
-            ),
-            position(
-                quantity = 4,
-                totalBuyAmount = 4_000,
-                owner = owners[1],
-                brokerage = Brokerage(1, "264", "키움증권"),
-            ),
-        )
-        val marketPricesByItemCode = mapOf(
-            "005930" to marketPrice("005930", "삼성전자", 1_000, MarketSession.REGULAR_MARKET),
-        )
-
-        val dashboard = getDashboardResponse(positions, marketPricesByItemCode)
-
-        val firstOwnerBrokerage = dashboard.owner("병민").brokerages.single()
-        val secondOwnerBrokerage = dashboard.owner("할머니").brokerages.single()
-        assertEquals("264", firstOwnerBrokerage.brokerageCode)
-        assertEquals(3, firstOwnerBrokerage.stocks.single().quantity)
-        assertEquals(4, secondOwnerBrokerage.stocks.single().quantity)
-    }
-
-    @Test
     fun `영속 포지션의 수량과 총매입액으로 매수평균단가를 반환한다`() {
         val positions = listOf(
             position(quantity = 4, totalBuyAmount = 4_800),
         )
-        val marketPricesByItemCode = mapOf(
-            "005930" to marketPrice("005930", "삼성전자", 1_000, MarketSession.REGULAR_MARKET),
+        val marketPricesByStockCode = mapOf(
+            "005930" to marketPrice("005930", "삼성전자", 1_000, DomesticMarketSession.REGULAR_MARKET),
         )
 
-        val stock = getDashboardResponse(positions, marketPricesByItemCode)
+        val stock = getDashboardResponse(positions, marketPricesByStockCode)
             .owner("병민")
             .brokerages
             .single()
@@ -241,11 +212,11 @@ class DashboardServiceTest {
                 brokerage = Brokerage(3, "279", "DB금융투자"),
             ),
         )
-        val marketPricesByItemCode = mapOf(
-            "005930" to marketPrice("005930", "삼성전자", 1_000, MarketSession.REGULAR_MARKET),
+        val marketPricesByStockCode = mapOf(
+            "005930" to marketPrice("005930", "삼성전자", 1_000, DomesticMarketSession.REGULAR_MARKET),
         )
 
-        val brokerages = getDashboardResponse(positions, marketPricesByItemCode)
+        val brokerages = getDashboardResponse(positions, marketPricesByStockCode)
             .owner("병민")
             .brokerages
 
@@ -255,22 +226,23 @@ class DashboardServiceTest {
 
     private fun getDashboardResponse(
         positions: List<DashboardPosition>,
-        marketPricesByItemCode: Map<String, MarketPriceDto>,
-        requestedStockCodes: List<String> = marketPricesByItemCode.keys.toList(),
+        marketPricesByStockCode: Map<String, MarketPriceDto>,
+        requestedStockCodes: List<String> = marketPricesByStockCode.keys.toList(),
     ): DashboardResponseDto {
-        prepareDashboard(positions, requestedStockCodes, marketPricesByItemCode)
+        prepareDashboard(positions, requestedStockCodes, marketPricesByStockCode)
         val dashboard = dashboardService.getDashboard().data
-        verify(marketPriceService).getMarketPrices(requestedStockCodes)
+        verify(domesticMarketPriceService).getMarketPrices(MarketStockCodesDto(requestedStockCodes))
         return dashboard
     }
 
     private fun prepareDashboard(
         positions: List<DashboardPosition>,
         requestedStockCodes: List<String>,
-        marketPricesByItemCode: Map<String, MarketPriceDto>,
+        marketPricesByStockCode: Map<String, MarketPriceDto>,
     ) {
-        `when`(dashboardPositionRepository.findAll()).thenReturn(positions)
-        `when`(marketPriceService.getMarketPrices(requestedStockCodes)).thenReturn(marketPricesByItemCode)
+        `when`(dashboardPositionQuerydslRepository.findAll()).thenReturn(positions)
+        `when`(domesticMarketPriceService.getMarketPrices(MarketStockCodesDto(requestedStockCodes)))
+            .thenReturn(marketPricesByStockCode)
     }
 
     private fun position(
@@ -294,15 +266,14 @@ class DashboardServiceTest {
         stockCode: String,
         stockName: String,
         price: Long,
-        session: MarketSession,
+        session: DomesticMarketSession,
         localTradedAt: String = "2026-08-14T10:00:00+09:00",
     ): MarketPriceDto {
         return MarketPriceDto(
-            itemCode = stockCode,
+            stockCode = stockCode,
             localTradedAt = OffsetDateTime.parse(localTradedAt),
-            marketStatus = "장중",
             price = price,
-            session = session,
+            marketSession = session,
             stockName = stockName,
         )
     }

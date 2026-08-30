@@ -1,8 +1,9 @@
 package kr.byeongmin.stockdaejang.domain.dashboard.dto
 
 import io.swagger.v3.oas.annotations.media.Schema
-import kr.byeongmin.stockdaejang.domain.stock.provider.MarketSession
-import kr.byeongmin.stockdaejang.global.util.sumOfDecimal
+import kr.byeongmin.stockdaejang.domain.common.util.sumOfDecimal
+import kr.byeongmin.stockdaejang.domain.stock.enums.DomesticMarketSession
+import kr.byeongmin.stockdaejang.domain.stock.enums.MarketSession
 import java.math.BigDecimal
 
 @Schema(
@@ -54,7 +55,7 @@ data class DashboardResponseDto(
         description = "평가에 적용한 가장 최근 현재가의 장 구분. 보유 종목이 없으면 null",
         example = "REGULAR_MARKET",
         nullable = true,
-        implementation = MarketSession::class,
+        implementation = DomesticMarketSession::class,
     )
     val valuationSession: MarketSession?,
 ) {
@@ -71,15 +72,9 @@ data class DashboardResponseDto(
             return DashboardResponseDto(
                 stockCount = stockCount,
                 checkedStockCount = stockCount,
-                totalBuyAmount = stocks.sumOfDecimal(
-                    DASHBOARD_MATH_CONTEXT,
-                    DashboardStockResponseDto::totalBuyAmount,
-                ),
-                valuation = stocks.sumOfDecimal(DASHBOARD_MATH_CONTEXT, DashboardStockResponseDto::valuation),
-                unrealizedProfit = stocks.sumOfDecimal(
-                    DASHBOARD_MATH_CONTEXT,
-                    DashboardStockResponseDto::unrealizedProfit,
-                ),
+                totalBuyAmount = stocks.sumOfDecimal(selector = DashboardStockResponseDto::totalBuyAmount),
+                valuation = stocks.sumOfDecimal(selector = DashboardStockResponseDto::valuation),
+                unrealizedProfit = stocks.sumOfDecimal(selector = DashboardStockResponseDto::unrealizedProfit),
                 owners = owners,
                 quoteFetchedAt = quoteFetchedAt,
                 valuationSession = valuationSession,

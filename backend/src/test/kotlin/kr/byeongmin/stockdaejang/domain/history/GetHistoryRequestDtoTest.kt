@@ -1,7 +1,7 @@
 package kr.byeongmin.stockdaejang.domain.history
 
 import kr.byeongmin.stockdaejang.domain.history.dto.GetHistoryRequestDto
-import kr.byeongmin.stockdaejang.domain.trade.entity.TradeType
+import kr.byeongmin.stockdaejang.domain.trade.enums.TradeType
 import org.junit.jupiter.api.Test
 import java.time.OffsetDateTime
 import kotlin.test.assertEquals

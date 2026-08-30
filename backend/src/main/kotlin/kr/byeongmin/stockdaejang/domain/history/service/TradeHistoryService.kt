@@ -3,8 +3,9 @@ package kr.byeongmin.stockdaejang.domain.history.service
 import kr.byeongmin.stockdaejang.domain.history.dto.GetHistoryRequestDto
 import kr.byeongmin.stockdaejang.domain.history.dto.TradeHistoryResponseDto
 import kr.byeongmin.stockdaejang.domain.history.dto.TradeHistoryRowResponseDto
-import kr.byeongmin.stockdaejang.domain.history.repository.HistoryRepository
+import kr.byeongmin.stockdaejang.domain.history.repository.HistoryQuerydslRepository
 import kr.byeongmin.stockdaejang.domain.trade.entity.Trade
+import kr.byeongmin.stockdaejang.domain.trade.repository.TradeRepository
 import kr.byeongmin.stockdaejang.global.response.SuccessDataResponse
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
@@ -15,11 +16,12 @@ import kotlin.math.ceil
 
 @Service
 class TradeHistoryService(
-    private val historyRepository: HistoryRepository,
+    private val historyQuerydslRepository: HistoryQuerydslRepository,
+    private val tradeRepository: TradeRepository,
 ) {
     @Transactional(readOnly = true)
     fun getHistory(getHistoryRequestDto: GetHistoryRequestDto): SuccessDataResponse<TradeHistoryResponseDto> {
-        val totalMatchedCount = historyRepository.count(
+        val totalMatchedCount = historyQuerydslRepository.count(
             getHistoryRequestDto.side,
             getHistoryRequestDto.stockNameOrCode,
             getHistoryRequestDto.from,
@@ -27,7 +29,7 @@ class TradeHistoryService(
             getHistoryRequestDto.ownerId,
             getHistoryRequestDto.brokerageCode,
         )
-        val totalCount = historyRepository.countAll(getHistoryRequestDto.side)
+        val totalCount = tradeRepository.countBySide(getHistoryRequestDto.side)
 
         val tradeHistoryPage = getTradeHistoryPages(getHistoryRequestDto, totalMatchedCount)
         val tradeHistoryRows = tradeHistoryPage.content.map(TradeHistoryRowResponseDto::from)
@@ -53,7 +55,7 @@ class TradeHistoryService(
         val currentPage = getHistoryRequestDto.page.coerceIn(1, totalPageCount)
         val pageable = PageRequest.of(currentPage - 1, pageSize)
 
-        val content = historyRepository.findPage(
+        val content = historyQuerydslRepository.findPage(
             getHistoryRequestDto.side,
             getHistoryRequestDto.stockNameOrCode,
             getHistoryRequestDto.from,

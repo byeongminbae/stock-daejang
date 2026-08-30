@@ -135,7 +135,6 @@ class StockDaejangApplicationTests {
             "OwnerResponseDto",
             "StockSearchItemResponseDto",
             "DeleteTradesRequestDto",
-            "DeleteTradesResponseDto",
             "PositionAverageResponseDto",
             "TradeIdResponseDto",
             "TradePreviewRequestDto",
@@ -200,21 +199,18 @@ class StockDaejangApplicationTests {
 
         val tradeRequest = schemas.path("TradeRequestDto")
         assertEquals("2026-08-20T09:30:00+09:00", tradeRequest.path("properties").path("executedAt").path("example").asString())
-        assertEquals("005930", tradeRequest.path("properties").path("itemCode").path("example").asString())
-        assertEquals("10", tradeRequest.path("properties").path("quantity").path("example").asString())
-        val intQuantityPattern = "^(?:[1-9][0-9]{0,8}|1[0-9]{9}|20[0-9]{8}|21[0-3][0-9]{7}|214[0-6][0-9]{6}|2147[0-3][0-9]{5}|21474[0-7][0-9]{4}|214748[0-2][0-9]{3}|2147483[0-5][0-9]{2}|21474836[0-3][0-9]|214748364[0-7])$"
+        assertEquals("005930", tradeRequest.path("properties").path("stockCode").path("example").asString())
+        assertEquals(10, tradeRequest.path("properties").path("quantity").path("example").asInt())
         listOf("UpdateTradeRequestDto", "TradePreviewRequestDto").forEach { requestSchemaName ->
             val quantity = schemas.path(requestSchemaName).path("properties").path("quantity")
-            assertEquals("거래 수량. 1 이상 2147483647 이하의 정수 문자열", quantity.path("description").asString())
-            assertEquals(10, quantity.path("maxLength").asInt())
-            assertEquals(intQuantityPattern, quantity.path("pattern").asString())
+            assertEquals("거래 수량. 1 이상 2147483647 이하의 정수", quantity.path("description").asString())
+            assertEquals("integer", quantity.path("type").asString())
         }
-        assertEquals("거래 수량. 1 이상 2147483647 이하의 정수 문자열", tradeRequest.path("properties").path("quantity").path("description").asString())
-        assertEquals(10, tradeRequest.path("properties").path("quantity").path("maxLength").asInt())
-        assertEquals(intQuantityPattern, tradeRequest.path("properties").path("quantity").path("pattern").asString())
+        assertEquals("거래 수량. 1 이상 2147483647 이하의 정수", tradeRequest.path("properties").path("quantity").path("description").asString())
+        assertEquals("integer", tradeRequest.path("properties").path("quantity").path("type").asString())
         val requiredTradeFields = tradeRequest.path("required").values().map { it.asString() }.toSet()
         assertEquals(
-            setOf("brokerageCode", "executedAt", "isEtf", "itemCode", "market", "ownerId", "quantity", "stockName", "side", "unitPrice"),
+            setOf("brokerageCode", "executedAt", "isEtf", "stockCode", "market", "ownerId", "quantity", "stockName", "side", "unitPrice"),
             requiredTradeFields,
         )
 

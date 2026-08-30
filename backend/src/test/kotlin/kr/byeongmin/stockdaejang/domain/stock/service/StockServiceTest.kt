@@ -1,10 +1,8 @@
 package kr.byeongmin.stockdaejang.domain.stock.service
 
-import kr.byeongmin.stockdaejang.domain.stock.dto.StockSearchResultDto
 import kr.byeongmin.stockdaejang.domain.stock.provider.StockSearchProvider
-import kr.byeongmin.stockdaejang.global.exception.BusinessException
+import kr.byeongmin.stockdaejang.external.naver.dto.StockSearchResultDto
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
 
 class StockServiceTest {
@@ -26,20 +24,7 @@ class StockServiceTest {
         val response = service.searchStocks("  삼성  ")
 
         assertEquals("삼성", providerQuery)
-        assertEquals(listOf("005930"), response.body?.data?.map { it.code })
-    }
-
-    @Test
-    fun `does not request one-character queries and rejects queries over eighty characters`() {
-        var invocationCount = 0
-        val service = StockService(StockSearchProvider {
-            invocationCount += 1
-            emptyList()
-        })
-
-        assertEquals(emptyList(), service.searchStocks(" 삼 ").body?.data)
-        assertThrows<BusinessException> { service.searchStocks("가".repeat(81)) }
-        assertEquals(0, invocationCount)
+        assertEquals(listOf("005930"), response.data.map { it.code })
     }
 
     private fun result(

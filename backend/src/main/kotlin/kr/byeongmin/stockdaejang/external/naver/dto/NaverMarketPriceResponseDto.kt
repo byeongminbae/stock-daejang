@@ -20,7 +20,7 @@ internal data class NaverMarketPriceResponseDto(
     internal data class ItemDto(
         @JsonProperty("closePriceRaw") val closePriceRaw: String,
 
-        @JsonProperty("itemCode") val itemCode: String,
+        @JsonProperty("itemCode") val stockCode: String,
 
         @JsonFormat(without = [JsonFormat.Feature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE])
         @JsonProperty("localTradedAt") val localTradedAt: OffsetDateTime,

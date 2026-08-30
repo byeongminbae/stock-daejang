@@ -5,7 +5,7 @@ import ch.qos.logback.classic.Logger
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.read.ListAppender
 import com.sun.net.httpserver.HttpServer
-import kr.byeongmin.stockdaejang.domain.stock.provider.MarketSession
+import kr.byeongmin.stockdaejang.domain.stock.enums.DomesticMarketSession
 import kr.byeongmin.stockdaejang.external.naver.config.NaverRestClientConfig
 import kr.byeongmin.stockdaejang.global.error.CommonError
 import kr.byeongmin.stockdaejang.global.exception.BusinessException
@@ -22,8 +22,8 @@ import org.springframework.test.web.client.ExpectedCount
 import org.springframework.test.web.client.MockRestServiceServer
 import org.springframework.test.web.client.match.MockRestRequestMatchers.method
 import org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo
-import org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess
 import org.springframework.test.web.client.response.MockRestResponseCreators.withStatus
+import org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess
 import org.springframework.web.client.RestClient
 import org.springframework.web.util.UriComponentsBuilder
 import java.io.IOException
@@ -77,14 +77,14 @@ class NaverStockProviderTest {
         assertEquals(4, snapshots.size)
         assertEquals(240000, snapshots[0].regularPrice)
         assertEquals(239000, snapshots[0].overPrice)
-        assertEquals(MarketSession.REGULAR_MARKET, snapshots[0].session)
+        assertEquals(DomesticMarketSession.REGULAR_MARKET, snapshots[0].marketSession)
         assertEquals(234500, snapshots[1].overPrice)
-        assertEquals(MarketSession.PRE_MARKET, snapshots[1].session)
+        assertEquals(DomesticMarketSession.PRE_MARKET, snapshots[1].marketSession)
         assertEquals(178500, snapshots[2].overPrice)
-        assertEquals(MarketSession.AFTER_MARKET, snapshots[2].session)
+        assertEquals(DomesticMarketSession.AFTER_MARKET, snapshots[2].marketSession)
         assertEquals(255500, snapshots[3].regularPrice)
         assertEquals(999999, snapshots[3].overPrice)
-        assertEquals(MarketSession.PREOPEN, snapshots[3].session)
+        assertEquals(DomesticMarketSession.PREOPEN, snapshots[3].marketSession)
         fixture.server.verify()
     }
 
@@ -96,14 +96,14 @@ class NaverStockProviderTest {
 
         val snapshot = fixture.provider.fetchMarketPrices(listOf("005930")).single()
 
-        assertEquals(MarketSession.REGULAR_MARKET, snapshot.session)
+        assertEquals(DomesticMarketSession.REGULAR_MARKET, snapshot.marketSession)
         assertNull(snapshot.overPrice)
         assertNull(snapshot.overTradedAt)
         fixture.server.verify()
     }
 
     @Test
-    fun `turns invalid payload prices and sessions into the typed external API error`() {
+    fun `turns invalid payload prices and sessions into the typed response field error`() {
         val invalidPriceFixture = Fixture()
         invalidPriceFixture.server.expect(requestTo(invalidPriceFixture.marketPriceUri("005930")))
             .andRespond(withSuccess(regularPriceResponse("invalid"), MediaType.APPLICATION_JSON))
@@ -112,7 +112,7 @@ class NaverStockProviderTest {
             invalidPriceFixture.provider.fetchMarketPrices(listOf("005930"))
         }
 
-        assertEquals("EXT_000", invalidPrice.errorType.statusCode)
+        assertEquals("EXT_001", invalidPrice.errorType.statusCode)
         invalidPriceFixture.server.verify()
 
         val invalidSessionFixture = Fixture()
@@ -123,8 +123,50 @@ class NaverStockProviderTest {
             invalidSessionFixture.provider.fetchMarketPrices(listOf("005930"))
         }
 
-        assertEquals("EXT_000", invalidSession.errorType.statusCode)
+        assertEquals("EXT_001", invalidSession.errorType.statusCode)
         invalidSessionFixture.server.verify()
+    }
+
+    @Test
+    fun `rejects a non-positive price as a response field error`() {
+        val fixture = Fixture()
+        fixture.server.expect(requestTo(fixture.marketPriceUri("005930")))
+            .andRespond(withSuccess(regularPriceResponse("0"), MediaType.APPLICATION_JSON))
+
+        val exception = assertThrows<BusinessException> {
+            fixture.provider.fetchMarketPrices(listOf("005930"))
+        }
+
+        assertEquals(CommonError.EXTERNAL_API_RESPONSE_FIELD_ERROR, exception.errorType)
+        fixture.server.verify()
+    }
+
+    @Test
+    fun `rejects a market-price response that omits a requested item code`() {
+        val fixture = Fixture()
+        fixture.server.expect(requestTo(fixture.marketPriceUri("005930,000660")))
+            .andRespond(withSuccess(regularPriceResponse(), MediaType.APPLICATION_JSON))
+
+        val exception = assertThrows<BusinessException> {
+            fixture.provider.fetchMarketPrices(listOf("005930", "000660"))
+        }
+
+        assertEquals(CommonError.EXTERNAL_API_RESPONSE_FIELD_ERROR, exception.errorType)
+        fixture.server.verify()
+    }
+
+    @Test
+    fun `rejects a market-price response containing an unrequested item code`() {
+        val fixture = Fixture()
+        fixture.server.expect(requestTo(fixture.marketPriceUri("000660")))
+            .andRespond(withSuccess(regularPriceResponse(), MediaType.APPLICATION_JSON))
+
+        val exception = assertThrows<BusinessException> {
+            fixture.provider.fetchMarketPrices(listOf("000660"))
+        }
+
+        assertEquals(CommonError.EXTERNAL_API_RESPONSE_FIELD_ERROR, exception.errorType)
+        fixture.server.verify()
     }
 
     @Test
@@ -156,8 +198,8 @@ class NaverStockProviderTest {
         assertTrue(
             logCapture.events.any { event ->
                 event.formattedMessage.contains("method=GET") &&
-                    event.formattedMessage.contains("status=500") &&
-                    event.formattedMessage.contains("temporary outage")
+                        event.formattedMessage.contains("status=500") &&
+                        event.formattedMessage.contains("temporary outage")
             },
         )
         fixture.server.verify()
@@ -204,7 +246,7 @@ class NaverStockProviderTest {
             assertTrue(
                 logCapture.events.any { event ->
                     event.formattedMessage.contains("Naver request failed: operation=search") &&
-                        event.throwableProxy != null
+                            event.throwableProxy != null
                 },
             )
         } finally {
@@ -225,14 +267,14 @@ class NaverStockProviderTest {
     }
 
     @Test
-    fun `turns Naver vendor failure envelopes into the typed external API error`() {
+    fun `turns Naver vendor failure envelopes into the typed response field error`() {
         val fixture = Fixture()
         fixture.server.expect(requestTo(fixture.searchUri("삼성")))
             .andRespond(withSuccess("{\"isSuccess\":false,\"result\":{\"items\":[]}}", MediaType.APPLICATION_JSON))
 
         val exception = assertThrows<BusinessException> { fixture.provider.search("삼성") }
 
-        assertEquals(CommonError.EXTERNAL_API_ERROR, exception.errorType)
+        assertEquals(CommonError.EXTERNAL_API_RESPONSE_FIELD_ERROR, exception.errorType)
         fixture.server.verify()
     }
 
@@ -252,10 +294,10 @@ class NaverStockProviderTest {
                 .toUri()
         }
 
-        fun marketPriceUri(itemCodes: String): java.net.URI {
+        fun marketPriceUri(stockCodes: String): java.net.URI {
             return UriComponentsBuilder.fromUriString("$BASE_URL/realTime/marketPrice")
                 .queryParam("endType", "stock")
-                .queryParam("itemCodes", itemCodes)
+                .queryParam("itemCodes", stockCodes)
                 .queryParam("stockType", "domestic")
                 .build()
                 .encode()
@@ -283,10 +325,47 @@ class NaverStockProviderTest {
         fun marketPriceResponse(): String {
             return """
                 {"isSuccess":true,"result":{"datas":[
-                  ${priceItem("005930", "240000", "2026-08-12T10:00:00+09:00", "239,000", "2026-08-12T10:00:00+09:00", "REGULAR_MARKET")},
-                  ${priceItem("000660", "230000", "2026-08-11T15:30:00+09:00", "234,500", "2026-08-12T08:20:00+09:00", "PRE_MARKET")},
-                  ${priceItem("035420", "175000", "2026-08-12T15:30:00+09:00", "178,500", "2026-08-12T19:45:00+09:00", "AFTER_MARKET")},
-                  ${priceItem("051910", "255500", "2026-08-11T15:30:00+09:00", "999,999", "2026-08-12T07:32:54+09:00", "", "PREOPEN")}
+                  ${
+                priceItem(
+                    "005930",
+                    "240000",
+                    "2026-08-12T10:00:00+09:00",
+                    "239,000",
+                    "2026-08-12T10:00:00+09:00",
+                    "REGULAR_MARKET"
+                )
+            },
+                  ${
+                priceItem(
+                    "000660",
+                    "230000",
+                    "2026-08-11T15:30:00+09:00",
+                    "234,500",
+                    "2026-08-12T08:20:00+09:00",
+                    "PRE_MARKET"
+                )
+            },
+                  ${
+                priceItem(
+                    "035420",
+                    "175000",
+                    "2026-08-12T15:30:00+09:00",
+                    "178,500",
+                    "2026-08-12T19:45:00+09:00",
+                    "AFTER_MARKET"
+                )
+            },
+                  ${
+                priceItem(
+                    "051910",
+                    "255500",
+                    "2026-08-11T15:30:00+09:00",
+                    "999,999",
+                    "2026-08-12T07:32:54+09:00",
+                    "",
+                    "PREOPEN"
+                )
+            }
                 ]}}
             """.trimIndent()
         }
@@ -303,13 +382,22 @@ class NaverStockProviderTest {
         fun unknownSessionResponse(): String {
             return """
                 {"isSuccess":true,"result":{"datas":[
-                  ${priceItem("005930", "255500", "2026-08-11T15:30:00+09:00", "258000", "2026-08-11T20:00:00+09:00", "UNKNOWN")}
+                  ${
+                priceItem(
+                    "005930",
+                    "255500",
+                    "2026-08-11T15:30:00+09:00",
+                    "258000",
+                    "2026-08-11T20:00:00+09:00",
+                    "UNKNOWN"
+                )
+            }
                 ]}}
             """.trimIndent()
         }
 
         fun priceItem(
-            itemCode: String,
+            stockCode: String,
             regularPrice: String,
             regularAt: String,
             overPrice: String,
@@ -319,7 +407,7 @@ class NaverStockProviderTest {
         ): String {
             val overMarketStatus = status?.let { "\"overMarketStatus\":\"$it\"," } ?: ""
             return """{
-              "closePriceRaw":"$regularPrice","itemCode":"$itemCode","localTradedAt":"$regularAt",
+              "closePriceRaw":"$regularPrice","itemCode":"$stockCode","localTradedAt":"$regularAt",
               "marketStatus":"CLOSE","stockName":"종목","overMarketPriceInfo":{
                 "localTradedAt":"$overAt",$overMarketStatus"overPrice":"$overPrice","tradingSessionType":"$session"
               }

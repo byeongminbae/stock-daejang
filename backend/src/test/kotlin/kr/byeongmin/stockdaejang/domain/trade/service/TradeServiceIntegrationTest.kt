@@ -5,13 +5,11 @@ import kr.byeongmin.stockdaejang.domain.brokerage.entity.QBrokerage.brokerage
 import kr.byeongmin.stockdaejang.domain.dashboard.entity.QDashboardPosition.dashboardPosition
 import kr.byeongmin.stockdaejang.domain.owner.entity.QOwner.owner
 import kr.byeongmin.stockdaejang.domain.stock.entity.QStock.stock
-import kr.byeongmin.stockdaejang.domain.trade.dto.DeleteTradesRequestDto
-import kr.byeongmin.stockdaejang.domain.trade.dto.TradeRequestDto
-import kr.byeongmin.stockdaejang.domain.trade.dto.TradePreviewRequestDto
-import kr.byeongmin.stockdaejang.domain.trade.dto.UpdateTradeRequestDto
-import kr.byeongmin.stockdaejang.domain.trade.error.TradeError
-import kr.byeongmin.stockdaejang.global.error.CommonError
+import kr.byeongmin.stockdaejang.domain.trade.dto.*
 import kr.byeongmin.stockdaejang.domain.trade.entity.QTrade.trade
+import kr.byeongmin.stockdaejang.domain.trade.enums.TradeError
+import kr.byeongmin.stockdaejang.domain.trade.enums.TradeType
+import kr.byeongmin.stockdaejang.global.error.CommonError
 import kr.byeongmin.stockdaejang.global.exception.BusinessException
 import kr.byeongmin.stockdaejang.support.QueryDslTestData
 import org.junit.jupiter.api.BeforeEach
@@ -49,10 +47,10 @@ class TradeServiceIntegrationTest {
 
     @Test
     fun `과거 매수를 수정하면 후속 매도 손익이 재계산되고 원장을 깨는 삭제는 롤백된다`() {
-        val firstBuy = tradeService.createTrade(trade(quantity = "3", unitPrice = "100", executedAt = "2026-08-01T10:00"))
-        val secondBuy = tradeService.createTrade(trade(quantity = "2", unitPrice = "200", executedAt = "2026-08-01T11:00"))
+        val firstBuy = tradeService.createTrade(trade(quantity = 3, unitPrice = 100, executedAt = "2026-08-01T10:00"))
+        val secondBuy = tradeService.createTrade(trade(quantity = 2, unitPrice = 200, executedAt = "2026-08-01T11:00"))
         val sell = tradeService.createTrade(
-            trade(side = "SELL", quantity = "2", unitPrice = "200", executedAt = "2026-08-02T10:00"),
+            trade(side = TradeType.SELL, quantity = 2, unitPrice = 200, executedAt = "2026-08-02T10:00"),
         )
         assertEquals("120", realizedProfit(sell.data.id))
         assertPosition(quantity = 3, totalBuyAmount = 420)
@@ -60,29 +58,34 @@ class TradeServiceIntegrationTest {
         tradeService.updateTrade(
             update(
                 id = secondBuy.data.id,
-                quantity = "2",
-                unitPrice = "300",
+                quantity = 2,
+                unitPrice = 300,
                 executedAt = "2026-08-01T11:00",
             ),
         )
         assertEquals("40", realizedProfit(sell.data.id))
         assertPosition(quantity = 3, totalBuyAmount = 540)
-        assertEquals("3", tradeService.getPositionAverage(1, "264", "TST001").data.heldQuantity)
+        assertEquals("3", tradeService.getPositionAverage(positionQuery()).data.heldQuantity)
         assertEquals(
             "보유 수량 3주를 초과할 수 없습니다.",
-            tradeService.previewTrade(preview(quantity = "4")).data.quantityError,
+            tradeService.previewTrade(preview(quantity = 4)).data.quantityError,
         )
-        val validPreview = tradeService.previewTrade(preview(quantity = "2"))
+        val validPreview = tradeService.previewTrade(preview(quantity = 2))
         assertEquals("400", validPreview.data.amount)
         assertEquals("40", validPreview.data.expectedProfit)
         assertEquals(null, validPreview.data.quantityError)
         assertEquals(
-            "선택한 증권사에 보유 수량이\u00a0없습니다.",
-            tradeService.previewTrade(preview(quantity = "1", itemCode = "TST002")).data.quantityError,
+            "선택한 증권사에 보유 수량이 없습니다.",
+            tradeService.previewTrade(preview(quantity = 1, stockCode = "TST002")).data.quantityError,
         )
 
         val exception = assertThrows<BusinessException> {
-            tradeService.deleteTrades(DeleteTradesRequestDto(listOf(firstBuy.data.id, secondBuy.data.id), "BUY"))
+            tradeService.deleteTrades(
+                DeleteTradesRequestDto(
+                    listOf(firstBuy.data.id, secondBuy.data.id),
+                    TradeType.BUY
+                )
+            )
         }
         assertEquals(TradeError.INSUFFICIENT_HOLDING, exception.errorType)
         assertEquals(
@@ -96,66 +99,78 @@ class TradeServiceIntegrationTest {
 
     @Test
     fun `다른 증권사에만 보유한 종목은 매도할 수 없고 선택한 증권사 원가로 손익을 계산한다`() {
-        tradeService.createTrade(trade(quantity = "2", unitPrice = "100", executedAt = "2026-08-01T10:00"))
+        tradeService.createTrade(trade(quantity = 2, unitPrice = 100, executedAt = "2026-08-01T10:00"))
 
         val exception = assertThrows<BusinessException> {
             tradeService.createTrade(
-                trade(side = "SELL", quantity = "1", unitPrice = "200", executedAt = "2026-08-02T10:00", brokerageCode = "238"),
+                trade(
+                    side = TradeType.SELL,
+                    quantity = 1,
+                    unitPrice = 200,
+                    executedAt = "2026-08-02T10:00",
+                    brokerageCode = "238"
+                ),
             )
         }
         assertEquals(TradeError.INSUFFICIENT_HOLDING, exception.errorType)
         assertEquals(1L, tradeCount())
 
         tradeService.createTrade(
-            trade(quantity = "2", unitPrice = "50", executedAt = "2026-08-01T11:00", brokerageCode = "238"),
+            trade(quantity = 2, unitPrice = 50, executedAt = "2026-08-01T11:00", brokerageCode = "238"),
         )
         val sell = tradeService.createTrade(
-            trade(side = "SELL", quantity = "1", unitPrice = "200", executedAt = "2026-08-02T10:00", brokerageCode = "238"),
+            trade(
+                side = TradeType.SELL,
+                quantity = 1,
+                unitPrice = 200,
+                executedAt = "2026-08-02T10:00",
+                brokerageCode = "238"
+            ),
         )
 
         assertEquals("150", realizedProfit(sell.data.id))
-        assertEquals("2", tradeService.getPositionAverage(1, "264", "TST001").data.heldQuantity)
-        assertEquals("1", tradeService.getPositionAverage(1, "238", "TST001").data.heldQuantity)
+        assertEquals("2", tradeService.getPositionAverage(positionQuery()).data.heldQuantity)
+        assertEquals("1", tradeService.getPositionAverage(positionQuery(brokerageCode = "238")).data.heldQuantity)
     }
 
     @Test
     fun `매도를 소유주 종목 증권사까지 옮기면 양쪽 원장을 재생하고 대상 보유가 없으면 롤백한다`() {
-        tradeService.createTrade(trade(quantity = "2", unitPrice = "100", executedAt = "2026-08-01T10:00"))
+        tradeService.createTrade(trade(quantity = 2, unitPrice = 100, executedAt = "2026-08-01T10:00"))
         val movableSell = tradeService.createTrade(
-            trade(side = "SELL", quantity = "1", unitPrice = "200", executedAt = "2026-08-02T10:00"),
+            trade(side = TradeType.SELL, quantity = 1, unitPrice = 200, executedAt = "2026-08-02T10:00"),
         )
         tradeService.createTrade(
             trade(
-                quantity = "2",
-                unitPrice = "50",
+                quantity = 2,
+                unitPrice = 50,
                 executedAt = "2026-08-01T09:00",
                 ownerId = 2,
                 brokerageCode = "238",
-                itemCode = "TST002",
+                stockCode = "TST002",
             ),
         )
 
         tradeService.updateTrade(
             update(
                 id = movableSell.data.id,
-                side = "SELL",
-                quantity = "1",
-                unitPrice = "100",
+                side = TradeType.SELL,
+                quantity = 1,
+                unitPrice = 100,
                 executedAt = "2026-08-02T10:00",
                 ownerId = 2,
                 brokerageCode = "238",
-                itemCode = "TST002",
+                stockCode = "TST002",
             ),
         )
 
-        assertEquals("2", tradeService.getPositionAverage(1, "264", "TST001").data.heldQuantity)
-        assertEquals("1", tradeService.getPositionAverage(2, "238", "TST002").data.heldQuantity)
+        assertEquals("2", tradeService.getPositionAverage(positionQuery()).data.heldQuantity)
+        assertEquals("1", tradeService.getPositionAverage(positionQuery(2, "238", "TST002")).data.heldQuantity)
         assertEquals("50", realizedProfit(movableSell.data.id))
         assertPosition(quantity = 2, totalBuyAmount = 200)
         assertPosition(
             ownerId = 2,
             brokerageCode = "238",
-            itemCode = "TST002",
+            stockCode = "TST002",
             quantity = 1,
             totalBuyAmount = 50,
         )
@@ -164,21 +179,21 @@ class TradeServiceIntegrationTest {
             tradeService.updateTrade(
                 update(
                     id = movableSell.data.id,
-                    side = "SELL",
-                    quantity = "1",
-                    unitPrice = "100",
+                    side = TradeType.SELL,
+                    quantity = 1,
+                    unitPrice = 100,
                     executedAt = "2026-08-02T10:00",
                     ownerId = 3,
                     brokerageCode = "218",
-                    itemCode = "TST003",
+                    stockCode = "TST003",
                 ),
             )
         }
 
         assertEquals(TradeError.INSUFFICIENT_HOLDING, exception.errorType)
         assertEquals(3L, tradeCount())
-        assertEquals("2", tradeService.getPositionAverage(1, "264", "TST001").data.heldQuantity)
-        assertEquals("1", tradeService.getPositionAverage(2, "238", "TST002").data.heldQuantity)
+        assertEquals("2", tradeService.getPositionAverage(positionQuery()).data.heldQuantity)
+        assertEquals("1", tradeService.getPositionAverage(positionQuery(2, "238", "TST002")).data.heldQuantity)
         assertEquals(
             2L,
             queryFactory.select(owner.id)
@@ -189,7 +204,7 @@ class TradeServiceIntegrationTest {
         )
         assertEquals(
             "TST002",
-            queryFactory.select(stock.itemCode)
+            queryFactory.select(stock.stockCode)
                 .from(trade)
                 .join(trade.stock, stock)
                 .where(trade.id.eq(movableSell.data.id.toLong()))
@@ -209,7 +224,7 @@ class TradeServiceIntegrationTest {
         assertPosition(
             ownerId = 2,
             brokerageCode = "238",
-            itemCode = "TST002",
+            stockCode = "TST002",
             quantity = 1,
             totalBuyAmount = 50,
         )
@@ -217,54 +232,65 @@ class TradeServiceIntegrationTest {
 
     @Test
     fun `여러 거래 삭제는 함께 성공하고 반대 매도 요청은 어떤 거래도 삭제하지 않는다`() {
-        val firstBuy = tradeService.createTrade(trade(quantity = "1", unitPrice = "100", executedAt = "2026-08-01T10:00"))
-        val secondBuy = tradeService.createTrade(trade(quantity = "1", unitPrice = "200", executedAt = "2026-08-01T11:00"))
+        val firstBuy = tradeService.createTrade(trade(quantity = 1, unitPrice = 100, executedAt = "2026-08-01T10:00"))
+        val secondBuy = tradeService.createTrade(trade(quantity = 1, unitPrice = 200, executedAt = "2026-08-01T11:00"))
 
-        val deleted = tradeService.deleteTrades(DeleteTradesRequestDto(listOf(firstBuy.data.id, secondBuy.data.id), "BUY"))
+        tradeService.deleteTrades(
+            DeleteTradesRequestDto(
+                listOf(firstBuy.data.id, secondBuy.data.id),
+                TradeType.BUY
+            )
+        )
 
-        assertEquals(2, deleted.data.deletedCount)
         assertEquals(0L, tradeCount())
         assertNull(position())
 
-        val buy = tradeService.createTrade(trade(quantity = "2", unitPrice = "100", executedAt = "2026-08-03T10:00"))
-        val sell = tradeService.createTrade(trade(side = "SELL", quantity = "1", unitPrice = "200", executedAt = "2026-08-04T10:00"))
+        val buy = tradeService.createTrade(trade(quantity = 2, unitPrice = 100, executedAt = "2026-08-03T10:00"))
+        val sell = tradeService.createTrade(
+            trade(
+                side = TradeType.SELL,
+                quantity = 1,
+                unitPrice = 200,
+                executedAt = "2026-08-04T10:00"
+            )
+        )
         val exception = assertThrows<BusinessException> {
-            tradeService.deleteTrades(DeleteTradesRequestDto(listOf(buy.data.id, sell.data.id), "SELL"))
+            tradeService.deleteTrades(DeleteTradesRequestDto(listOf(buy.data.id, sell.data.id), TradeType.SELL))
         }
 
         assertEquals(CommonError.RESOURCE_NOT_FOUND, exception.errorType)
         assertEquals(2L, tradeCount())
         assertEquals("100", realizedProfit(sell.data.id))
-        assertEquals("1", tradeService.getPositionAverage(1, "264", "TST001").data.heldQuantity)
+        assertEquals("1", tradeService.getPositionAverage(positionQuery()).data.heldQuantity)
         assertPosition(quantity = 1, totalBuyAmount = 100)
     }
 
     @Test
     fun `전량 매도와 재매수와 수정 삭제마다 대시보드 포지션을 갱신한다`() {
-        tradeService.createTrade(trade(quantity = "10", unitPrice = "100", executedAt = "2026-08-01T10:00"))
+        tradeService.createTrade(trade(quantity = 10, unitPrice = 100, executedAt = "2026-08-01T10:00"))
         assertPosition(quantity = 10, totalBuyAmount = 1_000)
 
         tradeService.createTrade(
-            trade(side = "SELL", quantity = "10", unitPrice = "100", executedAt = "2026-08-02T10:00"),
+            trade(side = TradeType.SELL, quantity = 10, unitPrice = 100, executedAt = "2026-08-02T10:00"),
         )
         assertNull(position())
 
         val newBuy = tradeService.createTrade(
-            trade(quantity = "10", unitPrice = "200", executedAt = "2026-08-03T10:00"),
+            trade(quantity = 10, unitPrice = 200, executedAt = "2026-08-03T10:00"),
         )
         assertPosition(quantity = 10, totalBuyAmount = 2_000)
 
         tradeService.updateTrade(
             update(
                 id = newBuy.data.id,
-                quantity = "10",
-                unitPrice = "300",
+                quantity = 10,
+                unitPrice = 300,
                 executedAt = "2026-08-03T10:00",
             ),
         )
         assertPosition(quantity = 10, totalBuyAmount = 3_000)
 
-        tradeService.deleteTrades(DeleteTradesRequestDto(listOf(newBuy.data.id), "BUY"))
+        tradeService.deleteTrades(DeleteTradesRequestDto(listOf(newBuy.data.id), TradeType.BUY))
         assertNull(position())
     }
 
@@ -272,29 +298,29 @@ class TradeServiceIntegrationTest {
     fun `같은 종목을 영문 이름으로 다시 생성 수정해도 최초 한국어 종목명은 유지한다`() {
         tradeService.createTrade(
             trade(
-                quantity = "1",
-                unitPrice = "100",
+                quantity = 1,
+                unitPrice = 100,
                 executedAt = "2026-08-01T10:00",
-                itemCode = "TST004",
+                stockCode = "TST004",
                 stockName = "최초 한국어 종목명",
             ),
         )
         val laterBuy = tradeService.createTrade(
             trade(
-                quantity = "1",
-                unitPrice = "200",
+                quantity = 1,
+                unitPrice = 200,
                 executedAt = "2026-08-01T11:00",
-                itemCode = "TST004",
+                stockCode = "TST004",
                 stockName = "English renamed stock",
             ),
         )
         tradeService.updateTrade(
             update(
                 id = laterBuy.data.id,
-                quantity = "1",
-                unitPrice = "300",
+                quantity = 1,
+                unitPrice = 300,
                 executedAt = "2026-08-01T11:00",
-                itemCode = "TST004",
+                stockCode = "TST004",
                 stockName = "Another English name",
             ),
         )
@@ -303,7 +329,7 @@ class TradeServiceIntegrationTest {
             "최초 한국어 종목명",
             queryFactory.select(stock.stockName)
                 .from(stock)
-                .where(stock.itemCode.eq("TST004"))
+                .where(stock.stockCode.eq("TST004"))
                 .fetchOne(),
         )
     }
@@ -314,14 +340,14 @@ class TradeServiceIntegrationTest {
 
         tradeService.createTrade(
             trade(
-                quantity = "1",
-                unitPrice = "100",
+                quantity = 1,
+                unitPrice = 100,
                 executedAt = "2026-08-01T10:00",
                 ownerId = 40_000L,
             ),
         )
 
-        assertEquals("1", tradeService.getPositionAverage(40_000L, "264", "TST001").data.heldQuantity)
+        assertEquals("1", tradeService.getPositionAverage(positionQuery(ownerId = 40_000L)).data.heldQuantity)
     }
 
     private fun realizedProfit(id: String): String {
@@ -340,11 +366,11 @@ class TradeServiceIntegrationTest {
     private fun assertPosition(
         ownerId: Long = 1,
         brokerageCode: String = "264",
-        itemCode: String = "TST001",
+        stockCode: String = "TST001",
         quantity: Long,
         totalBuyAmount: Long,
     ) {
-        val position = position(ownerId, brokerageCode, itemCode)
+        val position = position(ownerId, brokerageCode, stockCode)
         assertEquals(BigInteger.valueOf(quantity), position?.get(dashboardPosition.quantity))
         assertEquals(BigInteger.valueOf(totalBuyAmount), position?.get(dashboardPosition.totalBuyAmount))
     }
@@ -352,7 +378,7 @@ class TradeServiceIntegrationTest {
     private fun position(
         ownerId: Long = 1,
         brokerageCode: String = "264",
-        itemCode: String = "TST001",
+        stockCode: String = "TST001",
     ) = queryFactory
         .select(dashboardPosition.quantity, dashboardPosition.totalBuyAmount)
         .from(dashboardPosition)
@@ -361,25 +387,31 @@ class TradeServiceIntegrationTest {
         .where(
             dashboardPosition.owner.id.eq(ownerId),
             brokerage.code.eq(brokerageCode),
-            stock.itemCode.eq(itemCode),
+            stock.stockCode.eq(stockCode),
         )
         .fetchOne()
 
+    private fun positionQuery(
+        ownerId: Long = 1,
+        brokerageCode: String = "264",
+        stockCode: String = "TST001",
+    ) = GetPositionAverageRequestDto(ownerId, brokerageCode, stockCode)
+
     private fun trade(
-        side: String = "BUY",
-        quantity: String,
-        unitPrice: String,
+        side: TradeType = TradeType.BUY,
+        quantity: Int,
+        unitPrice: Long,
         executedAt: String,
         ownerId: Long = 1,
         brokerageCode: String = "264",
-        itemCode: String = "TST001",
+        stockCode: String = "TST001",
         stockName: String = "통합 테스트 종목",
-    ): TradeRequestDto {
-        return TradeRequestDto(
+    ): CreateTradeRequestDto {
+        return CreateTradeRequestDto(
             brokerageCode = brokerageCode,
             executedAt = OffsetDateTime.parse("$executedAt:00+09:00"),
             isEtf = false,
-            itemCode = itemCode,
+            stockCode = stockCode,
             market = "KRX",
             ownerId = ownerId,
             quantity = quantity,
@@ -391,38 +423,38 @@ class TradeServiceIntegrationTest {
 
     private fun update(
         id: String,
-        side: String = "BUY",
-        quantity: String,
-        unitPrice: String,
+        side: TradeType = TradeType.BUY,
+        quantity: Int,
+        unitPrice: Long,
         executedAt: String,
         ownerId: Long = 1,
         brokerageCode: String = "264",
-        itemCode: String = "TST001",
+        stockCode: String = "TST001",
         stockName: String = "통합 테스트 종목",
     ): UpdateTradeRequestDto {
         return UpdateTradeRequestDto(
             id = id,
-            brokerageCode = brokerageCode,
-            executedAt = OffsetDateTime.parse("$executedAt:00+09:00"),
-            isEtf = false,
-            itemCode = itemCode,
-            market = "KRX",
-            ownerId = ownerId,
-            quantity = quantity,
-            stockName = stockName,
-            side = side,
-            unitPrice = unitPrice,
+            trade = trade(
+                side = side,
+                quantity = quantity,
+                unitPrice = unitPrice,
+                executedAt = executedAt,
+                ownerId = ownerId,
+                brokerageCode = brokerageCode,
+                stockCode = stockCode,
+                stockName = stockName,
+            ),
         )
     }
 
-    private fun preview(quantity: String, itemCode: String = "TST001"): TradePreviewRequestDto {
+    private fun preview(quantity: Int, stockCode: String = "TST001"): TradePreviewRequestDto {
         return TradePreviewRequestDto(
             brokerageCode = "264",
-            itemCode = itemCode,
+            stockCode = stockCode,
             ownerId = 1,
             quantity = quantity,
-            side = "SELL",
-            unitPrice = "200",
+            side = TradeType.SELL,
+            unitPrice = 200,
         )
     }
 

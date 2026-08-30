@@ -9,7 +9,6 @@ const deleteResponseSchema = z.discriminatedUnion("success", [
   z.strictObject({
     success: z.literal(true),
     timestamp: z.string(),
-    data: z.strictObject({ deletedCount: z.number().int().positive() }),
   }),
   z.strictObject({
     success: z.literal(false),
@@ -81,7 +80,7 @@ export function useTradeDeletion({ rows, side }: UseTradeDeletionOptions) {
       const response = await ky.delete("/api/v1/trades", {
         throwHttpErrors: false,
         timeout: 10_000,
-        json: { side, ids: selectedRowIds },
+        json: { tradeIds: selectedRowIds },
       });
       const result = deleteResponseSchema.parse(await response.json<unknown>());
       if (!response.ok || !result.success) {
@@ -98,7 +97,7 @@ export function useTradeDeletion({ rows, side }: UseTradeDeletionOptions) {
       setSelectionMode(false);
       setStatus({
         tone: "success",
-        text: `${label} 기록 ${result.data.deletedCount}건을 삭제했습니다.`,
+        text: `${label} 기록 ${selectedRowIds.length}건을 삭제했습니다.`,
       });
       router.refresh();
     } catch {

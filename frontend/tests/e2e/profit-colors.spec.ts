@@ -47,7 +47,7 @@ async function createTrade(request: APIRequestContext, fixture: TradeFixture): P
       brokerageCode: "240",
       executedAt: fixture.executedAt,
       isEtf: false,
-      itemCode: fixture.code,
+      stockCode: fixture.code,
       market: "KOSPI",
       ownerId: 1,
       quantity: fixture.side === "BUY" ? "2" : "1",

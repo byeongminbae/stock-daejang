@@ -2,7 +2,6 @@ package kr.byeongmin.stockdaejang.external.naver.dto
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import kr.byeongmin.stockdaejang.domain.stock.dto.StockSearchResultDto
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 internal data class NaverSearchResponseDto(

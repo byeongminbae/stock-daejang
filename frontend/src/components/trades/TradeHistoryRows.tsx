@@ -115,7 +115,7 @@ export function TradeHistoryTable({
               <th scope="row">
                 <span className={styles.stockName}>{row.stockName}</span>
               </th>
-              <td className="money">{row.itemCode}</td>
+              <td className="money">{row.stockCode}</td>
               <td>{row.ownerName}</td>
               <td>{row.brokerageName}</td>
               <td className="money">{formatInteger(row.quantity)}주</td>
@@ -163,7 +163,7 @@ export function TradeHistoryCards({
             <header>
               <div>
                 <h3 id={`trade-card-${row.id}`}>{row.stockName}</h3>
-                <p>{row.itemCode}</p>
+                <p>{row.stockCode}</p>
               </div>
               <div className={styles.cardMeta}>
                 {selectionMode ? (

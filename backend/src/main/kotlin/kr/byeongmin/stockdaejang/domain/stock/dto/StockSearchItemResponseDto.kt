@@ -2,6 +2,8 @@ package kr.byeongmin.stockdaejang.domain.stock.dto
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
+import kr.byeongmin.stockdaejang.domain.common.validation.STOCK_CODE_PATTERN
+import kr.byeongmin.stockdaejang.external.naver.dto.StockSearchResultDto
 import kr.byeongmin.stockdaejang.global.util.ifNullThrow
 
 @Schema(description = "종목 검색 결과")
@@ -9,7 +11,7 @@ data class StockSearchItemResponseDto(
     @field:Schema(
         description = "종목코드",
         example = "005930",
-        pattern = "^[0-9A-Z]{6}$",
+        pattern = STOCK_CODE_PATTERN,
     )
     val code: String,
 

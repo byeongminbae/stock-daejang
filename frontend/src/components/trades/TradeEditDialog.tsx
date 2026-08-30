@@ -38,7 +38,7 @@ function TradeEditForm({ brokerages, onCancel, onSaved, owners, row, side }: Tra
       executedAt: isoInstantToSeoulDateTimeLocal(row.executedAt),
       ownerId: row.ownerId.toString(),
       stock: {
-        code: row.itemCode,
+        code: row.stockCode,
         isEtf: row.isEtf,
         market: row.market,
         name: row.stockName,

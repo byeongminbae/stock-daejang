@@ -13,7 +13,7 @@ class BrokerageService(
     @Transactional(readOnly = true)
     fun getList(): SuccessDataResponse<List<BrokerageResponseDto>> {
         return SuccessDataResponse(
-            brokerageRepository.findAll().map(BrokerageResponseDto::from),
+            brokerageRepository.findAllByOrderByCodeAsc().map(BrokerageResponseDto::from),
         )
     }
 }

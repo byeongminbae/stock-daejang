@@ -1,7 +1,7 @@
 package kr.byeongmin.stockdaejang.domain.trade.service
 
-import kr.byeongmin.stockdaejang.domain.trade.entity.TradeType
-import kr.byeongmin.stockdaejang.domain.trade.error.TradeError
+import kr.byeongmin.stockdaejang.domain.trade.enums.TradeType
+import kr.byeongmin.stockdaejang.domain.trade.enums.TradeError
 import kr.byeongmin.stockdaejang.global.exception.BusinessException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows

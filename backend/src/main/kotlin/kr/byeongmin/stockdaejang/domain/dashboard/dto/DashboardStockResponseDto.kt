@@ -1,13 +1,15 @@
 package kr.byeongmin.stockdaejang.domain.dashboard.dto
 
 import io.swagger.v3.oas.annotations.media.Schema
+import kr.byeongmin.stockdaejang.domain.common.util.MONEY_MATH_CONTEXT
+import kr.byeongmin.stockdaejang.domain.common.util.divideRounded
+import kr.byeongmin.stockdaejang.domain.common.util.multiplyRounded
+import kr.byeongmin.stockdaejang.domain.common.util.subtractRounded
 import kr.byeongmin.stockdaejang.domain.dashboard.entity.DashboardPosition
 import kr.byeongmin.stockdaejang.domain.stock.dto.MarketPriceDto
 import java.math.BigDecimal
 import java.math.MathContext
 import java.math.RoundingMode
-
-internal val DASHBOARD_MATH_CONTEXT = MathContext(40, RoundingMode.HALF_UP)
 
 @Schema(description = "증권사에 보유한 개별 종목의 매입 및 평가 정보")
 data class DashboardStockResponseDto(
@@ -25,10 +27,10 @@ data class DashboardStockResponseDto(
     val stockName: String,
 
     @field:Schema(
-        description = "보유 수량",
+        description = "보유 수량. 해외주식 등은 소수일 수 있음",
         example = "12",
     )
-    val quantity: Int,
+    val quantity: BigDecimal,
 
     @field:Schema(
         description = "매수평균단가. 원 단위 숫자",
@@ -78,30 +80,27 @@ data class DashboardStockResponseDto(
             marketPrice: MarketPriceDto,
             brokerageTotalBuyAmount: BigDecimal,
         ): DashboardStockResponseDto {
-            val quantity = position.quantity.toBigDecimal()
-            val totalBuyAmount = position.totalBuyAmount.toBigDecimal()
-            val averageBuyPrice = totalBuyAmount.divide(quantity, DASHBOARD_MATH_CONTEXT)
+            val quantity = position.quantity
+            val totalBuyAmount = position.totalBuyAmount
+            val averageBuyPrice = totalBuyAmount.divideRounded(quantity)
             val currentPrice = BigDecimal.valueOf(marketPrice.price)
-            val valuation = currentPrice.multiply(quantity, DASHBOARD_MATH_CONTEXT)
-            val unrealizedProfit = valuation.subtract(totalBuyAmount, DASHBOARD_MATH_CONTEXT)
+            val valuation = currentPrice.multiplyRounded(quantity)
+            val unrealizedProfit = valuation.subtractRounded(totalBuyAmount)
             return DashboardStockResponseDto(
-                stockCode = position.stock.itemCode,
+                stockCode = position.stock.stockCode,
                 stockName = position.stock.stockName,
-                quantity = quantity.intValueExact(),
+                quantity = quantity,
                 averageBuyPrice = averageBuyPrice.toDashboardDecimal(),
                 totalBuyAmount = totalBuyAmount.toDashboardDecimal(),
-                brokerageWeight = totalBuyAmount.toPercentageOf(
-                    brokerageTotalBuyAmount,
-                    DASHBOARD_MATH_CONTEXT,
-                ),
+                brokerageWeight = totalBuyAmount.toPercentageOf(brokerageTotalBuyAmount),
                 currentPrice = currentPrice,
                 valuation = valuation.toDashboardDecimal(),
                 unrealizedProfit = unrealizedProfit.toDashboardDecimal(),
-                returnRate = unrealizedProfit.toPercentageOf(totalBuyAmount, DASHBOARD_MATH_CONTEXT),
+                returnRate = unrealizedProfit.toPercentageOf(totalBuyAmount),
             )
         }
 
-        private fun BigDecimal.toPercentageOf(totalAmount: BigDecimal, mathContext: MathContext): BigDecimal {
+        private fun BigDecimal.toPercentageOf(totalAmount: BigDecimal, mathContext: MathContext = MONEY_MATH_CONTEXT): BigDecimal {
             val hasNoTotalAmount = totalAmount.signum() == 0
             return if (hasNoTotalAmount) {
                 BigDecimal.ZERO

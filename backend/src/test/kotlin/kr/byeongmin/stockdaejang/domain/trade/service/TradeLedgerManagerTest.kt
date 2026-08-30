@@ -1,11 +1,11 @@
 package kr.byeongmin.stockdaejang.domain.trade.service
 
 import kr.byeongmin.stockdaejang.domain.brokerage.entity.Brokerage
-import kr.byeongmin.stockdaejang.domain.dashboard.repository.DashboardPositionRepository
+import kr.byeongmin.stockdaejang.domain.dashboard.repository.DashboardPositionQuerydslRepository
 import kr.byeongmin.stockdaejang.domain.owner.entity.Owner
 import kr.byeongmin.stockdaejang.domain.stock.entity.Stock
 import kr.byeongmin.stockdaejang.domain.trade.entity.Trade
-import kr.byeongmin.stockdaejang.domain.trade.entity.TradeType
+import kr.byeongmin.stockdaejang.domain.trade.enums.TradeType
 import kr.byeongmin.stockdaejang.domain.trade.repository.TradeLedgerRepository
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.*
@@ -17,8 +17,8 @@ class TradeLedgerManagerTest {
     @Test
     fun `원장 재생은 조회한 관리 거래의 실현 손익을 갱신한다`() {
         val repository = mock(TradeLedgerRepository::class.java)
-        val dashboardPositionRepository = mock(DashboardPositionRepository::class.java)
-        val manager = TradeLedgerManager(repository, LedgerStateCalculator(), dashboardPositionRepository)
+        val dashboardPositionQuerydslRepository = mock(DashboardPositionQuerydslRepository::class.java)
+        val manager = TradeLedgerManager(repository, LedgerStateCalculator(), dashboardPositionQuerydslRepository)
         val updateFrom = OffsetDateTime.parse("2026-08-01T00:00:00+09:00")
         val ledgerKey = LedgerKey(1, 1, "TST001")
         val buy = trade(1, TradeType.BUY, updateFrom, 2, 100)
@@ -30,10 +30,10 @@ class TradeLedgerManagerTest {
         manager.replay(ledgerKey, updateFrom)
 
         assertEquals(BigInteger.valueOf(100), sell.realizedProfit)
-        verify(dashboardPositionRepository).replace(
+        verify(dashboardPositionQuerydslRepository).replace(
             ownerId = 1,
             brokerageId = 1,
-            itemCode = "TST001",
+            stockCode = "TST001",
             quantity = BigInteger.ONE,
             totalBuyAmount = BigInteger.valueOf(100),
         )

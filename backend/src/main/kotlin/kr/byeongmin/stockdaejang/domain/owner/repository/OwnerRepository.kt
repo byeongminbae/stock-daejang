@@ -1,8 +1,8 @@
 package kr.byeongmin.stockdaejang.domain.owner.repository
 
 import kr.byeongmin.stockdaejang.domain.owner.entity.Owner
-import org.springframework.data.jpa.repository.JpaRepository
+import kr.byeongmin.stockdaejang.global.repository.BaseJpaRepository
 
-interface OwnerRepository : JpaRepository<Owner, Long> {
+interface OwnerRepository : BaseJpaRepository<Owner, Long> {
     fun findAllByOrderByIdAsc(): List<Owner>
 }

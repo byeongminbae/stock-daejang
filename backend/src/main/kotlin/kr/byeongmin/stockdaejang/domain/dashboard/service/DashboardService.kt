@@ -1,56 +1,53 @@
 package kr.byeongmin.stockdaejang.domain.dashboard.service
 
-import kr.byeongmin.stockdaejang.domain.dashboard.dto.DashboardBrokerageResponseDto
-import kr.byeongmin.stockdaejang.domain.dashboard.dto.DASHBOARD_MATH_CONTEXT
-import kr.byeongmin.stockdaejang.domain.dashboard.dto.DashboardOwnerResponseDto
-import kr.byeongmin.stockdaejang.domain.dashboard.dto.DashboardResponseDto
-import kr.byeongmin.stockdaejang.domain.dashboard.dto.DashboardStockResponseDto
+import kr.byeongmin.stockdaejang.domain.common.util.sumOfDecimal
+import kr.byeongmin.stockdaejang.domain.dashboard.dto.*
 import kr.byeongmin.stockdaejang.domain.dashboard.entity.DashboardPosition
-import kr.byeongmin.stockdaejang.domain.dashboard.repository.DashboardPositionRepository
+import kr.byeongmin.stockdaejang.domain.dashboard.repository.DashboardPositionQuerydslRepository
 import kr.byeongmin.stockdaejang.domain.owner.entity.Owner
+import kr.byeongmin.stockdaejang.domain.stock.dto.MarketStockCodesDto
 import kr.byeongmin.stockdaejang.domain.stock.dto.MarketPriceDto
-import kr.byeongmin.stockdaejang.domain.stock.service.MarketPriceService
+import kr.byeongmin.stockdaejang.domain.stock.service.DomesticMarketPriceService
 import kr.byeongmin.stockdaejang.global.response.SuccessDataResponse
 import kr.byeongmin.stockdaejang.global.util.ifNullThrow
-import kr.byeongmin.stockdaejang.global.util.sumOfDecimal
 import org.springframework.stereotype.Service
 
 @Service
 class DashboardService(
-    private val dashboardPositionRepository: DashboardPositionRepository,
-    private val marketPriceService: MarketPriceService
+    private val dashboardPositionQuerydslRepository: DashboardPositionQuerydslRepository,
+    private val domesticMarketPriceService: DomesticMarketPriceService
 ) {
     fun getDashboard(): SuccessDataResponse<DashboardResponseDto> {
-        val positions = dashboardPositionRepository.findAll()
-        val itemCodes = positions.map { it.stock.itemCode }.distinct()
-        val marketPricesByItemCode = marketPriceService.getMarketPrices(itemCodes)
+        val positions = dashboardPositionQuerydslRepository.findAll()
+        val stockCodes = positions.map { it.stock.stockCode }.distinct()
+        val marketPricesByStockCode = domesticMarketPriceService.getMarketPrices(MarketStockCodesDto(stockCodes))
 
         val positionsByOwnerId = positions.groupBy { it.owner.id }
         val owners = positions.map { it.owner }.distinctBy { it.id }
 
-        val ownerResponseDtos = getOwnerResponseDtosOrEmptyList(owners, positionsByOwnerId, marketPricesByItemCode)
+        val ownerResponseDtos = getOwnerResponseDtosOrEmptyList(owners, positionsByOwnerId, marketPricesByStockCode)
 
-        val latestMarketPriceDto = getLatestMarketPriceDto(itemCodes, marketPricesByItemCode)
+        val latestMarketPriceDto = getLatestMarketPriceDto(stockCodes, marketPricesByStockCode)
 
         return SuccessDataResponse(
             DashboardResponseDto.of(
                 owners = ownerResponseDtos,
                 quoteFetchedAt = latestMarketPriceDto?.localTradedAt?.toString(),
-                valuationSession = latestMarketPriceDto?.session,
+                valuationSession = latestMarketPriceDto?.marketSession,
             ),
         )
     }
 
     private fun getLatestMarketPriceDto(
-        itemCodes: List<String>,
-        marketPricesByItemCode: Map<String, MarketPriceDto>
+        stockCodes: List<String>,
+        marketPricesByStockCode: Map<String, MarketPriceDto>
     ): MarketPriceDto? {
-        return itemCodes
-            .map { marketPricesByItemCode[it].ifNullThrow() }
+        return stockCodes
+            .map { marketPricesByStockCode[it].ifNullThrow() }
             .maxWithOrNull(
                 compareBy(MarketPriceDto::localTradedAt)
-                    .thenBy(MarketPriceDto::itemCode)
-                    .thenBy { it.session.ordinal },
+                    .thenBy(MarketPriceDto::stockCode)
+                    .thenBy { it.marketSession.ordinal },
             )
     }
 
@@ -58,7 +55,7 @@ class DashboardService(
     private fun getOwnerResponseDtosOrEmptyList(
         owners: List<Owner>,
         positionsByOwnerId: Map<Long, List<DashboardPosition>>,
-        marketPricesByItemCode: Map<String, MarketPriceDto>
+        marketPricesByStockCode: Map<String, MarketPriceDto>
     ): List<DashboardOwnerResponseDto> {
         return owners.map { owner ->
             val ownedPositions = positionsByOwnerId[owner.id].orEmpty()
@@ -66,13 +63,11 @@ class DashboardService(
 
             val dashboardBrokerageResponseDtos = ownedPositionsByBrokerageId.values
                 .map { brokeragePositions ->
-                    val brokerageTotalBuyAmount = brokeragePositions.sumOfDecimal(DASHBOARD_MATH_CONTEXT) {
-                        it.totalBuyAmount.toBigDecimal()
-                    }
+                    val brokerageTotalBuyAmount = brokeragePositions.sumOfDecimal { it.totalBuyAmount }
                     val dashboardStockResponseDtos = brokeragePositions.map {
                         DashboardStockResponseDto.of(
                             position = it,
-                            marketPrice = marketPricesByItemCode[it.stock.itemCode].ifNullThrow(),
+                            marketPrice = marketPricesByStockCode[it.stock.stockCode].ifNullThrow(),
                             brokerageTotalBuyAmount = brokerageTotalBuyAmount,
                         )
                     }

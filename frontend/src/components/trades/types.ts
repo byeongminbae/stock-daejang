@@ -11,7 +11,7 @@ export interface TradeHistoryRow {
   readonly id: string;
   readonly executedAt: string;
   readonly stockName: string;
-  readonly itemCode: string;
+  readonly stockCode: string;
   readonly market: string;
   readonly isEtf: boolean;
   readonly quantity: string;

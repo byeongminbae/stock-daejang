@@ -1,136 +1,335 @@
 package kr.byeongmin.stockdaejang.domain.trade.service
 
-import kr.byeongmin.stockdaejang.domain.trade.dto.DeleteTradesRequestDto
-import kr.byeongmin.stockdaejang.domain.trade.dto.DeleteTradesResponseDto
-import kr.byeongmin.stockdaejang.domain.trade.dto.PositionAverageResponseDto
-import kr.byeongmin.stockdaejang.domain.trade.dto.TradeIdResponseDto
-import kr.byeongmin.stockdaejang.domain.trade.dto.TradePreviewRequestDto
-import kr.byeongmin.stockdaejang.domain.trade.dto.TradePreviewResponseDto
-import kr.byeongmin.stockdaejang.domain.trade.dto.TradeRequestDto
-import kr.byeongmin.stockdaejang.domain.trade.dto.UpdateTradeRequestDto
-import kr.byeongmin.stockdaejang.domain.trade.repository.TradeCommandRepository
+import kr.byeongmin.stockdaejang.domain.brokerage.repository.BrokerageRepository
+import kr.byeongmin.stockdaejang.domain.common.util.multiplyRounded
+import kr.byeongmin.stockdaejang.domain.dashboard.entity.DashboardPosition
+import kr.byeongmin.stockdaejang.domain.dashboard.repository.DashboardPositionQuerydslRepository
+import kr.byeongmin.stockdaejang.domain.dashboard.repository.DashboardPositionReplacement
+import kr.byeongmin.stockdaejang.domain.dashboard.repository.DashboardPositionRepository
+import kr.byeongmin.stockdaejang.domain.owner.repository.OwnerRepository
+import kr.byeongmin.stockdaejang.domain.stock.entity.Stock
+import kr.byeongmin.stockdaejang.domain.stock.enums.StockCatalogLockName
+import kr.byeongmin.stockdaejang.domain.stock.repository.StockCatalogQuerydslRepository
+import kr.byeongmin.stockdaejang.domain.stock.repository.StockRepository
+import kr.byeongmin.stockdaejang.domain.trade.dto.*
+import kr.byeongmin.stockdaejang.domain.trade.entity.Trade
+import kr.byeongmin.stockdaejang.domain.trade.enums.TradeError
+import kr.byeongmin.stockdaejang.domain.trade.repository.TradeQuerydslRepository
+import kr.byeongmin.stockdaejang.domain.trade.repository.TradeRepository
 import kr.byeongmin.stockdaejang.global.error.CommonError
 import kr.byeongmin.stockdaejang.global.exception.BusinessException
 import kr.byeongmin.stockdaejang.global.response.SuccessDataResponse
+import kr.byeongmin.stockdaejang.global.response.SuccessResponse
 import kr.byeongmin.stockdaejang.global.util.ifNullThrow
+import kr.byeongmin.stockdaejang.global.util.isNotNull
+import kr.byeongmin.stockdaejang.global.util.isZero
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.math.BigDecimal
 import java.time.OffsetDateTime
 
 @Service
 class TradeService(
-    private val tradeReferenceResolver: TradeReferenceResolver,
-    private val tradeCommandRepository: TradeCommandRepository,
-    private val tradeLedgerManager: TradeLedgerManager,
-    private val tradePreviewCalculator: TradePreviewCalculator,
+	private val ownerRepository: OwnerRepository,
+	private val brokerageRepository: BrokerageRepository,
+	private val stockRepository: StockRepository,
+	private val stockCatalogQuerydslRepository: StockCatalogQuerydslRepository,
+	private val tradeQuerydslRepository: TradeQuerydslRepository,
+	private val tradeRepository: TradeRepository,
+	private val dashboardPositionQuerydslRepository: DashboardPositionQuerydslRepository,
+	private val dashboardPositionRepository: DashboardPositionRepository,
 ) {
-    @Transactional
-    fun createTrade(request: TradeRequestDto): SuccessDataResponse<TradeIdResponseDto> {
-        val parsedTrade = TradeInputParser.trade(request)
-        val resolvedTradeReferences = tradeReferenceResolver.resolve(parsedTrade)
-        val ledgerKey = LedgerKey.from(parsedTrade, resolvedTradeReferences.brokerage)
-        tradeLedgerManager.lock(listOf(ledgerKey))
-        val createdTrade = tradeCommandRepository.create(
-            parsedTrade.toEntity(
-                resolvedTradeReferences.owner,
-                resolvedTradeReferences.brokerage,
-                resolvedTradeReferences.stock,
-            ),
-        )
-        tradeLedgerManager.replay(ledgerKey, parsedTrade.executedAt)
-        return SuccessDataResponse(TradeIdResponseDto.of(createdTrade.id.ifNullThrow()))
-    }
+	@Transactional
+	fun createTrade(createTradeRequestDto: CreateTradeRequestDto): SuccessDataResponse<Long> {
+		val positionEntityDto = upsertStockAndBuildPositionEntityDto(
+			ownerId = createTradeRequestDto.ownerId,
+			brokerageCode = createTradeRequestDto.brokerageCode,
+			stockCode = createTradeRequestDto.stockCode,
+			stockName = createTradeRequestDto.stockName,
+			market = createTradeRequestDto.market,
+			isEtf = createTradeRequestDto.isEtf,
+			executedAt = createTradeRequestDto.executedAt,
+		)
 
-    @Transactional
-    fun updateTrade(request: UpdateTradeRequestDto): SuccessDataResponse<TradeIdResponseDto> {
-        val parsedUpdate = TradeInputParser.update(request)
-        val parsedTrade = parsedUpdate.trade
-        val resolvedTradeReferences = tradeReferenceResolver.resolve(parsedTrade)
-        tradeCommandRepository.lockIds(listOf(parsedUpdate.id))
-        val selectedTrade = tradeCommandRepository
-            .find(listOf(parsedUpdate.id), parsedTrade.side)
-            .singleOrNull()
-            ?: throw BusinessException(CommonError.RESOURCE_NOT_FOUND)
-        val previousLedgerKey = LedgerKey.from(selectedTrade)
-        val updatedLedgerKey = LedgerKey.from(parsedTrade, resolvedTradeReferences.brokerage)
-        val affectedLedgers = earliestByLedger(
-            listOf(
-                previousLedgerKey to selectedTrade.executedAt,
-                updatedLedgerKey to parsedTrade.executedAt,
-            ),
-        )
-        tradeLedgerManager.lock(affectedLedgers.map(AffectedLedger::key))
-        if (tradeCommandRepository.find(listOf(parsedUpdate.id), parsedTrade.side).size != 1) {
-            throw BusinessException(CommonError.RESOURCE_NOT_FOUND)
-        }
-        val updatedTradeCount = tradeCommandRepository.update(
-            parsedUpdate.id,
-            parsedTrade.toEntity(
-                resolvedTradeReferences.owner,
-                resolvedTradeReferences.brokerage,
-                resolvedTradeReferences.stock,
-            ),
-        )
-        if (updatedTradeCount != 1) throw BusinessException(CommonError.RESOURCE_NOT_FOUND)
-        affectedLedgers.forEach { tradeLedgerManager.replay(it.key, it.updateFrom) }
-        return SuccessDataResponse(TradeIdResponseDto.of(parsedUpdate.id))
-    }
+		// 리플레이 할때 db 에서 가져올거라 여기서 영속성 컨텍스트 flush 함
+		val savedTrade = tradeRepository.saveAndFlush(
+			Trade.of(
+				owner = positionEntityDto.owner,
+				brokerage = positionEntityDto.brokerage,
+				stock = positionEntityDto.stock,
+				side = createTradeRequestDto.side,
+				executedAt = createTradeRequestDto.executedAt,
+				quantity = createTradeRequestDto.quantity,
+				unitPrice = createTradeRequestDto.unitPrice
+			)
+		)
 
-    @Transactional
-    fun deleteTrades(request: DeleteTradesRequestDto): SuccessDataResponse<DeleteTradesResponseDto> {
-        val parsedDelete = TradeInputParser.delete(request)
-        tradeCommandRepository.lockIds(parsedDelete.ids)
-        val selectedTrades = tradeCommandRepository.find(parsedDelete.ids, parsedDelete.side)
-        if (selectedTrades.size != parsedDelete.ids.size) throw BusinessException(CommonError.RESOURCE_NOT_FOUND)
-        val affectedLedgers = earliestByLedger(
-            selectedTrades.map { LedgerKey.from(it) to it.executedAt },
-        )
-        tradeLedgerManager.lock(affectedLedgers.map(AffectedLedger::key))
-        if (
-            tradeCommandRepository.find(parsedDelete.ids, parsedDelete.side).size !=
-            parsedDelete.ids.size
-        ) {
-            throw BusinessException(CommonError.RESOURCE_NOT_FOUND)
-        }
-        val deletedTradeCount = tradeCommandRepository.delete(parsedDelete.ids, parsedDelete.side)
-        if (deletedTradeCount != parsedDelete.ids.size) throw BusinessException(CommonError.RESOURCE_NOT_FOUND)
-        affectedLedgers.forEach { tradeLedgerManager.replay(it.key, it.updateFrom) }
-        return SuccessDataResponse(DeleteTradesResponseDto.of(deletedTradeCount))
-    }
+		val replayedPositions =
+			replayTradesThenGetDashboardPositionReplacement(listOf(positionEntityDto.toPositionKeyAtDto()))
+		updateDashboardPositions(replayedPositions)
+		return SuccessDataResponse(savedTrade.id.ifNullThrow())
+	}
 
-    @Transactional(readOnly = true)
-    fun getPositionAverage(
-        ownerId: Long?,
-        brokerageCode: String?,
-        itemCode: String?,
-    ): SuccessDataResponse<PositionAverageResponseDto> {
-        val parsedPosition = TradeInputParser.position(ownerId, brokerageCode, itemCode)
-        tradeReferenceResolver.requireOwner(parsedPosition.ownerId)
-        return SuccessDataResponse(
-            tradePreviewCalculator.positionAverage(tradeLedgerManager.current(parsedPosition)),
-        )
-    }
+	@Transactional
+	fun updateTrade(updateTradeRequestDto: UpdateTradeRequestDto): SuccessResponse {
+		val tradeId = updateTradeRequestDto.id
+		// 조회 이후에 걸게되면 T1, T2 중 하나는 최신이 아닌 엔티티일수도 있음
+		tradeQuerydslRepository.lockTradeByTradeId(tradeId)
 
-    @Transactional(readOnly = true)
-    fun previewTrade(request: TradePreviewRequestDto): SuccessDataResponse<TradePreviewResponseDto> {
-        val parsedPreview = TradeInputParser.preview(request)
-        tradeReferenceResolver.requireOwner(parsedPreview.ownerId)
-        return SuccessDataResponse(
-            tradePreviewCalculator.preview(parsedPreview, tradeLedgerManager.current(parsedPreview)),
-        )
-    }
+		val selectedTrade = tradeRepository.findByIdOrNull(tradeId)
+			?: throw BusinessException(CommonError.RESOURCE_NOT_FOUND)
 
-    private fun earliestByLedger(entries: List<Pair<LedgerKey, OffsetDateTime>>): List<AffectedLedger> {
-        return entries.groupBy { it.first.lockText() }
-            .values
-            .map { ledgerEntries ->
-                AffectedLedger(
-                    key = ledgerEntries.first().first,
-                    updateFrom = ledgerEntries.minOf { it.second },
-                )
-            }
-            .sortedBy { it.key.lockText() }
-    }
+		val previousPosition = PositionEntityDto.from(selectedTrade)
+		val updatedPosition = upsertStockAndBuildPositionEntityDto(
+			ownerId = updateTradeRequestDto.ownerId,
+			brokerageCode = updateTradeRequestDto.brokerageCode,
+			stockCode = updateTradeRequestDto.stockCode,
+			stockName = updateTradeRequestDto.stockName,
+			market = updateTradeRequestDto.market,
+			isEtf = updateTradeRequestDto.isEtf,
+			executedAt = updateTradeRequestDto.executedAt,
+		)
 
-    private data class AffectedLedger(val key: LedgerKey, val updateFrom: OffsetDateTime)
+		selectedTrade.owner = updatedPosition.owner
+		selectedTrade.brokerage = updatedPosition.brokerage
+		selectedTrade.stock = updatedPosition.stock
+		selectedTrade.executedAt = updateTradeRequestDto.executedAt
+		selectedTrade.quantity = updateTradeRequestDto.quantity
+		selectedTrade.unitPrice = BigDecimal.valueOf(updateTradeRequestDto.unitPrice)
+		// 영속상태니까 걍 replay 때 쓸 엔티티를 위한 flush 만 하면됨
+		tradeRepository.flush()
+
+		val affectedPositions = getEarliestByPositionKey(listOf(previousPosition, updatedPosition))
+		val updatedDashboardPositions = replayTradesThenGetDashboardPositionReplacement(
+			// 소유주 or 증권사 or 종목 중 하나라도 바뀐경우 previousPosition, updatedPosition 둘다 리플레이 대상이 됨
+			affectedPositions.map(PositionEntityDto::toPositionKeyAtDto)
+		)
+		updateDashboardPositions(updatedDashboardPositions)
+		return SuccessResponse()
+	}
+
+	@Transactional
+	fun deleteTrades(deleteTradesRequestDto: DeleteTradesRequestDto): SuccessResponse {
+		val tradeIds = deleteTradesRequestDto.tradeIds
+		// 조회 이후에 걸게되면 T1, T2 중 하나는 최신이 아닌 엔티티일수도 있음
+		tradeQuerydslRepository.lockAllTradeByTradeIds(tradeIds)
+
+		val selectedTrades = tradeRepository.findAllByIdInOrderByIdAsc(tradeIds)
+
+		if (selectedTrades.size != tradeIds.size) {
+			throw BusinessException(CommonError.RESOURCE_NOT_FOUND)
+		}
+
+		tradeRepository.deleteAllByIdInBatch(tradeIds)
+
+		val affectedPositions = getEarliestByPositionKey(
+			selectedTrades.map(PositionEntityDto::from)
+		)
+		val replayedPositions = replayTradesThenGetDashboardPositionReplacement(
+			affectedPositions.map(
+				PositionEntityDto::toPositionKeyAtDto
+			)
+		)
+		updateDashboardPositions(replayedPositions)
+		return SuccessResponse()
+	}
+
+	@Transactional(readOnly = true)
+	fun previewTrade(tradePreviewRequestDto: TradePreviewRequestDto): SuccessDataResponse<TradePreviewResponseDto> {
+		ownerRepository.findByIdIfNullThrow(tradePreviewRequestDto.ownerId)
+		val positionSnapshot = getPositionSnapshot(
+			tradePreviewRequestDto.ownerId,
+			tradePreviewRequestDto.brokerageCode,
+			tradePreviewRequestDto.stockCode
+		)
+		val tradePreviewResponseDto = buildTradePreview(tradePreviewRequestDto, positionSnapshot)
+		return SuccessDataResponse(tradePreviewResponseDto)
+	}
+
+	@Transactional(readOnly = true)
+	fun currentPositionAverage(ownerId: Long, brokerageCode: String, stockCode: String): PositionAverageResponseDto {
+		val state = getPositionSnapshot(ownerId, brokerageCode, stockCode)
+		return PositionAverageResponseDto(
+			heldQuantity = state.remainingQuantitySnapshot,
+			averageBuyPrice = state.averagePrice(),
+		)
+	}
+
+	private fun upsertStockAndBuildPositionEntityDto(
+		ownerId: Long,
+		brokerageCode: String,
+		stockCode: String,
+		stockName: String,
+		market: String,
+		isEtf: Boolean,
+		executedAt: OffsetDateTime,
+	): PositionEntityDto {
+		val owner = ownerRepository.findByIdIfNullThrow(ownerId)
+		val brokerage = brokerageRepository.findByCode(brokerageCode)
+			?: throw BusinessException(CommonError.RESOURCE_NOT_FOUND)
+
+		val stock = upsertStock(stockCode, stockName, market, isEtf)
+		return PositionEntityDto(owner, brokerage, stock, executedAt)
+	}
+
+	// 한번이라도 거래된 종목은 추가되거나 정보 업데이트
+	private fun upsertStock(stockCode: String, stockName: String, market: String, isEtf: Boolean): Stock {
+		stockCatalogQuerydslRepository.lockByName(StockCatalogLockName.CATALOG)
+			?: throw BusinessException(CommonError.INTERNAL_SERVER_ERROR)
+
+		val existingStock = stockRepository.findByStockCode(stockCode)
+		return if (existingStock.isNotNull()) {
+			// 이전상장(코스닥->코스피 등)으로 종목코드는 유지된 채 시장만 바뀌는 경우가 있어 market은 최신값으로 갱신함
+			// isEtf는 같은 종목코드에서 바뀌는 사례가 없어 신뢰하고 덮어쓰지 않음
+			existingStock.market = market
+			existingStock
+		} else {
+			stockRepository.saveAndFlush(Stock.of(stockCode, stockName, market, isEtf))
+		}
+	}
+
+	private fun replayTradesThenGetDashboardPositionReplacement(positionKeyAtDtos: List<PositionKeyAtDto>): List<DashboardPositionReplacement> {
+		if (positionKeyAtDtos.isEmpty()) return emptyList()
+
+		// 리플레이 계산은 무조건 락을 걸어서 순차적으로 진행해야함. T1, T2 동시에 들어오면 한쪽은 반영이 안된 이상한 값으로 갱신됨
+		tradeQuerydslRepository.lockAllStockByStockCodes(positionKeyAtDtos.map { it.positionKeyDto.stockCode })
+
+		val baseTradeByPosition = tradeQuerydslRepository.findPositionTradesBefore(positionKeyAtDtos)
+			.groupBy(PositionKeyDto::from)
+
+		val targetTradesByPosition = tradeQuerydslRepository.findPositionTradesFrom(positionKeyAtDtos)
+			.groupBy(PositionKeyDto::from)
+
+		return positionKeyAtDtos.map { (positionKeyDto, _) ->
+			val basePositionSnapshot = PositionSnapshot.from(
+				// orderBy 로 정렬 보장되니 first 로 꺼냄
+				baseTradeByPosition[positionKeyDto].ifNullThrow().first()
+			)
+
+			var accumulatedSnapshot = basePositionSnapshot
+			targetTradesByPosition[positionKeyDto].orEmpty().forEach { trade ->
+				accumulatedSnapshot = trade.replay(accumulatedSnapshot)
+				trade.remainingQuantitySnapshot = accumulatedSnapshot.remainingQuantitySnapshot
+				trade.remainingCostSnapshot = accumulatedSnapshot.remainingCostSnapshot
+			}
+
+			DashboardPositionReplacement(
+				key = positionKeyDto,
+				quantity = accumulatedSnapshot.remainingQuantitySnapshot,
+				totalBuyAmount = accumulatedSnapshot.remainingCostSnapshot,
+			)
+		}
+	}
+
+	private fun updateDashboardPositions(dashboardPositionReplacements: List<DashboardPositionReplacement>) {
+		if (dashboardPositionReplacements.isEmpty()) return
+
+		val dashboardPositionByPositionKeyDto = dashboardPositionQuerydslRepository.find(dashboardPositionReplacements)
+			.associateBy(PositionKeyDto::from)
+
+		val toDelete = mutableListOf<DashboardPosition>()
+		val toInsert = mutableListOf<DashboardPositionReplacement>()
+
+		dashboardPositionReplacements.forEach { dashboardPositionReplacement ->
+			val dashboardPosition = dashboardPositionByPositionKeyDto[dashboardPositionReplacement.key]
+			when {
+				dashboardPositionReplacement.quantity.isZero() -> {
+					// 동일한 포지션이 매수 5개 매도 5개 인 상태에서 단가 오타만 수정할 경우에도 여기 들어오게됨
+					// dashboardPosition 이 존재하는걸 보장 못한다는 말임
+					// 현재는 null 일 경우 넘어감
+					dashboardPosition?.let { toDelete += it }
+				}
+
+				dashboardPosition.isNotNull() -> {
+					// 쓰기지연 저장소 있으니 성능 괜찮음
+					dashboardPosition.quantity = dashboardPositionReplacement.quantity
+					dashboardPosition.totalBuyAmount = dashboardPositionReplacement.totalBuyAmount
+				}
+
+				else -> {
+					// PK 디비에서 받아와야해서 쓰기지연 안먹힘 어쩔수없음...
+					toInsert += dashboardPositionReplacement
+				}
+			}
+		}
+
+		dashboardPositionRepository.deleteAllInBatch(toDelete)
+		insertDashboardPositions(toInsert)
+	}
+
+	private fun insertDashboardPositions(dashboardPositionReplacements: List<DashboardPositionReplacement>) {
+		if (dashboardPositionReplacements.isEmpty()) return
+
+		val stockByStockCode = stockRepository
+			.findAllByStockCodeIn(dashboardPositionReplacements.map { it.key.stockCode })
+			.associateBy { it.stockCode }
+
+		dashboardPositionRepository.saveAll(
+			dashboardPositionReplacements.map {
+				DashboardPosition(
+					// 어차피 저장할거고 조회할 필요 없으니 프록시 만들어서 넣음
+					owner = ownerRepository.getReferenceById(it.key.ownerId),
+					brokerage = brokerageRepository.getReferenceById(it.key.brokerageId),
+					stock = stockByStockCode[it.key.stockCode].ifNullThrow(),
+					quantity = it.quantity,
+					totalBuyAmount = it.totalBuyAmount,
+				)
+			},
+		)
+	}
+
+	private fun getPositionSnapshot(ownerId: Long, brokerageCode: String, stockCode: String): PositionSnapshot {
+		val brokerage = brokerageRepository.findByCode(brokerageCode)
+			?: throw BusinessException(CommonError.RESOURCE_NOT_FOUND)
+		val stock = stockRepository.findByStockCode(stockCode)
+			?: return PositionSnapshot(BigDecimal.ZERO, BigDecimal.ZERO)
+
+		val trade = tradeQuerydslRepository.findLatestTrade(
+			ownerId,
+			brokerage.id.ifNullThrow(),
+			stock.id.ifNullThrow(),
+		)
+		return PositionSnapshot.from(trade)
+	}
+
+	private fun buildTradePreview(
+		tradePreviewRequestDto: TradePreviewRequestDto,
+		positionSnapshot: PositionSnapshot
+	): TradePreviewResponseDto {
+		val quantity = tradePreviewRequestDto.quantity
+		val unitPrice = tradePreviewRequestDto.unitPrice
+		val amount = quantity.multiplyRounded(unitPrice)
+
+		val expectedProfit =
+			if (tradePreviewRequestDto.side.isSell()) {
+				if (positionSnapshot.isExceedQuantity(quantity)) {
+					throw BusinessException(
+						TradeError.INSUFFICIENT_HOLDING,
+						mapOf("quantity" to quantity.toString()),
+					)
+				}
+				val boughtCost = positionSnapshot.boughtCostFor(quantity)
+				amount - boughtCost
+			} else {
+				null
+			}
+
+		return TradePreviewResponseDto(
+			amount = amount.toString(),
+			heldQuantity = positionSnapshot.remainingQuantitySnapshot,
+			averageBuyPrice = positionSnapshot.averagePrice(),
+			expectedProfit = expectedProfit,
+		)
+	}
+
+	// 이벤트가 발생한 각포지션에 존재하는 Trade.executedAt 중 가장 오래된 포지션을 선택
+	// 같은 포지션 내에선 가장 오래된 포지션부터 업데이트를 진행하면됨
+	private fun getEarliestByPositionKey(positionEntityDtos: List<PositionEntityDto>): List<PositionEntityDto> {
+		return positionEntityDtos
+			.groupBy { it.toPositionKeyDto() }
+			.map { (_, positionEntityDtos) ->
+				positionEntityDtos.minBy { it.executedAt }
+			}
+	}
 }

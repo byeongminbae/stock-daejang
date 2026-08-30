@@ -1,8 +1,8 @@
 package kr.byeongmin.stockdaejang.domain.dashboard.dto
 
 import io.swagger.v3.oas.annotations.media.Schema
+import kr.byeongmin.stockdaejang.domain.common.util.sumOfDecimal
 import kr.byeongmin.stockdaejang.domain.owner.entity.Owner
-import kr.byeongmin.stockdaejang.global.util.sumOfDecimal
 import java.math.BigDecimal
 
 @Schema(description = "소유주별 보유 종목 현황과 평가 합계")
@@ -57,15 +57,9 @@ data class DashboardOwnerResponseDto(
                 ownerId = owner.id,
                 ownerName = owner.name,
                 stockCount = stocks.distinctBy(DashboardStockResponseDto::stockCode).size,
-                totalBuyAmount = stocks.sumOfDecimal(
-                    DASHBOARD_MATH_CONTEXT,
-                    DashboardStockResponseDto::totalBuyAmount,
-                ),
-                valuation = stocks.sumOfDecimal(DASHBOARD_MATH_CONTEXT, DashboardStockResponseDto::valuation),
-                unrealizedProfit = stocks.sumOfDecimal(
-                    DASHBOARD_MATH_CONTEXT,
-                    DashboardStockResponseDto::unrealizedProfit,
-                ),
+                totalBuyAmount = stocks.sumOfDecimal(selector = DashboardStockResponseDto::totalBuyAmount),
+                valuation = stocks.sumOfDecimal(selector = DashboardStockResponseDto::valuation),
+                unrealizedProfit = stocks.sumOfDecimal(selector = DashboardStockResponseDto::unrealizedProfit),
                 brokerages = brokerages,
             )
         }

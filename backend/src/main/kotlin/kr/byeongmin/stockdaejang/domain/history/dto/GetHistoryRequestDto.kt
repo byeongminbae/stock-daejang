@@ -1,10 +1,10 @@
 package kr.byeongmin.stockdaejang.domain.history.dto
 
 import io.swagger.v3.oas.annotations.Parameter
-import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Positive
 import jakarta.validation.constraints.Size
-import kr.byeongmin.stockdaejang.domain.trade.entity.TradeType
+import kr.byeongmin.stockdaejang.domain.common.validation.BrokerageCode
+import kr.byeongmin.stockdaejang.domain.trade.enums.TradeType
 import kr.byeongmin.stockdaejang.global.util.isNotNull
 import java.time.OffsetDateTime
 
@@ -34,7 +34,7 @@ data class GetHistoryRequestDto(
     val ownerId: Long?,
 
     @field:Parameter(description = "증권사 코드", example = "240")
-    @field:Pattern(regexp = "^[0-9]{3}$")
+    @field:BrokerageCode
     val brokerageCode: String?,
 
     @field:Parameter(description = "페이지 번호", example = "1")

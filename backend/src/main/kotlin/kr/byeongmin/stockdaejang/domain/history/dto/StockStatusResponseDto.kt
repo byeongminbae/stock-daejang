@@ -2,6 +2,7 @@ package kr.byeongmin.stockdaejang.domain.history.dto
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
+import kr.byeongmin.stockdaejang.domain.common.validation.STOCK_CODE_PATTERN
 import kr.byeongmin.stockdaejang.domain.stock.entity.Stock
 
 @Schema(description = "거래 내역의 '종목명 또는 종목코드' 필터에서 선택할 수 있는 매수 종목")
@@ -9,7 +10,7 @@ data class StockStatusResponseDto(
     @field:Schema(
         description = "종목코드",
         example = "005930",
-        pattern = "^[0-9A-Z]{6}$",
+        pattern = STOCK_CODE_PATTERN,
     )
     val code: String,
 
@@ -36,7 +37,7 @@ data class StockStatusResponseDto(
     companion object {
         fun from(stock: Stock): StockStatusResponseDto {
             return StockStatusResponseDto(
-                code = stock.itemCode,
+                code = stock.stockCode,
                 name = stock.stockName,
                 market = stock.market,
                 isEtf = stock.isEtf,

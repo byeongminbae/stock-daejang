@@ -7,6 +7,7 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import kr.byeongmin.stockdaejang.domain.common.validation.BROKERAGE_CODE_PATTERN
 import kr.byeongmin.stockdaejang.global.entity.Base
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
@@ -23,7 +24,7 @@ class Brokerage(
 
     @Column(name = "code", nullable = false, unique = true)
     @JdbcTypeCode(SqlTypes.CHAR)
-    @field:Schema(description = "증권사 코드. 숫자 0이 포함되어 String 임", example = "240", pattern = "^[0-9]{3}$")
+    @field:Schema(description = "증권사 코드. 숫자 0이 포함되어 String 임", example = "240", pattern = BROKERAGE_CODE_PATTERN)
     val code: String,
 
     @Column(name = "name", nullable = false, unique = true)

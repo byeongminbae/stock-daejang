@@ -5,7 +5,7 @@ import kr.byeongmin.stockdaejang.domain.dashboard.dto.DashboardOwnerResponseDto
 import kr.byeongmin.stockdaejang.domain.dashboard.dto.DashboardResponseDto
 import kr.byeongmin.stockdaejang.domain.dashboard.dto.DashboardStockResponseDto
 import kr.byeongmin.stockdaejang.domain.dashboard.service.DashboardService
-import kr.byeongmin.stockdaejang.domain.stock.provider.MarketSession
+import kr.byeongmin.stockdaejang.domain.stock.enums.DomesticMarketSession
 import kr.byeongmin.stockdaejang.global.response.SuccessDataResponse
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
@@ -95,7 +95,7 @@ class DashboardControllerTest {
                 ),
             ),
             quoteFetchedAt = "2026-08-20T09:03:00+09:00",
-            valuationSession = MarketSession.PRE_MARKET,
+            valuationSession = DomesticMarketSession.PRE_MARKET,
         )
     }
 }

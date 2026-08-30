@@ -16,7 +16,7 @@ async function createBuy(request: APIRequestContext, stock: (typeof boughtStocks
       brokerageCode: "240",
       executedAt: "2026-08-09T10:00",
       isEtf: false,
-      itemCode: stock.code,
+      stockCode: stock.code,
       market: "KOSPI",
       ownerId: 1,
       quantity: "1",

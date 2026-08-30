@@ -1,34 +1,28 @@
 package kr.byeongmin.stockdaejang.domain.stock.dto
 
-import kr.byeongmin.stockdaejang.domain.stock.provider.MarketSession
+import kr.byeongmin.stockdaejang.domain.stock.enums.MarketSession
+import kr.byeongmin.stockdaejang.external.naver.dto.MarketPriceSnapshotDto
 import java.time.OffsetDateTime
 
 data class MarketPriceDto(
-    val itemCode: String,
-
+    val stockCode: String,
     val localTradedAt: OffsetDateTime,
-
-    val marketStatus: String,
-
     val price: Long,
-
-    val session: MarketSession,
-
+    val marketSession: MarketSession,
     val stockName: String,
 ) {
     companion object {
-        fun from(
+        fun of(
             marketPriceSnapshot: MarketPriceSnapshotDto,
             localTradedAt: OffsetDateTime,
             price: Long,
-            session: MarketSession,
+            marketSession: MarketSession,
         ): MarketPriceDto {
             return MarketPriceDto(
-                itemCode = marketPriceSnapshot.itemCode,
+                stockCode = marketPriceSnapshot.stockCode,
                 localTradedAt = localTradedAt,
-                marketStatus = marketPriceSnapshot.marketStatus,
                 price = price,
-                session = session,
+                marketSession = marketSession,
                 stockName = marketPriceSnapshot.stockName,
             )
         }
