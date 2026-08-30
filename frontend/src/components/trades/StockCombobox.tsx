@@ -66,8 +66,8 @@ export function StockCombobox({ value, onChange, error, disabled = false }: Stoc
       setState(retryKey > 0 ? "refreshing" : "loading");
       try {
         const payload: unknown = await ky
-          .get("/api/v1/stocks/search", {
-            searchParams: { q: trimmed },
+          .get("/api/v1/stocks", {
+            searchParams: { stockName: trimmed },
             signal: controller.signal,
             timeout: 8_000,
           })

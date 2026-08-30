@@ -9,7 +9,7 @@ const marketSessionSchema = z.enum(MARKET_SESSIONS);
 const dashboardStockSchema = z.strictObject({
   stockCode: z.string().regex(/^[0-9A-Z]{6}$/),
   stockName: z.string().min(1),
-  quantity: z.number().int(),
+  quantity: financeNumberSchema,
   averageBuyPrice: financeNumberSchema,
   totalBuyAmount: financeNumberSchema,
   brokerageWeight: financeNumberSchema,

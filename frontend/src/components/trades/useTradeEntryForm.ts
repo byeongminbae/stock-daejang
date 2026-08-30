@@ -30,7 +30,7 @@ const tradeErrorResponseSchema = z.object({
 });
 
 const createTradeResponseSchema = z.discriminatedUnion("success", [
-  z.object({ success: z.literal(true), timestamp: z.string(), data: z.object({ id: z.string() }) }),
+  z.object({ success: z.literal(true), timestamp: z.string(), data: z.number().int().positive() }),
   tradeErrorResponseSchema,
 ]);
 
@@ -57,12 +57,19 @@ const previewRequestSchema = z.object({
 const previewSuccessResponseSchema = z.object({
   success: z.literal(true),
   timestamp: z.string(),
-  data: z.object({
-    amount: z.string().regex(/^\d+$/),
-    averageBuyPrice: z.string().nullable(),
-    expectedProfit: z.string().nullable(),
-    heldQuantity: z.string().regex(/^\d+$/),
-  }),
+  data: z
+    .object({
+      amount: z.string().regex(/^\d+$/),
+      averageBuyPrice: z.number(),
+      expectedProfit: z.number().nullable(),
+      heldQuantity: z.number(),
+    })
+    .transform(({ amount, averageBuyPrice, expectedProfit, heldQuantity }) => ({
+      amount,
+      averageBuyPrice: heldQuantity === 0 ? null : averageBuyPrice.toString(),
+      expectedProfit: expectedProfit === null ? null : expectedProfit.toString(),
+      heldQuantity: heldQuantity.toString(),
+    })),
 });
 
 const previewResponseSchema = z.discriminatedUnion("success", [
@@ -230,7 +237,7 @@ export function useTradeEntryForm({
         ? await ky.patch("/api/v1/trades", {
             throwHttpErrors: false,
             timeout: 10_000,
-            json: { id: tradeId, ...payload },
+            json: { id: Number(tradeId), ...payload },
           })
         : await ky.post("/api/v1/trades", {
             throwHttpErrors: false,
@@ -263,7 +270,7 @@ export function useTradeEntryForm({
       if (tradeId !== undefined) {
         onSaved?.(tradeId);
       } else if ("data" in result) {
-        onSaved?.(result.data.id);
+        onSaved?.((result as { data: number }).data.toString());
       }
       router.refresh();
     } catch {

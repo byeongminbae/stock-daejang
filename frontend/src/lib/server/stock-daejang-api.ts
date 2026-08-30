@@ -7,7 +7,7 @@ import type { Brokerage, Owner } from "@/lib/api-contracts";
 
 import { getInternalApiData } from "./internal-api";
 
-const financeTextSchema = z.string().regex(/^-?(0|[1-9]\d*)(\.\d+)?$/);
+const financeNumberSchema = z.number().finite();
 const ownerIdSchema = z.number().int().positive().max(Number.MAX_SAFE_INTEGER);
 const ownerSchema = z.strictObject({
   id: ownerIdSchema,
@@ -19,22 +19,29 @@ const brokerageSchema = z.strictObject({
 });
 const historyRowSchema = z
   .strictObject({
-    amount: financeTextSchema,
+    amount: financeNumberSchema,
     brokerageCode: z.string().regex(/^\d{3}$/),
     brokerageName: z.string().min(1),
     executedAt: z.string().min(1),
-    id: z.string().regex(/^[1-9]\d*$/),
+    id: z.number().int().positive(),
     isEtf: z.boolean(),
     stockCode: z.string().regex(/^[0-9A-Z]{6}$/),
     market: z.string().min(1),
     ownerId: ownerIdSchema,
     ownerName: z.string().min(1),
-    quantity: financeTextSchema,
-    realizedProfit: financeTextSchema.nullable(),
+    quantity: financeNumberSchema,
+    realizedProfit: financeNumberSchema.nullable(),
     stockName: z.string().min(1),
-    unitPrice: financeTextSchema,
+    unitPrice: financeNumberSchema,
   })
-  .transform(({ realizedProfit, ...row }) => ({ ...row, profit: realizedProfit }));
+  .transform(({ realizedProfit, id, amount, quantity, unitPrice, ...row }) => ({
+    ...row,
+    id: id.toString(),
+    amount: amount.toString(),
+    quantity: quantity.toString(),
+    unitPrice: unitPrice.toString(),
+    profit: realizedProfit === null ? null : realizedProfit.toString(),
+  }));
 const historySchema = z
   .strictObject({
     currentPage: z.number().int().positive(),

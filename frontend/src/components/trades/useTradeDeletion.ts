@@ -80,7 +80,7 @@ export function useTradeDeletion({ rows, side }: UseTradeDeletionOptions) {
       const response = await ky.delete("/api/v1/trades", {
         throwHttpErrors: false,
         timeout: 10_000,
-        json: { tradeIds: selectedRowIds },
+        json: { tradeIds: selectedRowIds.map(Number) },
       });
       const result = deleteResponseSchema.parse(await response.json<unknown>());
       if (!response.ok || !result.success) {
