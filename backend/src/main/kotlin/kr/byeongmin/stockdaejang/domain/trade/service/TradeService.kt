@@ -65,9 +65,9 @@ class TradeService(
 			)
 		)
 
-		val replayedPositions =
+		val dashboardPositionReplacements =
 			replayTradesThenGetDashboardPositionReplacement(listOf(positionEntityDto.toPositionKeyAtDto()))
-		updateDashboardPositions(replayedPositions)
+		updateDashboardPositions(dashboardPositionReplacements)
 		return SuccessDataResponse(savedTrade.id.ifNullThrow())
 	}
 
@@ -126,12 +126,12 @@ class TradeService(
 		val affectedPositions = getEarliestByPositionKey(
 			selectedTrades.map(PositionEntityDto::from)
 		)
-		val replayedPositions = replayTradesThenGetDashboardPositionReplacement(
+		val dashboardPositionReplacements = replayTradesThenGetDashboardPositionReplacement(
 			affectedPositions.map(
 				PositionEntityDto::toPositionKeyAtDto
 			)
 		)
-		updateDashboardPositions(replayedPositions)
+		updateDashboardPositions(dashboardPositionReplacements)
 		return SuccessResponse()
 	}
 

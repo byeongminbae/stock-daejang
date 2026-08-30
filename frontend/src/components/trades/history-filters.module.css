@@ -198,10 +198,5 @@
 
   .actions {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .actions button {
-    min-width: 0;
   }
 }

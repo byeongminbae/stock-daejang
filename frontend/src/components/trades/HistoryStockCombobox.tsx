@@ -16,6 +16,7 @@ import type { StockSelection } from "./types";
 interface HistoryStockComboboxProps {
   readonly stocks: readonly StockSelection[];
   readonly initialValue: string;
+  readonly onChange: (value: string) => void;
 }
 
 function matches(stock: StockSelection, query: string): boolean {
@@ -26,7 +27,11 @@ function matches(stock: StockSelection, query: string): boolean {
         stock.code.toLocaleUpperCase("en-US").includes(query.trim().toLocaleUpperCase("en-US"));
 }
 
-export function HistoryStockCombobox({ stocks, initialValue }: HistoryStockComboboxProps) {
+export function HistoryStockCombobox({
+  stocks,
+  initialValue,
+  onChange,
+}: HistoryStockComboboxProps) {
   const baseId = useId();
   const inputId = `${baseId}-history-stock`;
   const listId = `${baseId}-history-stock-list`;
@@ -58,6 +63,7 @@ export function HistoryStockCombobox({ stocks, initialValue }: HistoryStockCombo
     setQuery(stock.name);
     setOpen(false);
     setActiveIndex(-1);
+    onChange(stock.code);
   };
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -100,6 +106,7 @@ export function HistoryStockCombobox({ stocks, initialValue }: HistoryStockCombo
 
   const handleBlur = (_event: FocusEvent<HTMLInputElement>) => {
     closeTimer.current = window.setTimeout(() => setOpen(false), 150);
+    onChange(selected?.code ?? query.trim());
   };
 
   const handleComposition = (event: CompositionEvent<HTMLInputElement>) => {
@@ -112,7 +119,6 @@ export function HistoryStockCombobox({ stocks, initialValue }: HistoryStockCombo
         종목명 또는 종목코드
       </label>
       <div className={styles.stockAnchor}>
-        <input name="stockNameOrCode" type="hidden" value={selected?.code ?? query.trim()} />
         <input
           id={inputId}
           className="control"

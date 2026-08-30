@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { type FormEvent, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import type { Brokerage, Owner } from "@/lib/api-contracts";
 import { HistoryFilterFields } from "./HistoryFilterFields";
 import {
@@ -31,20 +31,21 @@ export function HistoryFilters({ brokerages, owners, stocks, side }: HistoryFilt
   const searchParams = useSearchParams();
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
+  const values = Object.fromEntries(
+    BASE_FILTER_KEYS.map((key) => [key, searchParams.get(key) ?? ""]),
+  ) as Readonly<Record<(typeof BASE_FILTER_KEYS)[number], string>>;
   const active: ActiveFilter[] = [];
   for (const key of BASE_FILTER_KEYS) {
     if (key === "from" || key === "to") continue;
     const value = searchParams.get(key);
     if (value) active.push({ key, value });
   }
-  const from = searchParams.get("from");
-  const to = searchParams.get("to");
   const period =
-    from || to
+    values.from || values.to
       ? [
           {
             key: "period",
-            value: `${from ?? "시작일"} ~ ${to ?? "종료일"}`,
+            value: `${values.from || "시작일"} ~ ${values.to || "종료일"}`,
           },
         ]
       : [];
@@ -55,22 +56,17 @@ export function HistoryFilters({ brokerages, owners, stocks, side }: HistoryFilt
     startTransition(() => router.push(query ? `${pathname}?${query}` : pathname));
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    const next = new URLSearchParams();
-    const nextFrom = String(data.get("from") ?? "");
-    const nextTo = String(data.get("to") ?? "");
-    if (nextFrom && nextTo && nextFrom > nextTo) {
+  const applyFilter = (overrides: Readonly<Partial<Record<string, string>>>) => {
+    const merged = { ...values, ...overrides };
+    if (merged.from && merged.to && merged.from > merged.to) {
       setError("시작일은 종료일보다 늦을 수 없습니다.");
       return;
     }
-    for (const key of BASE_FILTER_KEYS) {
-      const value = String(data.get(key) ?? "").trim();
-      if (value) next.set(key, value);
-      else next.delete(key);
+    const next = new URLSearchParams();
+    for (const filterKey of BASE_FILTER_KEYS) {
+      const filterValue = merged[filterKey].trim();
+      if (filterValue) next.set(filterKey, filterValue);
     }
-    next.delete("page");
     setError("");
     navigate(next);
   };
@@ -98,17 +94,14 @@ export function HistoryFilters({ brokerages, owners, stocks, side }: HistoryFilt
       <summary>
         필터 <span className={styles.count}>{activeFilters.length}개 적용</span>
       </summary>
-      <form
-        key={searchParams.toString()}
-        className={styles.form}
-        onSubmit={handleSubmit}
-        aria-busy={isPending}
-      >
+      <div className={styles.form} aria-busy={isPending}>
         <HistoryFilterFields
           brokerages={brokerages}
+          key={searchParams.toString()}
+          onFilterChange={applyFilter}
           owners={owners}
           stocks={stocks}
-          value={(key) => searchParams.get(key) ?? ""}
+          values={values}
         />
         <div className={styles.actions}>
           <button
@@ -117,13 +110,10 @@ export function HistoryFilters({ brokerages, owners, stocks, side }: HistoryFilt
             onClick={clearAll}
             disabled={isPending || activeFilters.length === 0}
           >
-            전체 초기화
-          </button>
-          <button className="button button--primary" type="submit" disabled={isPending}>
-            {isPending ? "검색 중..." : "검색 적용"}
+            조건 초기화
           </button>
         </div>
-      </form>
+      </div>
       {error ? (
         <p className={styles.error} role="alert">
           {error}

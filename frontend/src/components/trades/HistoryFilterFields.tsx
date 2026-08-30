@@ -1,16 +1,20 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import type { Brokerage, Owner } from "@/lib/api-contracts";
 import { HistoryStockCombobox } from "./HistoryStockCombobox";
 import { periodRange } from "./history-date-range";
-import { PERIOD_PRESETS } from "./history-filter-config";
+import { type BASE_FILTER_KEYS, PERIOD_PRESETS } from "./history-filter-config";
 import styles from "./history-filters.module.css";
 import type { StockSelection } from "./types";
+
+type FilterKey = (typeof BASE_FILTER_KEYS)[number];
+type FilterValues = Readonly<Record<FilterKey, string>>;
 
 interface HistoryFilterFieldsProps {
   readonly brokerages: readonly Brokerage[];
   readonly owners: readonly Owner[];
   readonly stocks: readonly StockSelection[];
-  readonly value: (key: string) => string;
+  readonly values: FilterValues;
+  readonly onFilterChange: (overrides: Readonly<Partial<Record<FilterKey, string>>>) => void;
 }
 
 function selectedPeriod(from: string, to: string): (typeof PERIOD_PRESETS)[number] | null {
@@ -24,24 +28,20 @@ function selectedPeriod(from: string, to: string): (typeof PERIOD_PRESETS)[numbe
   return "기간선택";
 }
 
-function HistoryDateRange({ value }: Pick<HistoryFilterFieldsProps, "value">) {
-  const [from, setFrom] = useState(() => value("from"));
-  const [to, setTo] = useState(() => value("to"));
-  const [selectedPreset, setSelectedPreset] = useState<(typeof PERIOD_PRESETS)[number] | null>(() =>
-    selectedPeriod(value("from"), value("to")),
-  );
+function HistoryDateRange({
+  values,
+  onFilterChange,
+}: Pick<HistoryFilterFieldsProps, "values" | "onFilterChange">) {
   const fromInput = useRef<HTMLInputElement>(null);
+  const activePreset = selectedPeriod(values.from, values.to);
 
   const applyPeriod = (preset: (typeof PERIOD_PRESETS)[number]) => {
     if (preset === "기간선택") {
-      setSelectedPreset(preset);
       fromInput.current?.focus();
       return;
     }
     const range = periodRange(preset);
-    setFrom(range.from);
-    setTo(range.to);
-    setSelectedPreset(preset);
+    onFilterChange({ from: range.from, to: range.to });
   };
 
   return (
@@ -53,7 +53,7 @@ function HistoryDateRange({ value }: Pick<HistoryFilterFieldsProps, "value">) {
             className="button button--secondary"
             key={preset}
             type="button"
-            aria-pressed={selectedPreset === preset}
+            aria-pressed={activePreset === preset}
             onClick={() => applyPeriod(preset)}
           >
             {preset}
@@ -70,11 +70,8 @@ function HistoryDateRange({ value }: Pick<HistoryFilterFieldsProps, "value">) {
             ref={fromInput}
             lang="ko-KR"
             type="date"
-            value={from}
-            onChange={(event) => {
-              setFrom(event.currentTarget.value);
-              setSelectedPreset("기간선택");
-            }}
+            value={values.from}
+            onChange={(event) => onFilterChange({ from: event.currentTarget.value })}
           />
         </label>
         <span aria-hidden="true">~</span>
@@ -86,11 +83,8 @@ function HistoryDateRange({ value }: Pick<HistoryFilterFieldsProps, "value">) {
             name="to"
             lang="ko-KR"
             type="date"
-            value={to}
-            onChange={(event) => {
-              setTo(event.currentTarget.value);
-              setSelectedPreset("기간선택");
-            }}
+            value={values.to}
+            onChange={(event) => onFilterChange({ to: event.currentTarget.value })}
           />
         </label>
       </div>
@@ -100,14 +94,19 @@ function HistoryDateRange({ value }: Pick<HistoryFilterFieldsProps, "value">) {
 
 export function HistoryFilterFields({
   brokerages,
+  onFilterChange,
   owners,
   stocks,
-  value,
+  values,
 }: HistoryFilterFieldsProps) {
   return (
     <>
-      <HistoryDateRange value={value} />
-      <HistoryStockCombobox initialValue={value("stockNameOrCode")} stocks={stocks} />
+      <HistoryDateRange values={values} onFilterChange={onFilterChange} />
+      <HistoryStockCombobox
+        initialValue={values.stockNameOrCode}
+        onChange={(value) => onFilterChange({ stockNameOrCode: value })}
+        stocks={stocks}
+      />
       <div className="field">
         <label className="field-label" htmlFor="filter-owner">
           소유주
@@ -116,7 +115,8 @@ export function HistoryFilterFields({
           id="filter-owner"
           className="control"
           name="ownerId"
-          defaultValue={value("ownerId")}
+          value={values.ownerId}
+          onChange={(event) => onFilterChange({ ownerId: event.currentTarget.value })}
         >
           <option value="">전체</option>
           {owners.map((owner) => (
@@ -134,7 +134,8 @@ export function HistoryFilterFields({
           id="filter-brokerage"
           className="control"
           name="brokerageCode"
-          defaultValue={value("brokerageCode")}
+          value={values.brokerageCode}
+          onChange={(event) => onFilterChange({ brokerageCode: event.currentTarget.value })}
         >
           <option value="">전체</option>
           {brokerages.map((brokerage) => (
