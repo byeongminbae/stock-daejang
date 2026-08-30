@@ -87,6 +87,7 @@ describe("dashboard brokerage layout", () => {
     const markup = renderToStaticMarkup(
       createElement(OwnerSection, {
         owner: ownerWithDuplicatedStock,
+        showBrokerageTotals: true,
       }),
     );
 
@@ -103,6 +104,7 @@ describe("dashboard brokerage layout", () => {
       sortField: "stockName",
       sortDirection: "asc",
       onSort: () => undefined,
+      showBrokerageTotals: true,
     });
 
     // When: the wide dashboard table is rendered.
@@ -120,7 +122,7 @@ describe("dashboard brokerage layout", () => {
 
   it("renders brokerage metadata inside every compact stock card", () => {
     // Given: two stock cards from the same brokerage.
-    const cards = createElement(PositionCards, { owner, brokerages });
+    const cards = createElement(PositionCards, { owner, brokerages, showBrokerageTotals: true });
 
     // When: the compact dashboard cards are rendered.
     const markup = renderToStaticMarkup(cards);

@@ -12,6 +12,7 @@ import type { DashboardBrokerage, DashboardOwner } from "./types";
 type PositionCardsProps = Readonly<{
   owner: DashboardOwner;
   brokerages: readonly DashboardBrokerage[];
+  showBrokerageTotals: boolean;
 }>;
 
 function PositionTotalMetrics({
@@ -66,7 +67,7 @@ function PositionTotalMetrics({
   );
 }
 
-export function PositionCards({ owner, brokerages }: PositionCardsProps) {
+export function PositionCards({ owner, brokerages, showBrokerageTotals }: PositionCardsProps) {
   return (
     <>
       <div className={`compact-only ${styles.cardGroups}`}>
@@ -141,15 +142,17 @@ export function PositionCards({ owner, brokerages }: PositionCardsProps) {
                 );
               })}
             </ul>
-            <aside
-              className={styles.brokerageTotals}
-              aria-label={`${brokerage.brokerageName} 합계`}
-            >
-              <h3>
-                {brokerage.brokerageName} 합계 ({brokerage.stockCount}종목)
-              </h3>
-              <PositionTotalMetrics aggregate={brokerage} />
-            </aside>
+            {showBrokerageTotals ? (
+              <aside
+                className={styles.brokerageTotals}
+                aria-label={`${brokerage.brokerageName} 합계`}
+              >
+                <h3>
+                  {brokerage.brokerageName} 합계 ({brokerage.stockCount}종목)
+                </h3>
+                <PositionTotalMetrics aggregate={brokerage} />
+              </aside>
+            ) : null}
           </div>
         ))}
       </div>

@@ -1,3 +1,5 @@
+import { cookies } from "next/headers";
+import { SHOW_BROKERAGE_TOTALS_COOKIE } from "@/components/dashboard/brokerage-totals-cookie";
 import { DashboardView } from "@/components/dashboard/dashboard-view";
 import { loadDashboard } from "@/components/dashboard/load-dashboard";
 import { PrimitiveShowcase } from "@/components/primitive-showcase";
@@ -16,5 +18,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   }
 
   const dashboard = await loadDashboard();
-  return <DashboardView dashboard={dashboard} />;
+  const cookieStore = await cookies();
+  const showBrokerageTotals = cookieStore.get(SHOW_BROKERAGE_TOTALS_COOKIE)?.value !== "false";
+  return <DashboardView dashboard={dashboard} initialShowBrokerageTotals={showBrokerageTotals} />;
 }

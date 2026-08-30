@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 
+import { SHOW_BROKERAGE_TOTALS_COOKIE } from "./brokerage-totals-cookie";
 import styles from "./dashboard.module.css";
 import { OwnerSection } from "./owner-section";
 import { SummaryStrip } from "./summary-strip";
@@ -11,15 +12,28 @@ import type { DashboardResponse } from "./types";
 
 type DashboardViewProps = Readonly<{
   dashboard: DashboardResponse;
+  initialShowBrokerageTotals: boolean;
 }>;
 
-export function DashboardView({ dashboard }: DashboardViewProps) {
+const SHOW_BROKERAGE_TOTALS_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
+
+export function DashboardView({ dashboard, initialShowBrokerageTotals }: DashboardViewProps) {
   const router = useRouter();
   const [refreshing, startRefresh] = useTransition();
+  const [showBrokerageTotals, setShowBrokerageTotals] = useState(initialShowBrokerageTotals);
   const isEmpty = dashboard.stockCount === 0;
 
   function refreshPrices() {
     startRefresh(() => router.refresh());
+  }
+
+  function toggleBrokerageTotals() {
+    setShowBrokerageTotals((current) => {
+      const next = !current;
+      // biome-ignore lint/suspicious/noDocumentCookie: Cookie Store API isn't supported in every browser yet.
+      document.cookie = `${SHOW_BROKERAGE_TOTALS_COOKIE}=${next}; path=/; max-age=${SHOW_BROKERAGE_TOTALS_COOKIE_MAX_AGE_SECONDS}; SameSite=Lax`;
+      return next;
+    });
   }
 
   return (
@@ -32,9 +46,19 @@ export function DashboardView({ dashboard }: DashboardViewProps) {
             가족별 보유 수량과 매입 원가, 오늘의 평가 결과를 한눈에 비교합니다.
           </p>
         </div>
-        <Link className="button button--primary" href="/record">
-          매수 기록 추가
-        </Link>
+        <div className={styles.headerActions}>
+          <button
+            className="button button--secondary"
+            type="button"
+            onClick={toggleBrokerageTotals}
+            aria-pressed={showBrokerageTotals}
+          >
+            {showBrokerageTotals ? "증권사 합계 숨기기" : "증권사 합계 보기"}
+          </button>
+          <Link className="button button--primary" href="/record">
+            매수 기록 추가
+          </Link>
+        </div>
       </header>
 
       <SummaryStrip dashboard={dashboard} refreshing={refreshing} onRefresh={refreshPrices} />
@@ -53,7 +77,11 @@ export function DashboardView({ dashboard }: DashboardViewProps) {
 
       <div className={styles.ownerStack} aria-busy={refreshing}>
         {dashboard.owners.map((owner) => (
-          <OwnerSection key={owner.ownerId} owner={owner} />
+          <OwnerSection
+            key={owner.ownerId}
+            owner={owner}
+            showBrokerageTotals={showBrokerageTotals}
+          />
         ))}
       </div>
     </div>

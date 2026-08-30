@@ -30,6 +30,7 @@ type PositionTableProps = Readonly<{
   sortField: SortField;
   sortDirection: SortDirection;
   onSort: (field: SortField) => void;
+  showBrokerageTotals: boolean;
 }>;
 
 function ariaSort(
@@ -81,6 +82,7 @@ export function PositionTable({
   sortField,
   sortDirection,
   onSort,
+  showBrokerageTotals,
 }: PositionTableProps) {
   return (
     <div className={`desktop-only ${styles.tableWrap}`}>
@@ -146,12 +148,14 @@ export function PositionTable({
                 </tr>
               );
             })}
-            <tr className={styles.brokerageTotalRow}>
-              <th colSpan={2} scope="row">
-                {brokerage.brokerageName} 합계 ({brokerage.stockCount}종목)
-              </th>
-              <PositionTotalCells aggregate={brokerage} />
-            </tr>
+            {showBrokerageTotals ? (
+              <tr className={styles.brokerageTotalRow}>
+                <th colSpan={2} scope="row">
+                  {brokerage.brokerageName} 합계 ({brokerage.stockCount}종목)
+                </th>
+                <PositionTotalCells aggregate={brokerage} />
+              </tr>
+            ) : null}
           </tbody>
         ))}
         <tfoot>

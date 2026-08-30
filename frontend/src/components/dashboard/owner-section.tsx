@@ -26,6 +26,7 @@ const sortOptions: readonly Readonly<{
 
 type OwnerSectionProps = Readonly<{
   owner: DashboardOwner;
+  showBrokerageTotals: boolean;
 }>;
 
 function selectedSortField(value: string): SortField | null {
@@ -43,7 +44,7 @@ function sortedBrokerages(
   }));
 }
 
-export function OwnerSection({ owner }: OwnerSectionProps) {
+export function OwnerSection({ owner, showBrokerageTotals }: OwnerSectionProps) {
   const [sortField, setSortField] = useState<SortField>("totalBuyAmount");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const sorted = useMemo(
@@ -128,8 +129,13 @@ export function OwnerSection({ owner }: OwnerSectionProps) {
             sortField={sortField}
             sortDirection={sortDirection}
             onSort={sortFromHeader}
+            showBrokerageTotals={showBrokerageTotals}
           />
-          <PositionCards owner={owner} brokerages={sorted} />
+          <PositionCards
+            owner={owner}
+            brokerages={sorted}
+            showBrokerageTotals={showBrokerageTotals}
+          />
         </>
       )}
     </section>
