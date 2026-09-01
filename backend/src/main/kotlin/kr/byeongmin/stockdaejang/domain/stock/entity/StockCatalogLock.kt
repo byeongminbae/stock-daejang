@@ -2,7 +2,7 @@ package kr.byeongmin.stockdaejang.domain.stock.entity
 
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.persistence.*
-import kr.byeongmin.stockdaejang.domain.stock.enums.StockCatalogLockName
+import kr.byeongmin.stockdaejang.domain.stock.types.StockCatalogLockName
 import kr.byeongmin.stockdaejang.global.entity.Base
 
 @Entity

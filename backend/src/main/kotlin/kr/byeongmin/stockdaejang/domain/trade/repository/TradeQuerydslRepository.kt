@@ -8,6 +8,7 @@ import kr.byeongmin.stockdaejang.domain.trade.dto.PositionKeyAtDto
 import kr.byeongmin.stockdaejang.domain.trade.entity.QTrade.trade
 import kr.byeongmin.stockdaejang.domain.trade.entity.Trade
 import org.springframework.stereotype.Repository
+import java.time.OffsetDateTime
 
 @Repository
 class TradeQuerydslRepository(
@@ -55,13 +56,26 @@ class TradeQuerydslRepository(
 			.fetchFirst()
 	}
 
+	fun findLatestTradeAt(ownerId: Long, brokerageId: Long, stockId: Long, executedAt: OffsetDateTime): Trade? {
+		return queryFactory
+			.selectFrom(trade)
+			.where(
+				trade.owner.id.eq(ownerId),
+				trade.brokerage.id.eq(brokerageId),
+				trade.stock.id.eq(stockId),
+				trade.executedAt.loe(executedAt),
+			)
+			.orderBy(trade.executedAt.desc(), trade.id.desc())
+			.fetchFirst()
+	}
+
 	fun findPositionTradesBefore(positionKeyAtDtos: List<PositionKeyAtDto>): List<Trade> {
 		if (positionKeyAtDtos.isEmpty()) return emptyList()
 
 		return queryFactory
 			.selectFrom(trade)
 			.join(trade.stock, stock).fetchJoin()
-			.where(positionKeyAtDtos.map(::beforePositionCondition).reduce(BooleanExpression::or))
+			.where(positionKeyAtDtos.map(::conditionPerBeforePosition).reduce(BooleanExpression::or))
 			.orderBy(
 				trade.owner.id.asc(),
 				trade.brokerage.id.asc(),
@@ -77,7 +91,7 @@ class TradeQuerydslRepository(
 		return queryFactory
 			.selectFrom(trade)
 			.join(trade.stock, stock).fetchJoin()
-			.where(positionKeyAtDtos.map(::fromPositionCondition).reduce(BooleanExpression::or))
+			.where(positionKeyAtDtos.map(::conditionPerFromPosition).reduce(BooleanExpression::or))
 			.orderBy(
 				trade.owner.id.asc(),
 				trade.brokerage.id.asc(),
@@ -88,14 +102,14 @@ class TradeQuerydslRepository(
 			.fetch()
 	}
 
-	private fun beforePositionCondition(positionKeyAtDto: PositionKeyAtDto): BooleanExpression {
+	private fun conditionPerBeforePosition(positionKeyAtDto: PositionKeyAtDto): BooleanExpression {
 		return trade.owner.id.eq(positionKeyAtDto.positionKeyDto.ownerId)
 			.and(trade.brokerage.id.eq(positionKeyAtDto.positionKeyDto.brokerageId))
 			.and(stock.stockCode.eq(positionKeyAtDto.positionKeyDto.stockCode))
 			.and(trade.executedAt.lt(positionKeyAtDto.executedAt))
 	}
 
-	private fun fromPositionCondition(positionKeyAtDto: PositionKeyAtDto): BooleanExpression {
+	private fun conditionPerFromPosition(positionKeyAtDto: PositionKeyAtDto): BooleanExpression {
 		return trade.owner.id.eq(positionKeyAtDto.positionKeyDto.ownerId)
 			.and(trade.brokerage.id.eq(positionKeyAtDto.positionKeyDto.brokerageId))
 			.and(stock.stockCode.eq(positionKeyAtDto.positionKeyDto.stockCode))

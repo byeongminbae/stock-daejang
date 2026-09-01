@@ -9,7 +9,7 @@ import kr.byeongmin.stockdaejang.domain.common.validation.BROKERAGE_CODE_PATTERN
 import kr.byeongmin.stockdaejang.domain.common.validation.BrokerageCode
 import kr.byeongmin.stockdaejang.domain.common.validation.STOCK_CODE_PATTERN
 import kr.byeongmin.stockdaejang.domain.common.validation.StockCode
-import kr.byeongmin.stockdaejang.domain.trade.enums.TradeType
+import kr.byeongmin.stockdaejang.domain.trade.types.TradeType
 import java.math.BigDecimal
 import java.time.OffsetDateTime
 

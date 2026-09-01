@@ -8,15 +8,15 @@ data class TradeHistoryResponseDto(
     val tradeHistoryRowResponseDtos: List<TradeHistoryRowResponseDto>,
 
     @field:Schema(
-        description = "검색 결과 건수",
-        example = "42",
+        description = "현재 페이지에 담긴 건수",
+        example = "25",
         minimum = "0",
     )
-    val totalMatchedCount: Long,
+    val count: Int,
 
     @field:Schema(
-        description = "전체 건수",
-        example = "100",
+        description = "조건에 맞는 전체 페이지 합산 건수",
+        example = "42",
         minimum = "0",
     )
     val totalCount: Long,

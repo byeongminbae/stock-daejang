@@ -1,10 +1,7 @@
 package kr.byeongmin.stockdaejang.domain.trade.dto
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
-import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Positive
-import jakarta.validation.constraints.Size
 import kr.byeongmin.stockdaejang.domain.common.validation.BROKERAGE_CODE_PATTERN
 import kr.byeongmin.stockdaejang.domain.common.validation.BrokerageCode
 import kr.byeongmin.stockdaejang.domain.common.validation.STOCK_CODE_PATTERN
@@ -37,14 +34,6 @@ data class UpdateTradeRequestDto(
 	)
 	val executedAt: OffsetDateTime,
 
-	@get:JsonProperty("isEtf")
-	@get:Schema(
-		name = "isEtf",
-		description = "선택한 종목이 ETF인지 여부",
-		example = "false",
-	)
-	val isEtf: Boolean,
-
 	@field:Schema(
 		description = "종목코드",
 		pattern = STOCK_CODE_PATTERN,
@@ -52,16 +41,6 @@ data class UpdateTradeRequestDto(
 	)
 	@field:StockCode
 	val stockCode: String,
-
-	@field:Schema(
-		description = "시장명",
-		minLength = 1,
-		maxLength = 30,
-		example = "코스피",
-	)
-	@field:NotBlank
-	@field:Size(max = 30)
-	val market: String,
 
 	@field:Schema(
 		description = "소유주 ID",
@@ -78,16 +57,6 @@ data class UpdateTradeRequestDto(
 	)
 	@field:Positive
 	val quantity: BigDecimal,
-
-	@field:Schema(
-		description = "종목명",
-		minLength = 1,
-		maxLength = 100,
-		example = "삼성전자",
-	)
-	@field:NotBlank
-	@field:Size(max = 100)
-	val stockName: String,
 
 	@field:Schema(
 		description = "당시 단가",

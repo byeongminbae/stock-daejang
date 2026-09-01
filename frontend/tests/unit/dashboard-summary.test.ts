@@ -10,7 +10,6 @@ describe("dashboard summary", () => {
     const summary = createElement(SummaryStrip, {
       dashboard: {
         stockCount: 1,
-        checkedStockCount: 1,
         totalBuyAmount: 0,
         valuation: 0,
         unrealizedProfit: 0,
@@ -36,7 +35,6 @@ describe("dashboard summary", () => {
     const summary = createElement(SummaryStrip, {
       dashboard: {
         stockCount: 0,
-        checkedStockCount: 0,
         totalBuyAmount: 0,
         valuation: 0,
         unrealizedProfit: 0,
@@ -63,7 +61,6 @@ describe("dashboard summary", () => {
     const summary = createElement(SummaryStrip, {
       dashboard: {
         stockCount: 1,
-        checkedStockCount: 1,
         totalBuyAmount: 280000,
         valuation: 320000,
         unrealizedProfit: 40000,

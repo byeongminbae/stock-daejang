@@ -1,5 +1,7 @@
 package kr.byeongmin.stockdaejang.global.exception
 
+import io.github.oshai.kotlinlogging.KotlinLogging
+import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.ConstraintViolationException
 import kr.byeongmin.stockdaejang.global.error.CommonError
 import kr.byeongmin.stockdaejang.global.response.ErrorResponse
@@ -13,8 +15,14 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
+    private val logger = KotlinLogging.logger {}
+
     @ExceptionHandler(BusinessException::class)
-    fun handleBusinessException(exception: BusinessException): ResponseEntity<ErrorResponse> {
+    fun handleBusinessException(
+        exception: BusinessException,
+        request: HttpServletRequest,
+    ): ResponseEntity<ErrorResponse> {
+        logger.warn(exception) { requestLogMessage(request) }
         return ResponseEntity.status(exception.errorType.httpStatus).body(ErrorResponse(exception))
     }
 
@@ -52,5 +60,19 @@ class GlobalExceptionHandler {
     private fun invalidInput(fieldErrors: Map<String, String>): ResponseEntity<ErrorResponse> {
         val exception = BusinessException(CommonError.INVALID_INPUT_VALUE, fieldErrors)
         return ResponseEntity.status(exception.errorType.httpStatus).body(ErrorResponse(exception))
+    }
+
+    private fun requestLogMessage(request: HttpServletRequest): String {
+        return StringBuilder().append("\n")
+            .append("requestMethod: ${request.method}").append("\n")
+            .append("requestURL: ${request.requestURL}").append("\n")
+            .append("parameterMap: ${requestParameters(request)}")
+            .toString()
+    }
+
+    private fun requestParameters(request: HttpServletRequest): String {
+        return request.parameterMap.entries.joinToString(", ") { (key, values) ->
+            "$key=${values.joinToString(",")}"
+        }
     }
 }

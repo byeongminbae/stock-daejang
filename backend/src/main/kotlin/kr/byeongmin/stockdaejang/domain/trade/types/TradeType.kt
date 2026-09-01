@@ -1,4 +1,4 @@
-package kr.byeongmin.stockdaejang.domain.trade.enums
+package kr.byeongmin.stockdaejang.domain.trade.types
 
 import io.swagger.v3.oas.annotations.media.Schema
 import kr.byeongmin.stockdaejang.domain.common.util.zeroOr
@@ -22,8 +22,8 @@ enum class TradeType {
 		override fun apply(trade: Trade, accumulatedSnapshot: PositionSnapshot): PositionSnapshot {
 			if (accumulatedSnapshot.isExceedQuantity(trade.quantity)) {
 				throw BusinessException(
-					TradeError.INSUFFICIENT_HOLDING,
-					mapOf("quantity" to TradeError.INSUFFICIENT_HOLDING.message),
+					TradeErrorType.INSUFFICIENT_HOLDING,
+					mapOf("quantity" to TradeErrorType.INSUFFICIENT_HOLDING.message),
 				)
 			}
 

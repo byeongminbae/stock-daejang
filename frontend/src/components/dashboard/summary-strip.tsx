@@ -17,7 +17,12 @@ const marketSessionLabels = {
   AFTER_MARKET: "에프터",
 } as const satisfies Readonly<Record<MarketSession, string>>;
 export function SummaryStrip({ dashboard, refreshing, onRefresh }: SummaryStripProps) {
-  const { checkedStockCount, stockCount, totalBuyAmount, unrealizedProfit, valuation } = dashboard;
+  const { stockCount, totalBuyAmount, unrealizedProfit, valuation } = dashboard;
+  const checkedStockCount = new Set(
+    dashboard.owners.flatMap((owner) =>
+      owner.brokerages.flatMap((brokerage) => brokerage.stocks.map((stock) => stock.stockCode)),
+    ),
+  ).size;
   const quoteMetadata =
     dashboard.valuationSession === null
       ? {

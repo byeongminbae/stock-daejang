@@ -25,3 +25,7 @@ playwright/.auth/
 *.log
 npm-debug.log*
 pnpm-debug.log*
+.run/
+
+
+

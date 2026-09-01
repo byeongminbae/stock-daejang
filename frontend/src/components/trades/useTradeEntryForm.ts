@@ -42,6 +42,10 @@ const updateTradeResponseSchema = z.discriminatedUnion("success", [
 const previewRequestSchema = z.object({
   brokerageCode: z.string().regex(/^\d{3}$/),
   stockCode: z.string().regex(/^[0-9A-Z]{6}$/),
+  executedAt: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/)
+    .transform((value) => `${value}:00+09:00`),
   ownerId: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER),
   quantity: z
     .string()
@@ -59,13 +63,13 @@ const previewSuccessResponseSchema = z.object({
   timestamp: z.string(),
   data: z
     .object({
-      amount: z.string().regex(/^\d+$/),
+      amount: z.number(),
       averageBuyPrice: z.number(),
       expectedProfit: z.number().nullable(),
       heldQuantity: z.number(),
     })
     .transform(({ amount, averageBuyPrice, expectedProfit, heldQuantity }) => ({
-      amount,
+      amount: amount.toString(),
       averageBuyPrice: heldQuantity === 0 ? null : averageBuyPrice.toString(),
       expectedProfit: expectedProfit === null ? null : expectedProfit.toString(),
       heldQuantity: heldQuantity.toString(),
@@ -145,6 +149,7 @@ export function useTradeEntryForm({
     const parsed = previewRequestSchema.safeParse({
       brokerageCode,
       stockCode: stock?.code,
+      executedAt,
       ownerId: Number(ownerId),
       quantity,
       side,
@@ -180,7 +185,7 @@ export function useTradeEntryForm({
         if (!controller.signal.aborted) setPreviewUnavailable(true);
       });
     return () => controller.abort();
-  }, [brokerageCode, ownerId, quantity, side, stock, unitPrice]);
+  }, [brokerageCode, executedAt, ownerId, quantity, side, stock, unitPrice]);
 
   const amount = preview?.amount ?? null;
   const expectedProfit = preview?.expectedProfit ?? null;
@@ -225,9 +230,6 @@ export function useTradeEntryForm({
       brokerageCode: parsed.data.brokerageCode,
       executedAt: `${parsed.data.executedAt}:00+09:00`,
       stockCode: stock.code,
-      stockName: stock.name,
-      market: stock.market,
-      isEtf: stock.isEtf,
       ownerId: Number(parsed.data.ownerId),
       quantity: Number(parsed.data.quantity),
       unitPrice: Number(parsed.data.unitPrice),
@@ -242,7 +244,13 @@ export function useTradeEntryForm({
         : await ky.post("/api/v1/trades", {
             throwHttpErrors: false,
             timeout: 10_000,
-            json: { side, ...payload },
+            json: {
+              side,
+              stockName: stock.name,
+              market: stock.market,
+              isEtf: stock.isEtf,
+              ...payload,
+            },
           });
       const result = editing
         ? updateTradeResponseSchema.parse(await response.json<unknown>())

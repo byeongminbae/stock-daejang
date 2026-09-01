@@ -83,7 +83,7 @@ data class DashboardStockResponseDto(
             val quantity = position.quantity
             val totalBuyAmount = position.totalBuyAmount
             val averageBuyPrice = totalBuyAmount.divideRounded(quantity)
-            val currentPrice = BigDecimal.valueOf(marketPrice.price)
+            val currentPrice = marketPrice.price
             val valuation = currentPrice.multiplyRounded(quantity)
             val unrealizedProfit = valuation.subtractRounded(totalBuyAmount)
             return DashboardStockResponseDto(

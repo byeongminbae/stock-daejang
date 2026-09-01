@@ -44,20 +44,20 @@ const historyRowSchema = z
   }));
 const historySchema = z
   .strictObject({
+    count: z.number().int().nonnegative(),
     currentPage: z.number().int().positive(),
     hasFilters: z.boolean(),
     totalCount: z.number().int().nonnegative(),
-    totalMatchedCount: z.number().int().nonnegative(),
     totalPages: z.number().int().positive(),
     tradeHistoryRowResponseDtos: z.array(historyRowSchema),
   })
   .transform((data) => ({
+    count: data.count,
     currentPage: data.currentPage,
     hasFilters: data.hasFilters,
     rows: data.tradeHistoryRowResponseDtos,
-    total: data.totalMatchedCount,
+    total: data.totalCount,
     totalPages: data.totalPages,
-    unfilteredTotal: data.totalCount,
   }));
 const purchasedStockSchema = z.strictObject({
   code: z.string().regex(/^[0-9A-Z]{6}$/),

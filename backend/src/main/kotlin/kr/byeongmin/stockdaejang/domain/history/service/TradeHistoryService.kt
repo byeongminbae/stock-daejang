@@ -5,7 +5,6 @@ import kr.byeongmin.stockdaejang.domain.history.dto.TradeHistoryResponseDto
 import kr.byeongmin.stockdaejang.domain.history.dto.TradeHistoryRowResponseDto
 import kr.byeongmin.stockdaejang.domain.history.repository.HistoryQuerydslRepository
 import kr.byeongmin.stockdaejang.domain.trade.entity.Trade
-import kr.byeongmin.stockdaejang.domain.trade.repository.TradeRepository
 import kr.byeongmin.stockdaejang.global.response.SuccessDataResponse
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
@@ -17,11 +16,10 @@ import kotlin.math.ceil
 @Service
 class TradeHistoryService(
     private val historyQuerydslRepository: HistoryQuerydslRepository,
-    private val tradeRepository: TradeRepository,
 ) {
     @Transactional(readOnly = true)
     fun getHistory(getHistoryRequestDto: GetHistoryRequestDto): SuccessDataResponse<TradeHistoryResponseDto> {
-        val totalMatchedCount = historyQuerydslRepository.count(
+        val totalCount = historyQuerydslRepository.count(
             getHistoryRequestDto.side,
             getHistoryRequestDto.stockNameOrCode,
             getHistoryRequestDto.from,
@@ -29,18 +27,17 @@ class TradeHistoryService(
             getHistoryRequestDto.ownerId,
             getHistoryRequestDto.brokerageCode,
         )
-        val totalCount = tradeRepository.countBySide(getHistoryRequestDto.side)
 
-        val tradeHistoryPage = getTradeHistoryPages(getHistoryRequestDto, totalMatchedCount)
+        val tradeHistoryPage = getTradeHistoryPages(getHistoryRequestDto, totalCount)
         val tradeHistoryRows = tradeHistoryPage.content.map(TradeHistoryRowResponseDto::from)
 
         return SuccessDataResponse(
             TradeHistoryResponseDto(
                 tradeHistoryRowResponseDtos = tradeHistoryRows,
-                totalMatchedCount = totalMatchedCount,
+                count = tradeHistoryRows.size,
                 totalCount = totalCount,
                 currentPage = tradeHistoryPage.number + 1,
-                totalPages = getTotalPageCount(totalMatchedCount, getHistoryRequestDto.pageSize),
+                totalPages = getTotalPageCount(totalCount, getHistoryRequestDto.pageSize),
                 hasFilters = getHistoryRequestDto.hasFilters(),
             ),
         )

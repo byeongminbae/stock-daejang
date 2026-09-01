@@ -39,37 +39,15 @@ const dashboardOwnerSchema = z.strictObject({
   brokerages: z.array(dashboardBrokerageSchema),
 });
 
-const dashboardResponseShape = {
+export const dashboardResponseSchema = z.strictObject({
+  stockCount: z.number().int().nonnegative(),
   totalBuyAmount: financeNumberSchema,
   valuation: financeNumberSchema,
   unrealizedProfit: financeNumberSchema,
   owners: z.array(dashboardOwnerSchema),
-};
-
-const emptyDashboardResponseSchema = z.strictObject({
-  ...dashboardResponseShape,
-  stockCount: z.literal(0),
-  checkedStockCount: z.literal(0),
-  quoteFetchedAt: z.null(),
-  valuationSession: z.null(),
+  quoteFetchedAt: z.string().nullable(),
+  valuationSession: marketSessionSchema.nullable(),
 });
-
-const populatedDashboardResponseSchema = z
-  .strictObject({
-    ...dashboardResponseShape,
-    stockCount: z.number().int().positive(),
-    checkedStockCount: z.number().int().positive(),
-    quoteFetchedAt: z.string(),
-    valuationSession: marketSessionSchema,
-  })
-  .refine(({ checkedStockCount, stockCount }) => checkedStockCount === stockCount, {
-    path: ["checkedStockCount"],
-  });
-
-export const dashboardResponseSchema = z.union([
-  emptyDashboardResponseSchema,
-  populatedDashboardResponseSchema,
-]);
 
 export type DashboardStock = Readonly<z.infer<typeof dashboardStockSchema>>;
 export type DashboardBrokerage = Readonly<

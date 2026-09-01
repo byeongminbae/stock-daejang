@@ -6,8 +6,9 @@ import kr.byeongmin.stockdaejang.domain.common.validation.BROKERAGE_CODE_PATTERN
 import kr.byeongmin.stockdaejang.domain.common.validation.BrokerageCode
 import kr.byeongmin.stockdaejang.domain.common.validation.STOCK_CODE_PATTERN
 import kr.byeongmin.stockdaejang.domain.common.validation.StockCode
-import kr.byeongmin.stockdaejang.domain.trade.enums.TradeType
+import kr.byeongmin.stockdaejang.domain.trade.types.TradeType
 import java.math.BigDecimal
+import java.time.OffsetDateTime
 
 @Schema(description = "거래 입력 전 매수액/매도액, 보유 수량, 매수평균단가와 예상 손익을 확인하는 요청")
 data class TradePreviewRequestDto(
@@ -26,6 +27,13 @@ data class TradePreviewRequestDto(
 	)
 	@field:StockCode
 	val stockCode: String,
+
+	@field:Schema(
+		description = "거래 일시. 이 시점 직전까지의 보유 수량/매수평균단가를 기준으로 계산",
+		example = "2026-08-20T09:30:00+09:00",
+		format = "date-time",
+	)
+	val executedAt: OffsetDateTime,
 
 	@field:Schema(
 		description = "소유주 ID",

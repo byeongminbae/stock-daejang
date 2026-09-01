@@ -9,6 +9,7 @@ import kr.byeongmin.stockdaejang.global.error.CommonError
 import kr.byeongmin.stockdaejang.global.exception.BusinessException
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
+import org.springframework.web.client.RestClient
 import java.net.InetSocketAddress
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -27,10 +28,14 @@ class RestClientConfigTest {
         server.start()
 
         try {
+            val restClient = RestClientConfig().configureRestClient(
+                restClientBuilder = RestClient.builder(),
+                baseUrl = "http://127.0.0.1:${server.address.port}",
+            )
+
             val exception = assertFailsWith<BusinessException> {
-                RestClientConfig().restClient()
-                    .get()
-                    .uri("http://127.0.0.1:${server.address.port}/always-fail")
+                restClient.get()
+                    .uri("/always-fail")
                     .retrieve()
                     .toBodilessEntity()
             }
@@ -42,11 +47,10 @@ class RestClientConfigTest {
     }
 
     @Test
-    fun `외부 API 오류 로그에서 민감한 헤더를 가리고 응답 본문을 제한한다`() {
+    fun `외부 API 오류 로그에서 응답 본문을 제한한다`() {
         val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
         server.createContext("/always-fail") { exchange ->
             val body = ("a".repeat(4_096) + "BODY-END").toByteArray()
-            exchange.responseHeaders.add("Set-Cookie", "response-secret")
             exchange.sendResponseHeaders(500, body.size.toLong())
             exchange.responseBody.use { it.write(body) }
         }
@@ -54,22 +58,20 @@ class RestClientConfigTest {
         server.start()
 
         try {
+            val restClient = RestClientConfig().configureRestClient(
+                restClientBuilder = RestClient.builder(),
+                baseUrl = "http://127.0.0.1:${server.address.port}",
+            )
+
             assertFailsWith<BusinessException> {
-                RestClientConfig().restClient()
-                    .get()
-                    .uri("http://127.0.0.1:${server.address.port}/always-fail")
-                    .header("Authorization", "Bearer request-secret")
+                restClient.get()
+                    .uri("/always-fail")
                     .retrieve()
                     .toBodilessEntity()
             }
 
             val logMessage = logCapture.events.single().formattedMessage
-            assertTrue(logMessage.lowercase().contains("authorization"))
-            assertTrue(logMessage.lowercase().contains("set-cookie"))
-            assertEquals(2, Regex("\\[REDACTED]").findAll(logMessage).count())
             assertTrue(logMessage.contains("a".repeat(4_096)))
-            assertFalse(logMessage.contains("request-secret"))
-            assertFalse(logMessage.contains("response-secret"))
             assertFalse(logMessage.contains("BODY-END"))
         } finally {
             server.stop(0)

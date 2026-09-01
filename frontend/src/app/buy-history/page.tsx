@@ -28,7 +28,7 @@ export default async function BuyHistoryPage({ searchParams }: BuyHistoryPagePro
     listOwners(),
     listPurchasedStocks("BUY"),
   ]);
-  const showFilteredEmptyState = result.hasFilters && result.unfilteredTotal > 0;
+  const showFilteredEmptyState = result.hasFilters && result.rows.length === 0 && stocks.length > 0;
 
   return (
     <div className="page-frame page-stack">
@@ -47,7 +47,7 @@ export default async function BuyHistoryPage({ searchParams }: BuyHistoryPagePro
           <p className="results-heading" role="status" aria-live="polite">
             {result.hasFilters
               ? `검색 결과 ${result.total.toLocaleString("ko-KR")}건`
-              : `전체 ${result.unfilteredTotal.toLocaleString("ko-KR")}건`}
+              : `전체 ${result.total.toLocaleString("ko-KR")}건`}
           </p>
         </div>
 

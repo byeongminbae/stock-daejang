@@ -6,7 +6,7 @@ import kr.byeongmin.stockdaejang.domain.brokerage.entity.Brokerage
 import kr.byeongmin.stockdaejang.domain.owner.entity.Owner
 import kr.byeongmin.stockdaejang.domain.stock.entity.Stock
 import kr.byeongmin.stockdaejang.domain.trade.dto.PositionSnapshot
-import kr.byeongmin.stockdaejang.domain.trade.enums.TradeType
+import kr.byeongmin.stockdaejang.domain.trade.types.TradeType
 import kr.byeongmin.stockdaejang.global.entity.Base
 import java.math.BigDecimal
 import java.time.OffsetDateTime
