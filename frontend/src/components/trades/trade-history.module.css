@@ -58,6 +58,11 @@
   text-align: end;
 }
 
+.dateColumn {
+  width: 190px;
+  white-space: nowrap;
+}
+
 .tableWrap thead th {
   border-block-end: 2px solid var(--color-line-strong);
   color: var(--color-text);

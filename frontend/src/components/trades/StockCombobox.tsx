@@ -160,7 +160,7 @@ export function StockCombobox({ value, onChange, error, disabled = false }: Stoc
   return (
     <div className={styles.field}>
       <label className="field-label" htmlFor={inputId}>
-        종목명 <span>(필수)</span>
+        종목명
       </label>
       <div className={styles.anchor}>
         <input

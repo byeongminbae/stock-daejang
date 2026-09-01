@@ -83,10 +83,10 @@ test("한글 종목 선택 뒤 거래 정수 필드는 비정수 입력을 무�
   const combobox = buyForm.getByRole("combobox", { name: /종목명/ });
   await combobox.fill("삼성");
   await buyForm.getByRole("option", { name: /삼성전자/ }).click();
-  await buyForm.getByLabel("증권사 (필수)").selectOption("240");
+  await buyForm.getByLabel("증권사").selectOption("240");
 
-  const quantity = buyForm.getByLabel("매수 수량 (필수)");
-  const unitPrice = buyForm.getByLabel("매수 당시 단가 (필수)");
+  const quantity = buyForm.getByLabel("매수 수량");
+  const unitPrice = buyForm.getByLabel("매수 당시 단가");
   for (const field of [quantity, unitPrice]) {
     await expect(field).toHaveAttribute("type", "text");
     expect(await field.getAttribute("inputmode")).toBeNull();

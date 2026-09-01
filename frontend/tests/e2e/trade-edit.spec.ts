@@ -32,11 +32,11 @@ async function addTrade(
   unitPrice: string,
 ): Promise<void> {
   const form = page.getByRole("region", { name: `${side} 기록 추가` });
-  await form.getByLabel(`${side} 일시 (필수)`).fill(executedAt);
+  await form.getByLabel(`${side} 일시`).fill(executedAt);
   await selectStock(form, "삼성전자");
-  await form.getByLabel("증권사 (필수)").selectOption("240");
-  await form.getByLabel(`${side} 수량 (필수)`).fill(quantity);
-  await form.getByLabel(`${side} 당시 단가 (필수)`).fill(unitPrice);
+  await form.getByLabel("증권사").selectOption("240");
+  await form.getByLabel(`${side} 수량`).fill(quantity);
+  await form.getByLabel(`${side} 당시 단가`).fill(unitPrice);
   const responsePromise = page.waitForResponse(
     (response) =>
       response.request().method() === "POST" &&
@@ -119,12 +119,12 @@ test("creates chronological trades then edits buy and sell through the accessibl
   await buyEdit.click();
   const buyDialog = page.getByRole("dialog", { name: "매수 기록 수정" });
   await expect(buyDialog).toBeVisible();
-  await expect(buyDialog.getByLabel("매수 일시 (필수)")).toHaveValue("2026-08-07T09:00");
+  await expect(buyDialog.getByLabel("매수 일시")).toHaveValue("2026-08-07T09:00");
   await expect(buyDialog.getByText(/선택: 삼성전자/)).toBeVisible();
-  await expect(buyDialog.getByLabel("소유주 (필수)")).toHaveValue("1");
-  await expect(buyDialog.getByLabel("증권사 (필수)")).toHaveValue("240");
-  await expect(buyDialog.getByLabel("매수 수량 (필수)")).toHaveValue("100");
-  await expect(buyDialog.getByLabel("매수 당시 단가 (필수)")).toHaveValue("7000");
+  await expect(buyDialog.getByLabel("소유주")).toHaveValue("1");
+  await expect(buyDialog.getByLabel("증권사")).toHaveValue("240");
+  await expect(buyDialog.getByLabel("매수 수량")).toHaveValue("100");
+  await expect(buyDialog.getByLabel("매수 당시 단가")).toHaveValue("7000");
   await expect(buyDialog.getByText("700,000원")).toBeVisible();
   await screenshot(page, "buy-edit-dialog-desktop-1280.png", false);
   await page.keyboard.press("Escape");
@@ -132,8 +132,8 @@ test("creates chronological trades then edits buy and sell through the accessibl
   await expect(buyEdit).toBeFocused();
 
   await buyEdit.click();
-  await buyDialog.getByLabel("매수 일시 (필수)").fill("2026-08-07T09:30");
-  await buyDialog.getByLabel("매수 수량 (필수)").fill("120");
+  await buyDialog.getByLabel("매수 일시").fill("2026-08-07T09:30");
+  await buyDialog.getByLabel("매수 수량").fill("120");
   await buyDialog.getByRole("button", { name: "매수 기록 수정" }).click();
   await expect(buyDialog).toBeHidden();
   await expect(page.getByText("매수 기록을 수정했습니다.", { exact: true })).toBeVisible();
@@ -150,13 +150,13 @@ test("creates chronological trades then edits buy and sell through the accessibl
   const sellEdit = editAction(sellRow);
   await sellEdit.click();
   const sellDialog = page.getByRole("dialog", { name: "매도 기록 수정" });
-  await expect(sellDialog.getByLabel("증권사 (필수)")).toHaveValue("240");
+  await expect(sellDialog.getByLabel("증권사")).toHaveValue("240");
   await expect(sellDialog.getByText("손익 재계산")).toBeVisible();
   await expect(
     sellDialog.getByText(/저장 시 거래 시각 순으로 이 매도와 이후 손익을 다시 계산합니다/),
   ).toBeVisible();
-  await sellDialog.getByLabel("매도 일시 (필수)").fill("2026-08-07T12:00");
-  await sellDialog.getByLabel("매도 당시 단가 (필수)").fill("10000");
+  await sellDialog.getByLabel("매도 일시").fill("2026-08-07T12:00");
+  await sellDialog.getByLabel("매도 당시 단가").fill("10000");
   await sellDialog.getByRole("button", { name: "매도 기록 수정" }).click();
   await expect(sellDialog).toBeHidden();
   await expect(page.getByRole("row", { name: /삼성전자.*50주.*10,000원/ })).toBeVisible();
@@ -181,7 +181,7 @@ test("creates chronological trades then edits buy and sell through the accessibl
   await page.setViewportSize({ width: 375, height: 1200 });
   await mobileEdit.click();
   await expect(buyDialog).toBeVisible();
-  await expect(buyDialog.getByLabel("매수 일시 (필수)")).toBeFocused();
+  await expect(buyDialog.getByLabel("매수 일시")).toBeFocused();
   const mobileCancel = buyDialog.getByRole("button", { name: "취소" });
   expect(await buyDialog.evaluate((dialog) => dialog.scrollWidth - dialog.clientWidth)).toBe(0);
   await screenshot(page, "buy-edit-dialog-mobile-375.png", false);

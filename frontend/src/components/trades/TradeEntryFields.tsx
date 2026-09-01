@@ -36,6 +36,47 @@ export function TradeEntryFields({
   const expectedProfitClass =
     expectedProfitSign === 1 ? "positive" : expectedProfitSign === -1 ? "negative" : "";
 
+  const summary = (
+    <>
+      <div className={styles.output}>
+        <span>{label}액</span>
+        <output className="money">{form.amount === null ? "-" : formatWon(form.amount)}</output>
+      </div>
+      {side === "SELL" ? (
+        <div className={styles.output}>
+          <span>{form.editing ? "손익 재계산" : "예상 손익"}</span>
+          {form.editing ? (
+            <small>저장 시 거래 시각 순으로 이 매도와 이후 손익을 다시 계산합니다.</small>
+          ) : (
+            <output className={`money${expectedProfitClass ? ` ${expectedProfitClass}` : ""}`}>
+              {form.previewUnavailable
+                ? "조회 실패"
+                : form.expectedProfit === null
+                  ? "-"
+                  : formatWon(form.expectedProfit)}
+            </output>
+          )}
+          {!form.editing && form.preview ? (
+            <small>
+              보유 {formatInteger(form.preview.heldQuantity)}주 · 평균{" "}
+              {form.preview.averageBuyPrice ? formatWon(form.preview.averageBuyPrice) : "-"}
+            </small>
+          ) : null}
+        </div>
+      ) : null}
+      <div className={`${styles.actions}${onCancel ? ` ${styles.dialogActions}` : ""}`}>
+        {onCancel ? (
+          <Button disabled={form.submitting} onClick={onCancel} variant="secondary">
+            취소
+          </Button>
+        ) : null}
+        <Button busyLabel="저장 중" isBusy={form.submitting} type="submit">
+          {submitLabel}
+        </Button>
+      </div>
+    </>
+  );
+
   return (
     <>
       {form.message ? (
@@ -57,7 +98,7 @@ export function TradeEntryFields({
       >
         <div className="field">
           <label className="field-label" htmlFor={id("executed-at")}>
-            {label} 일시 <span>(필수)</span>
+            {label} 일시
           </label>
           <input
             aria-describedby={`${id("datetime-hint")}${fieldError("executedAt") ? ` ${id("datetime-error")}` : ""}`}
@@ -80,17 +121,9 @@ export function TradeEntryFields({
             </p>
           ) : null}
         </div>
-        <div className={styles.stock}>
-          <StockCombobox
-            disabled={form.submitting}
-            error={fieldError("stock")}
-            onChange={form.setStock}
-            value={form.stock}
-          />
-        </div>
         <div className="field">
           <label className="field-label" htmlFor={id("owner")}>
-            소유주 <span>(필수)</span>
+            소유주
           </label>
           <select
             className="control"
@@ -108,7 +141,7 @@ export function TradeEntryFields({
         </div>
         <div className="field">
           <label className="field-label" htmlFor={id("brokerage")}>
-            증권사 <span>(필수)</span>
+            증권사
           </label>
           <select
             aria-describedby={fieldError("brokerageCode") ? id("brokerage-error") : undefined}
@@ -133,9 +166,17 @@ export function TradeEntryFields({
             </p>
           ) : null}
         </div>
+        <div className={styles.stock}>
+          <StockCombobox
+            disabled={form.submitting}
+            error={fieldError("stock")}
+            onChange={form.setStock}
+            value={form.stock}
+          />
+        </div>
         <div className="field">
           <label className="field-label" htmlFor={id("quantity")}>
-            {label} 수량 <span>(필수)</span>
+            {label} 수량
           </label>
           <input
             aria-describedby={fieldError("quantity") ? id("quantity-error") : undefined}
@@ -158,7 +199,7 @@ export function TradeEntryFields({
         </div>
         <div className="field">
           <label className="field-label" htmlFor={id("price")}>
-            {label} 당시 단가 <span>(필수)</span>
+            {label} 당시 단가
           </label>
           <input
             aria-describedby={fieldError("unitPrice") ? id("price-error") : undefined}
@@ -179,42 +220,7 @@ export function TradeEntryFields({
             </p>
           ) : null}
         </div>
-        <div className={styles.output}>
-          <span>{label}액</span>
-          <output className="money">{form.amount === null ? "-" : formatWon(form.amount)}</output>
-        </div>
-        {side === "SELL" ? (
-          <div className={styles.output}>
-            <span>{form.editing ? "손익 재계산" : "예상 손익"}</span>
-            {form.editing ? (
-              <small>저장 시 거래 시각 순으로 이 매도와 이후 손익을 다시 계산합니다.</small>
-            ) : (
-              <output className={`money${expectedProfitClass ? ` ${expectedProfitClass}` : ""}`}>
-                {form.previewUnavailable
-                  ? "조회 실패"
-                  : form.expectedProfit === null
-                    ? "-"
-                    : formatWon(form.expectedProfit)}
-              </output>
-            )}
-            {!form.editing && form.preview ? (
-              <small>
-                보유 {formatInteger(form.preview.heldQuantity)}주 · 평균{" "}
-                {form.preview.averageBuyPrice ? formatWon(form.preview.averageBuyPrice) : "-"}
-              </small>
-            ) : null}
-          </div>
-        ) : null}
-        <div className={`${styles.actions}${onCancel ? ` ${styles.dialogActions}` : ""}`}>
-          {onCancel ? (
-            <Button disabled={form.submitting} onClick={onCancel} variant="secondary">
-              취소
-            </Button>
-          ) : null}
-          <Button busyLabel="저장 중" isBusy={form.submitting} type="submit">
-            {submitLabel}
-          </Button>
-        </div>
+        {compact ? summary : <div className={styles.summary}>{summary}</div>}
       </form>
     </>
   );

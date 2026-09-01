@@ -81,7 +81,9 @@ export function TradeHistoryTable({
         <thead>
           <tr>
             {selectionMode ? <th scope="col">선택</th> : null}
-            <th scope="col">{label} 일시</th>
+            <th className={styles.dateColumn} scope="col">
+              {label} 일시
+            </th>
             <th scope="col">소유주</th>
             <th scope="col">증권사</th>
             <th scope="col">종목명</th>
@@ -118,7 +120,7 @@ export function TradeHistoryTable({
                   />
                 </td>
               ) : null}
-              <td>
+              <td className={styles.dateColumn}>
                 <time dateTime={row.executedAt}>{formatSeoulDateTime(row.executedAt)}</time>
               </td>
               <td>{row.ownerName}</td>

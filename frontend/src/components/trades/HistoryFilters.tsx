@@ -90,10 +90,10 @@ export function HistoryFilters({ brokerages, owners, stocks, side }: HistoryFilt
   };
 
   return (
-    <details className={`panel ${styles.filters}`} open>
-      <summary>
+    <section className={`panel ${styles.filters}`}>
+      <p className={styles.filtersHeading}>
         필터 <span className={styles.count}>{activeFilters.length}개 적용</span>
-      </summary>
+      </p>
       <div className={styles.form} aria-busy={isPending}>
         <HistoryFilterFields
           brokerages={brokerages}
@@ -147,6 +147,6 @@ export function HistoryFilters({ brokerages, owners, stocks, side }: HistoryFilt
       <p className="sr-only" role="status" aria-live="polite">
         {isPending ? `${side === "BUY" ? "매수" : "매도"} 검색 결과 갱신 중` : ""}
       </p>
-    </details>
+    </section>
   );
 }

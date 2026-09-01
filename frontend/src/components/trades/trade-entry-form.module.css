@@ -1,5 +1,6 @@
 .section {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: var(--space-4);
   padding: var(--space-5);
 }
@@ -22,33 +23,21 @@
 }
 
 .form {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  align-items: start;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
   gap: var(--space-3);
 }
 
-.form > :nth-child(1) {
-  grid-column: span 3;
-}
-
-.stock {
-  grid-column: span 3;
-}
-
-.form > :nth-child(3) {
-  grid-column: span 2;
-}
-
-.form > :nth-child(4),
-.form > :nth-child(5),
-.form > :nth-child(6) {
-  grid-column: span 2;
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: auto;
 }
 
 .output {
   display: grid;
-  grid-column: span 2;
   align-content: center;
   min-height: 68px;
   padding: var(--space-2) var(--space-3);
@@ -61,11 +50,6 @@
 .output small {
   color: var(--color-text-muted);
   font-size: var(--font-size-xs);
-}
-
-.actions {
-  grid-column: 11 / -1;
-  align-self: end;
 }
 
 .actions,
@@ -84,6 +68,7 @@
 }
 
 .compactForm {
+  display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -116,26 +101,6 @@
   outline-offset: 2px;
 }
 
-@media (max-width: 1119px) {
-  .form {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .form > :nth-child(n),
-  .stock,
-  .output {
-    grid-column: span 1;
-  }
-
-  .stock {
-    grid-column: 1 / -1;
-  }
-
-  .actions {
-    grid-column: 1 / -1;
-  }
-}
-
 @media (max-width: 639px) {
   .section {
     padding: var(--space-4);
@@ -143,16 +108,5 @@
 
   .heading {
     display: grid;
-  }
-
-  .form {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .form > :nth-child(n),
-  .stock,
-  .output,
-  .actions {
-    grid-column: 1;
   }
 }

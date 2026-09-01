@@ -93,10 +93,10 @@ async function addTrade(
 ) {
   const region = tradeRegion(page, side);
   await selectStock(region, stock.query, stock.name);
-  await region.getByLabel("증권사 (필수)").selectOption("240");
-  await region.getByLabel("소유주 (필수)").selectOption({ label: owner });
-  await region.getByLabel(`${side} 수량 (필수)`).fill(quantity);
-  await region.getByLabel(`${side} 당시 단가 (필수)`).fill(price);
+  await region.getByLabel("증권사").selectOption("240");
+  await region.getByLabel("소유주").selectOption({ label: owner });
+  await region.getByLabel(`${side} 수량`).fill(quantity);
+  await region.getByLabel(`${side} 당시 단가`).fill(price);
   const responsePromise = page.waitForResponse(
     (response) =>
       response.request().method() === "POST" &&
@@ -142,7 +142,7 @@ test("real journal flow and complete responsive capture set", async ({ page }) =
   await capture(page, "record-validation-error-1280.png");
 
   await page.goto("/record");
-  await buyRegion.getByLabel("매수 일시 (필수)").fill("2026-08-07T10:30");
+  await buyRegion.getByLabel("매수 일시").fill("2026-08-07T10:30");
   const stockSearch = buyRegion.getByRole("combobox", { name: /종목명/ });
   await stockSearch.fill("삼성");
   await expect(buyRegion.getByRole("option", { name: /삼성전자/ }).first()).toBeVisible();
@@ -157,16 +157,16 @@ test("real journal flow and complete responsive capture set", async ({ page }) =
   await addTrade(page, "매수", { query: "삼성", name: "삼성전자" }, "3", "80000", "할머니");
 
   const sellRegion = tradeRegion(page, "매도");
-  await sellRegion.getByLabel("매도 일시 (필수)").fill("2026-08-07T11:00");
+  await sellRegion.getByLabel("매도 일시").fill("2026-08-07T11:00");
   await addTrade(page, "매도", { query: "삼성", name: "삼성전자" }, "2", "90000");
   await page.goto("/sell-history");
   await expect(page.getByText(/이익 \+40,000원/).first()).toBeVisible();
 
   await page.goto("/record");
   await selectStock(sellRegion, "삼성", "삼성전자");
-  await sellRegion.getByLabel("증권사 (필수)").selectOption("240");
-  await sellRegion.getByLabel("매도 수량 (필수)").fill("99");
-  await sellRegion.getByLabel("매도 당시 단가 (필수)").fill("90000");
+  await sellRegion.getByLabel("증권사").selectOption("240");
+  await sellRegion.getByLabel("매도 수량").fill("99");
+  await sellRegion.getByLabel("매도 당시 단가").fill("90000");
   await sellRegion.getByRole("button", { name: "매도 기록 저장" }).click();
   await expect(sellRegion.getByText(/보유 수량 8주를 초과할 수 없습니다/)).toBeVisible();
   await capture(page, "record-sell-oversell-error-1280.png");

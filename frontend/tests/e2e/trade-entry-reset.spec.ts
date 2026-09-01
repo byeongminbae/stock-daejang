@@ -56,11 +56,11 @@ test("매도 입력은 preview 응답의 금액과 예상 손익을 표시한다
   const combobox = form.getByRole("combobox", { name: /종목명/ });
   await combobox.fill("삼성");
   await form.getByRole("option", { name: /삼성전자/ }).click();
-  await form.getByLabel("증권사 (필수)").selectOption("240");
-  await form.getByLabel("매도 수량 (필수)").fill("1");
+  await form.getByLabel("증권사").selectOption("240");
+  await form.getByLabel("매도 수량").fill("1");
 
   // When: the unit price completes a preview request.
-  await form.getByLabel("매도 당시 단가 (필수)").fill("70000");
+  await form.getByLabel("매도 당시 단가").fill("70000");
 
   // Then: the server-provided values, not a browser calculation, are rendered.
   await expect(form.getByText("777원", { exact: true })).toBeVisible();
@@ -75,9 +75,9 @@ for (const scenario of scenarios) {
     const combobox = form.getByRole("combobox", { name: /종목명/ });
     await combobox.fill("삼성");
     await form.getByRole("option", { name: /삼성전자/ }).click();
-    await form.getByLabel("증권사 (필수)").selectOption("240");
-    await form.getByLabel(`${scenario.label} 수량 (필수)`).fill("1");
-    await form.getByLabel(`${scenario.label} 당시 단가 (필수)`).fill("70000");
+    await form.getByLabel("증권사").selectOption("240");
+    await form.getByLabel(`${scenario.label} 수량`).fill("1");
+    await form.getByLabel(`${scenario.label} 당시 단가`).fill("70000");
 
     // When: the create request succeeds.
     await form.getByRole("button", { name: `${scenario.label} 기록 저장` }).click();
@@ -135,20 +135,20 @@ test("매도 수량 초안은 매수 저장 성공 후에도 독립적으로 유
   await page.goto("/record");
   const buyForm = page.getByRole("region", { name: "매수 기록 추가" });
   const sellForm = page.getByRole("region", { name: "매도 기록 추가" });
-  await sellForm.getByLabel("매도 수량 (필수)").fill("3");
+  await sellForm.getByLabel("매도 수량").fill("3");
 
   // When: a valid buy record is submitted successfully.
   const buyCombobox = buyForm.getByRole("combobox", { name: /종목명/ });
   await buyCombobox.fill("삼성");
   await buyForm.getByRole("option", { name: /삼성전자/ }).click();
-  await buyForm.getByLabel("증권사 (필수)").selectOption("240");
-  await buyForm.getByLabel("매수 수량 (필수)").fill("1");
-  await buyForm.getByLabel("매수 당시 단가 (필수)").fill("70000");
+  await buyForm.getByLabel("증권사").selectOption("240");
+  await buyForm.getByLabel("매수 수량").fill("1");
+  await buyForm.getByLabel("매수 당시 단가").fill("70000");
   await buyForm.getByRole("button", { name: "매수 기록 저장" }).click();
 
   // Then: the buy succeeds and the sell draft is unchanged.
   await expect(buyForm.getByText("매수 기록이 저장되었습니다.")).toBeVisible();
-  await expect(sellForm.getByLabel("매도 수량 (필수)")).toHaveValue("3");
+  await expect(sellForm.getByLabel("매도 수량")).toHaveValue("3");
 });
 
 test("매수하지 않은 증권사에서는 매도 저장을 막는다", async ({ page }) => {
@@ -158,9 +158,9 @@ test("매수하지 않은 증권사에서는 매도 저장을 막는다", async 
   const combobox = sellForm.getByRole("combobox", { name: /종목명/ });
   await combobox.fill("삼성");
   await sellForm.getByRole("option", { name: /삼성전자/ }).click();
-  await sellForm.getByLabel("증권사 (필수)").selectOption("264");
-  await sellForm.getByLabel("매도 수량 (필수)").fill("1");
-  await sellForm.getByLabel("매도 당시 단가 (필수)").fill("70000");
+  await sellForm.getByLabel("증권사").selectOption("264");
+  await sellForm.getByLabel("매도 수량").fill("1");
+  await sellForm.getByLabel("매도 당시 단가").fill("70000");
 
   // When: the brokerage-scoped position finishes loading and the form is submitted.
   await expect(sellForm.getByText(/보유 0주 · 평균\s+-/)).toBeVisible();

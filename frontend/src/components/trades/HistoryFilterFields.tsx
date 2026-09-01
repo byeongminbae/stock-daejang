@@ -104,12 +104,6 @@ export function HistoryFilterFields({
   return (
     <>
       <HistoryDateRange values={values} onFilterChange={onFilterChange} />
-      <HistoryStockCombobox
-        initialValue={values.stockNameOrCode}
-        onChange={(value) => onFilterChange({ stockNameOrCode: value })}
-        side={side}
-        stocks={stocks}
-      />
       <div className="field">
         <label className="field-label" htmlFor="filter-owner">
           소유주
@@ -148,6 +142,12 @@ export function HistoryFilterFields({
           ))}
         </select>
       </div>
+      <HistoryStockCombobox
+        initialValue={values.stockNameOrCode}
+        onChange={(value) => onFilterChange({ stockNameOrCode: value })}
+        side={side}
+        stocks={stocks}
+      />
     </>
   );
 }

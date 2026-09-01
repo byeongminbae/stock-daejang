@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { TradeEntryForm } from "@/components/trades";
 import { listBrokerages, listOwners } from "@/lib/server/stock-daejang-api";
 
+import styles from "./record.module.css";
+
 export const metadata: Metadata = {
   title: "기록하기",
   description: "가족별 국내 주식 매수·매도 기록을 한곳에서 추가합니다.",
@@ -19,8 +21,10 @@ export default async function RecordPage() {
         <h1 className="page-title">기록하기</h1>
       </header>
 
-      <TradeEntryForm brokerages={brokerages} owners={owners} side="BUY" />
-      <TradeEntryForm brokerages={brokerages} owners={owners} side="SELL" />
+      <div className={styles.entryGrid}>
+        <TradeEntryForm brokerages={brokerages} owners={owners} side="BUY" />
+        <TradeEntryForm brokerages={brokerages} owners={owners} side="SELL" />
+      </div>
     </div>
   );
 }
