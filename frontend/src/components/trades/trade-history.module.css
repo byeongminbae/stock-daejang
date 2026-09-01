@@ -229,6 +229,21 @@
   gap: var(--space-2);
 }
 
+.stockIdentity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.stockLogo {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border-radius: var(--radius-control);
+  object-fit: contain;
+  background: var(--color-surface-muted);
+}
+
 .stockName {
   display: -webkit-box;
   overflow: hidden;

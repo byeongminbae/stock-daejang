@@ -1,3 +1,5 @@
+import { stockImageUrl } from "@/lib/stock-image";
+
 import styles from "./dashboard.module.css";
 import {
   formatDashboardPercent,
@@ -127,8 +129,22 @@ export function PositionTable({
                     </th>
                   ) : null}
                   <th scope="row">
-                    <span className={styles.stockName}>{stock.stockName}</span>
-                    <span className={styles.stockCode}>{stock.stockCode}</span>
+                    <div className={styles.stockIdentity}>
+                      {/* biome-ignore lint/performance/noImgElement: external hotlinked SVG, avoids next/image's dangerouslyAllowSVG */}
+                      <img
+                        alt=""
+                        className={styles.stockLogo}
+                        loading="lazy"
+                        onError={(event) => {
+                          event.currentTarget.style.display = "none";
+                        }}
+                        src={stockImageUrl(stock.stockCode)}
+                      />
+                      <span>
+                        <span className={styles.stockName}>{stock.stockName}</span>
+                        <span className={styles.stockCode}>{stock.stockCode}</span>
+                      </span>
+                    </div>
                   </th>
                   <td className="money">{formatDashboardQuantity(stock.quantity)}</td>
                   <td className="money">{formatDashboardWon(stock.averageBuyPrice)}</td>

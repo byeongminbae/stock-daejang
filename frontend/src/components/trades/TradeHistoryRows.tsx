@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { stockImageUrl } from "@/lib/stock-image";
 
 import { formatInteger, formatSeoulDateTime, formatWon, numericSign } from "./format";
 import styles from "./trade-history.module.css";
@@ -126,7 +127,19 @@ export function TradeHistoryTable({
               <td>{row.ownerName}</td>
               <td>{row.brokerageName}</td>
               <th scope="row">
-                <span className={styles.stockName}>{row.stockName}</span>
+                <div className={styles.stockIdentity}>
+                  {/* biome-ignore lint/performance/noImgElement: external hotlinked SVG, avoids next/image's dangerouslyAllowSVG */}
+                  <img
+                    alt=""
+                    className={styles.stockLogo}
+                    loading="lazy"
+                    onError={(event) => {
+                      event.currentTarget.style.display = "none";
+                    }}
+                    src={stockImageUrl(row.stockCode)}
+                  />
+                  <span className={styles.stockName}>{row.stockName}</span>
+                </div>
               </th>
               <td className="money">{formatInteger(row.quantity)}주</td>
               <td className="money">{formatWon(row.unitPrice)}</td>
@@ -171,7 +184,17 @@ export function TradeHistoryCards({
             data-profit-tone={side === "SELL" ? profitTone(row.profit) : undefined}
           >
             <header>
-              <div>
+              <div className={styles.stockIdentity}>
+                {/* biome-ignore lint/performance/noImgElement: external hotlinked SVG, avoids next/image's dangerouslyAllowSVG */}
+                <img
+                  alt=""
+                  className={styles.stockLogo}
+                  loading="lazy"
+                  onError={(event) => {
+                    event.currentTarget.style.display = "none";
+                  }}
+                  src={stockImageUrl(row.stockCode)}
+                />
                 <h3 id={`trade-card-${row.id}`}>{row.stockName}</h3>
               </div>
               <div className={styles.cardMeta}>

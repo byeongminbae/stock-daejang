@@ -1,3 +1,5 @@
+import { stockImageUrl } from "@/lib/stock-image";
+
 import styles from "./dashboard.module.css";
 import {
   formatDashboardPercent,
@@ -89,7 +91,19 @@ export function PositionCards({ owner, brokerages, showBrokerageTotals }: Positi
                           <span>증권사</span>
                           <strong>{brokerage.brokerageName}</strong>
                         </div>
-                        <h3>{stock.stockName}</h3>
+                        <div className={styles.stockIdentity}>
+                          {/* biome-ignore lint/performance/noImgElement: external hotlinked SVG, avoids next/image's dangerouslyAllowSVG */}
+                          <img
+                            alt=""
+                            className={styles.stockLogo}
+                            loading="lazy"
+                            onError={(event) => {
+                              event.currentTarget.style.display = "none";
+                            }}
+                            src={stockImageUrl(stock.stockCode)}
+                          />
+                          <h3>{stock.stockName}</h3>
+                        </div>
                         <p>{stock.stockCode}</p>
                       </header>
                       <dl className={styles.metricGrid}>
