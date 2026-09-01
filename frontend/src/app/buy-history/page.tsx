@@ -33,15 +33,12 @@ export default async function BuyHistoryPage({ searchParams }: BuyHistoryPagePro
   return (
     <div className="page-frame page-stack">
       <header className="page-intro">
-        <p className="page-eyebrow">거래 원장 · 매수</p>
         <h1 className="page-title">매수 히스토리</h1>
-        <p className="page-description">기간, 매수했던 종목, 소유주, 증권사 기준으로 찾아보세요.</p>
       </header>
 
       <section className="history-section" aria-labelledby="buy-history-title">
         <div className="section-heading">
           <div>
-            <p className="page-eyebrow">기록 탐색</p>
             <h2 id="buy-history-title">매수 기록 검색</h2>
           </div>
           <p className="results-heading" role="status" aria-live="polite">

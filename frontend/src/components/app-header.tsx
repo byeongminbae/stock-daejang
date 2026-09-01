@@ -16,11 +16,11 @@ export function AppHeader() {
   return (
     <header className="app-header">
       <div className="app-header__inner">
-        <Link className="app-brand" href="/" aria-label="주식 매매일지 대시보드">
+        <Link className="app-brand" href="/" aria-label="우리집 주식대장 대시보드">
           <span aria-hidden="true" className="app-brand__mark">
             주
           </span>
-          <span>주식 매매일지</span>
+          <span>우리집 주식대장</span>
         </Link>
         <nav aria-label="주요 메뉴" className="app-nav">
           {navigation.map((item) => {

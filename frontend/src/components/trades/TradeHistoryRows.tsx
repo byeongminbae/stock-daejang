@@ -82,14 +82,23 @@ export function TradeHistoryTable({
           <tr>
             {selectionMode ? <th scope="col">선택</th> : null}
             <th scope="col">{label} 일시</th>
-            <th scope="col">종목명</th>
-            <th scope="col">종목코드</th>
             <th scope="col">소유주</th>
             <th scope="col">증권사</th>
-            <th scope="col">수량</th>
-            <th scope="col">당시 단가</th>
-            <th scope="col">{label}액</th>
-            {side === "SELL" ? <th scope="col">손익</th> : null}
+            <th scope="col">종목명</th>
+            <th className="money" scope="col">
+              수량
+            </th>
+            <th className="money" scope="col">
+              당시 단가
+            </th>
+            <th className="money" scope="col">
+              {label}액
+            </th>
+            {side === "SELL" ? (
+              <th className="money" scope="col">
+                손익
+              </th>
+            ) : null}
             {!selectionMode ? <th scope="col">관리</th> : null}
           </tr>
         </thead>
@@ -112,17 +121,16 @@ export function TradeHistoryTable({
               <td>
                 <time dateTime={row.executedAt}>{formatSeoulDateTime(row.executedAt)}</time>
               </td>
+              <td>{row.ownerName}</td>
+              <td>{row.brokerageName}</td>
               <th scope="row">
                 <span className={styles.stockName}>{row.stockName}</span>
               </th>
-              <td className="money">{row.stockCode}</td>
-              <td>{row.ownerName}</td>
-              <td>{row.brokerageName}</td>
               <td className="money">{formatInteger(row.quantity)}주</td>
               <td className="money">{formatWon(row.unitPrice)}</td>
               <td className="money">{formatWon(row.amount)}</td>
               {side === "SELL" ? (
-                <td>
+                <td className="money">
                   <Profit value={row.profit} />
                 </td>
               ) : null}
@@ -163,7 +171,6 @@ export function TradeHistoryCards({
             <header>
               <div>
                 <h3 id={`trade-card-${row.id}`}>{row.stockName}</h3>
-                <p>{row.stockCode}</p>
               </div>
               <div className={styles.cardMeta}>
                 {selectionMode ? (

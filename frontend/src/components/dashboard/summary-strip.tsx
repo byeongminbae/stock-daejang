@@ -18,11 +18,6 @@ const marketSessionLabels = {
 } as const satisfies Readonly<Record<MarketSession, string>>;
 export function SummaryStrip({ dashboard, refreshing, onRefresh }: SummaryStripProps) {
   const { stockCount, totalBuyAmount, unrealizedProfit, valuation } = dashboard;
-  const checkedStockCount = new Set(
-    dashboard.owners.flatMap((owner) =>
-      owner.brokerages.flatMap((brokerage) => brokerage.stocks.map((stock) => stock.stockCode)),
-    ),
-  ).size;
   const quoteMetadata =
     dashboard.valuationSession === null
       ? {
@@ -39,9 +34,7 @@ export function SummaryStrip({ dashboard, refreshing, onRefresh }: SummaryStripP
       <div className={styles.summaryHeading}>
         <div>
           <h2 id="portfolio-summary">전체 보유 현황</h2>
-          <p>
-            {quoteMetadata.quoteTime} · {checkedStockCount}/{stockCount}개 종목 가격 확인
-          </p>
+          <p>{quoteMetadata.quoteTime}</p>
         </div>
         <button
           className="button button--secondary"

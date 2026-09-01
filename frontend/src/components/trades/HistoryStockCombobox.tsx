@@ -11,12 +11,13 @@ import {
   useState,
 } from "react";
 import styles from "./history-filters.module.css";
-import type { StockSelection } from "./types";
+import { type StockSelection, sideLabel, type TradeSide } from "./types";
 
 interface HistoryStockComboboxProps {
   readonly stocks: readonly StockSelection[];
   readonly initialValue: string;
   readonly onChange: (value: string) => void;
+  readonly side: TradeSide;
 }
 
 function matches(stock: StockSelection, query: string): boolean {
@@ -31,7 +32,9 @@ export function HistoryStockCombobox({
   stocks,
   initialValue,
   onChange,
+  side,
 }: HistoryStockComboboxProps) {
+  const label = sideLabel(side);
   const baseId = useId();
   const inputId = `${baseId}-history-stock`;
   const listId = `${baseId}-history-stock-list`;
@@ -130,7 +133,7 @@ export function HistoryStockCombobox({
           }
           aria-expanded={open}
           autoComplete="off"
-          placeholder="매수한 종목 선택"
+          placeholder={`${label}한 종목 선택`}
           value={query}
           onBlur={handleBlur}
           onChange={handleChange}
@@ -147,7 +150,9 @@ export function HistoryStockCombobox({
           <div id={listId} className={styles.stockPopover} role="listbox">
             {items.length === 0 ? (
               <p className={styles.stockMessage}>
-                {stocks.length === 0 ? "매수한 종목이 없습니다." : "일치하는 매수 종목이 없습니다."}
+                {stocks.length === 0
+                  ? `${label}한 종목이 없습니다.`
+                  : `일치하는 ${label} 종목이 없습니다.`}
               </p>
             ) : (
               items.map((stock, index) => (

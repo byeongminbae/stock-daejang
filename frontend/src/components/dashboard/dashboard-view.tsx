@@ -40,11 +40,7 @@ export function DashboardView({ dashboard, initialShowBrokerageTotals }: Dashboa
     <div className="page-frame">
       <header className={`page-header ${styles.pageHeader}`}>
         <div>
-          <p className="page-kicker">FAMILY PORTFOLIO</p>
           <h1 className="page-title">대시보드</h1>
-          <p className="page-description">
-            가족별 보유 수량과 매입 원가, 오늘의 평가 결과를 한눈에 비교합니다.
-          </p>
         </div>
         <div className={styles.headerActions}>
           <button

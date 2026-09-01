@@ -16,9 +16,7 @@ export default async function RecordPage() {
   return (
     <div className="page-frame page-stack">
       <header className="page-intro">
-        <p className="page-eyebrow">거래 원장</p>
         <h1 className="page-title">기록하기</h1>
-        <p className="page-description">매수와 매도 기록을 한곳에서 차례로 남겨보세요.</p>
       </header>
 
       <TradeEntryForm brokerages={brokerages} owners={owners} side="BUY" />

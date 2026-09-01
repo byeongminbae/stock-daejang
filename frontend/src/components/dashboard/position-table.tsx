@@ -52,17 +52,17 @@ function PositionTotalCells({
   return (
     <>
       <td className="money">
-        -<span className="sr-only">보유 수량은 합산하지 않습니다</span>
+        <span className="sr-only">보유 수량은 합산하지 않습니다</span>
       </td>
       <td className="money">
-        -<span className="sr-only">매수평균단가는 합산하지 않습니다</span>
+        <span className="sr-only">매수평균단가는 합산하지 않습니다</span>
       </td>
       <td className="money">{formatDashboardWon(aggregate.totalBuyAmount)}</td>
       <td className="money">
-        -<span className="sr-only">증권사 비중은 종목별로만 표시합니다</span>
+        <span className="sr-only">증권사 비중은 종목별로만 표시합니다</span>
       </td>
       <td className="money">
-        -<span className="sr-only">현재가는 합산하지 않습니다</span>
+        <span className="sr-only">현재가는 합산하지 않습니다</span>
       </td>
       <td className={`money ${profitClass}`}>
         <span className="sr-only">{profitState} </span>
@@ -70,7 +70,7 @@ function PositionTotalCells({
       </td>
       <td className="money">{formatDashboardWon(aggregate.valuation)}</td>
       <td className="money">
-        -<span className="sr-only">수익률은 합산하지 않습니다</span>
+        <span className="sr-only">수익률은 합산하지 않습니다</span>
       </td>
     </>
   );
@@ -124,7 +124,6 @@ export function PositionTable({
                       scope="rowgroup"
                     >
                       <span className={styles.brokerageName}>{brokerage.brokerageName}</span>
-                      <span className={styles.brokerageCode}>{brokerage.brokerageCode}</span>
                     </th>
                   ) : null}
                   <th scope="row">

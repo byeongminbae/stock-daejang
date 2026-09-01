@@ -100,6 +100,7 @@ export function HistoryFilters({ brokerages, owners, stocks, side }: HistoryFilt
           key={searchParams.toString()}
           onFilterChange={applyFilter}
           owners={owners}
+          side={side}
           stocks={stocks}
           values={values}
         />

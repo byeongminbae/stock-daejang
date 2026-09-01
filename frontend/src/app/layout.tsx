@@ -8,8 +8,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "대시보드 | 주식 매매일지",
-    template: "%s | 주식 매매일지",
+    default: "대시보드 | 우리집 주식대장",
+    template: "%s | 우리집 주식대장",
   },
   description: "가족의 국내 주식 매매 기록과 보유 현황을 확인합니다.",
 };

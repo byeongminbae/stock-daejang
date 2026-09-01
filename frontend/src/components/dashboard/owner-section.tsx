@@ -29,10 +29,6 @@ type OwnerSectionProps = Readonly<{
   showBrokerageTotals: boolean;
 }>;
 
-function selectedSortField(value: string): SortField | null {
-  return sortOptions.find((option) => option.value === value)?.value ?? null;
-}
-
 function sortedBrokerages(
   brokerages: readonly DashboardBrokerage[],
   sortField: SortField,
@@ -53,11 +49,6 @@ export function OwnerSection({ owner, showBrokerageTotals }: OwnerSectionProps) 
   );
   const headingId = `owner-${owner.ownerId}`;
   const activeLabel = sortOptions.find((option) => option.value === sortField)?.label ?? "매입액";
-
-  function changeSortField(value: string) {
-    const next = selectedSortField(value);
-    if (next !== null) setSortField(next);
-  }
 
   function sortFromHeader(field: SortField) {
     if (field === sortField) {
@@ -81,31 +72,6 @@ export function OwnerSection({ owner, showBrokerageTotals }: OwnerSectionProps) 
           <p>
             {owner.brokerages.length}개 증권사, {owner.stockCount}개 종목 보유
           </p>
-        </div>
-        <div className={styles.sortControls}>
-          <label htmlFor={`${headingId}-sort`}>{owner.ownerName} 정렬 기준</label>
-          <select
-            id={`${headingId}-sort`}
-            className="control"
-            value={sortField}
-            onChange={(event) => changeSortField(event.currentTarget.value)}
-          >
-            {sortOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
-            className="button button--secondary"
-            onClick={() => setSortDirection((current) => (current === "asc" ? "desc" : "asc"))}
-            aria-label={`${owner.ownerName} 정렬 방향, 현재 ${
-              sortDirection === "asc" ? "오름차순" : "내림차순"
-            }`}
-          >
-            {sortDirection === "asc" ? "오름차순 ↑" : "내림차순 ↓"}
-          </button>
         </div>
       </div>
 

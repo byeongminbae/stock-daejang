@@ -4,7 +4,7 @@ import { HistoryStockCombobox } from "./HistoryStockCombobox";
 import { periodRange } from "./history-date-range";
 import { type BASE_FILTER_KEYS, PERIOD_PRESETS } from "./history-filter-config";
 import styles from "./history-filters.module.css";
-import type { StockSelection } from "./types";
+import type { StockSelection, TradeSide } from "./types";
 
 type FilterKey = (typeof BASE_FILTER_KEYS)[number];
 type FilterValues = Readonly<Record<FilterKey, string>>;
@@ -15,6 +15,7 @@ interface HistoryFilterFieldsProps {
   readonly stocks: readonly StockSelection[];
   readonly values: FilterValues;
   readonly onFilterChange: (overrides: Readonly<Partial<Record<FilterKey, string>>>) => void;
+  readonly side: TradeSide;
 }
 
 function selectedPeriod(from: string, to: string): (typeof PERIOD_PRESETS)[number] | null {
@@ -96,6 +97,7 @@ export function HistoryFilterFields({
   brokerages,
   onFilterChange,
   owners,
+  side,
   stocks,
   values,
 }: HistoryFilterFieldsProps) {
@@ -105,6 +107,7 @@ export function HistoryFilterFields({
       <HistoryStockCombobox
         initialValue={values.stockNameOrCode}
         onChange={(value) => onFilterChange({ stockNameOrCode: value })}
+        side={side}
         stocks={stocks}
       />
       <div className="field">

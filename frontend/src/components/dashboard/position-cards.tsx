@@ -27,13 +27,13 @@ function PositionTotalMetrics({
       <div>
         <dt>보유 수량</dt>
         <dd className="money">
-          -<span className="sr-only">보유 수량은 합산하지 않습니다</span>
+          <span className="sr-only">보유 수량은 합산하지 않습니다</span>
         </dd>
       </div>
       <div>
         <dt>매수평균단가</dt>
         <dd className="money">
-          -<span className="sr-only">매수평균단가는 합산하지 않습니다</span>
+          <span className="sr-only">매수평균단가는 합산하지 않습니다</span>
         </dd>
       </div>
       <div>
@@ -43,7 +43,7 @@ function PositionTotalMetrics({
       <div>
         <dt>현재가</dt>
         <dd className="money">
-          -<span className="sr-only">현재가는 합산하지 않습니다</span>
+          <span className="sr-only">현재가는 합산하지 않습니다</span>
         </dd>
       </div>
       <div>
@@ -60,7 +60,7 @@ function PositionTotalMetrics({
       <div>
         <dt>수익률</dt>
         <dd className="money">
-          -<span className="sr-only">수익률은 합산하지 않습니다</span>
+          <span className="sr-only">수익률은 합산하지 않습니다</span>
         </dd>
       </div>
     </dl>
@@ -88,7 +88,6 @@ export function PositionCards({ owner, brokerages, showBrokerageTotals }: Positi
                         <div className={styles.cardBrokerage}>
                           <span>증권사</span>
                           <strong>{brokerage.brokerageName}</strong>
-                          <span>{brokerage.brokerageCode}</span>
                         </div>
                         <h3>{stock.stockName}</h3>
                         <p>{stock.stockCode}</p>

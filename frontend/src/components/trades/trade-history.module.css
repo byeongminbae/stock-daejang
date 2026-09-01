@@ -46,25 +46,35 @@
 
 .tableWrap th,
 .tableWrap td {
-  padding: var(--space-3) var(--space-2);
+  padding: var(--space-3);
   border-block-end: 1px solid var(--color-line);
   text-align: start;
   vertical-align: middle;
   overflow-wrap: anywhere;
 }
 
+.tableWrap th.money,
+.tableWrap td.money {
+  text-align: end;
+}
+
 .tableWrap thead th {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
-  font-weight: 700;
+  border-block-end: 2px solid var(--color-line-strong);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: 800;
 }
 
 .tableWrap tbody th {
   font-weight: 700;
 }
 
-.tableWrap tbody tr:hover {
+.tableWrap tbody tr:nth-child(even) {
   background: var(--color-surface-muted);
+}
+
+.tableWrap tbody tr:hover {
+  background: var(--color-surface-strong);
 }
 
 .checkboxLabel {
