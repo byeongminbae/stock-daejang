@@ -4,6 +4,7 @@ import { ko } from "react-day-picker/locale";
 import "react-day-picker/style.css";
 import type { Brokerage, Owner } from "@/lib/api-contracts";
 import { BrokerageCombobox } from "./BrokerageCombobox";
+import calendarStyles from "./calendar-popover.module.css";
 import { HistoryStockCombobox } from "./HistoryStockCombobox";
 import { periodRange } from "./history-date-range";
 import { type BASE_FILTER_KEYS, PERIOD_PRESETS } from "./history-filter-config";
@@ -147,7 +148,7 @@ function HistoryDateRange({
           </button>
         ))}
       </div>
-      <div className={styles.dateTrigger} ref={anchorRef}>
+      <div className={`${styles.dateTrigger} ${calendarStyles.anchor}`} ref={anchorRef}>
         <button
           aria-expanded={open}
           aria-haspopup="dialog"
@@ -159,7 +160,7 @@ function HistoryDateRange({
           {rangeLabel}
         </button>
         {open ? (
-          <div aria-label="날짜 범위 선택" className={styles.calendarPopover} role="dialog">
+          <div aria-label="날짜 범위 선택" className={calendarStyles.popover} role="dialog">
             <DayPicker
               defaultMonth={committedRange?.from ?? committedRange?.to ?? new Date()}
               locale={ko}

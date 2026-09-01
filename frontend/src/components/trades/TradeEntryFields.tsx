@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import type { Brokerage, Owner } from "@/lib/api-contracts";
 
 import { BrokerageCombobox } from "./BrokerageCombobox";
+import { DateTimeInput } from "./DateTimeInput";
 import { formatInteger, formatWon, numericSign } from "./format";
 import { isIntegerDraft } from "./integer-input";
 import { OwnerCombobox } from "./OwnerCombobox";
@@ -101,19 +102,16 @@ export function TradeEntryFields({
         noValidate
       >
         <div className="field">
-          <label className="field-label" htmlFor={id("executed-at")}>
+          <span className="field-label" id={id("executed-at-label")}>
             {label} 일시
-          </label>
-          <input
+          </span>
+          <DateTimeInput
             aria-describedby={`${id("datetime-hint")}${fieldError("executedAt") ? ` ${id("datetime-error")}` : ""}`}
             aria-invalid={fieldError("executedAt") ? true : undefined}
-            className="control"
+            aria-labelledby={id("executed-at-label")}
             disabled={form.submitting}
             id={id("executed-at")}
-            onChange={(event) => form.setExecutedAt(event.target.value)}
-            required
-            lang="ko-KR"
-            type="datetime-local"
+            onChange={form.setExecutedAt}
             value={form.executedAt}
           />
           <p id={id("datetime-hint")} className="field-hint">
