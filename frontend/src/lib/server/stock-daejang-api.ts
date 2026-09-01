@@ -77,6 +77,21 @@ export function listOwners(): Promise<readonly Owner[]> {
   return getInternalApiData("owners", z.array(ownerSchema));
 }
 
+export function listFavoriteBrokerages(ownerId: number): Promise<readonly Brokerage[]> {
+  return getInternalApiData(`owners/${ownerId}/brokerages`, z.array(brokerageSchema));
+}
+
+export async function listFavoriteBrokeragesByOwner(
+  owners: readonly Owner[],
+): Promise<Readonly<Record<string, readonly Brokerage[]>>> {
+  const entries = await Promise.all(
+    owners.map(
+      async (owner) => [owner.id.toString(), await listFavoriteBrokerages(owner.id)] as const,
+    ),
+  );
+  return Object.fromEntries(entries);
+}
+
 export function getDashboard(): Promise<DashboardResponse> {
   return getInternalApiData("dashboard", dashboardResponseSchema);
 }

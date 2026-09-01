@@ -15,6 +15,7 @@ import type { StockSelection, TradeSide } from "./types";
 
 interface HistoryFiltersProps {
   readonly brokerages: readonly Brokerage[];
+  readonly favoriteBrokeragesByOwner?: Readonly<Record<string, readonly Brokerage[]>> | undefined;
   readonly owners: readonly Owner[];
   readonly stocks: readonly StockSelection[];
   readonly side: TradeSide;
@@ -25,7 +26,13 @@ interface ActiveFilter {
   readonly value: string;
 }
 
-export function HistoryFilters({ brokerages, owners, stocks, side }: HistoryFiltersProps) {
+export function HistoryFilters({
+  brokerages,
+  favoriteBrokeragesByOwner,
+  owners,
+  stocks,
+  side,
+}: HistoryFiltersProps) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -97,6 +104,7 @@ export function HistoryFilters({ brokerages, owners, stocks, side }: HistoryFilt
       <div className={styles.form} aria-busy={isPending}>
         <HistoryFilterFields
           brokerages={brokerages}
+          favoriteBrokeragesByOwner={favoriteBrokeragesByOwner}
           key={searchParams.toString()}
           onFilterChange={applyFilter}
           owners={owners}

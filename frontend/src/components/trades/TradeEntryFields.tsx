@@ -1,8 +1,10 @@
 import { Button } from "@/components/ui/button";
 import type { Brokerage, Owner } from "@/lib/api-contracts";
 
+import { BrokerageCombobox } from "./BrokerageCombobox";
 import { formatInteger, formatWon, numericSign } from "./format";
 import { isIntegerDraft } from "./integer-input";
+import { OwnerCombobox } from "./OwnerCombobox";
 import { StockCombobox } from "./StockCombobox";
 import styles from "./trade-entry-form.module.css";
 import { sideLabel, type TradeSide } from "./types";
@@ -11,6 +13,7 @@ import type { TradeFieldName, useTradeEntryForm } from "./useTradeEntryForm";
 interface TradeEntryFieldsProps {
   readonly brokerages: readonly Brokerage[];
   readonly compact?: boolean;
+  readonly favoriteBrokeragesByOwner?: Readonly<Record<string, readonly Brokerage[]>> | undefined;
   readonly form: ReturnType<typeof useTradeEntryForm>;
   readonly formId: string;
   readonly onCancel?: () => void;
@@ -22,6 +25,7 @@ interface TradeEntryFieldsProps {
 export function TradeEntryFields({
   brokerages,
   compact = false,
+  favoriteBrokeragesByOwner = {},
   form,
   formId,
   onCancel,
@@ -121,51 +125,20 @@ export function TradeEntryFields({
             </p>
           ) : null}
         </div>
-        <div className="field">
-          <label className="field-label" htmlFor={id("owner")}>
-            소유주
-          </label>
-          <select
-            className="control"
-            disabled={form.submitting}
-            id={id("owner")}
-            onChange={(event) => form.setOwnerId(event.target.value)}
-            value={form.ownerId}
-          >
-            {owners.map((owner) => (
-              <option key={owner.id} value={owner.id}>
-                {owner.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="field">
-          <label className="field-label" htmlFor={id("brokerage")}>
-            증권사
-          </label>
-          <select
-            aria-describedby={fieldError("brokerageCode") ? id("brokerage-error") : undefined}
-            aria-invalid={fieldError("brokerageCode") ? true : undefined}
-            className="control"
-            disabled={form.submitting}
-            id={id("brokerage")}
-            onChange={(event) => form.setBrokerageCode(event.target.value)}
-            required
-            value={form.brokerageCode}
-          >
-            <option value="">선택해 주세요</option>
-            {brokerages.map((brokerage) => (
-              <option key={brokerage.code} value={brokerage.code}>
-                {brokerage.name}
-              </option>
-            ))}
-          </select>
-          {fieldError("brokerageCode") ? (
-            <p id={id("brokerage-error")} className="field-error">
-              {fieldError("brokerageCode")}
-            </p>
-          ) : null}
-        </div>
+        <OwnerCombobox
+          disabled={form.submitting}
+          onChange={form.setOwnerId}
+          owners={owners}
+          value={form.ownerId}
+        />
+        <BrokerageCombobox
+          brokerages={brokerages}
+          disabled={form.submitting}
+          error={fieldError("brokerageCode")}
+          favoriteBrokerages={favoriteBrokeragesByOwner[form.ownerId] ?? []}
+          onChange={form.setBrokerageCode}
+          value={form.brokerageCode}
+        />
         <div className={styles.stock}>
           <StockCombobox
             disabled={form.submitting}

@@ -49,7 +49,8 @@ class StockDaejangApplicationTests {
             "/api/v1/owners" to mapOf("get" to "200"),
             "/api/v1/stocks/search" to mapOf("get" to "200"),
             "/api/v1/positions/average" to mapOf("get" to "200"),
-            "/api/v1/trades" to mapOf("post" to "201", "patch" to "200", "delete" to "200"),
+            "/api/v1/trades" to mapOf("post" to "201", "delete" to "200"),
+            "/api/v1/trades/{id}" to mapOf("put" to "200"),
             "/api/v1/trades/preview" to mapOf("post" to "200"),
         )
 

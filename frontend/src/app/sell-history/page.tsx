@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { HistoryFilters, HistoryPagination, TradeHistory } from "@/components/trades";
 import {
   listBrokerages,
+  listFavoriteBrokeragesByOwner,
   listOwners,
   listPurchasedStocks,
   listTradeHistory,
@@ -29,6 +30,7 @@ export default async function SellHistoryPage({ searchParams }: SellHistoryPageP
     listPurchasedStocks("SELL"),
   ]);
   const showFilteredEmptyState = result.hasFilters && result.rows.length === 0 && stocks.length > 0;
+  const favoriteBrokeragesByOwner = await listFavoriteBrokeragesByOwner(owners);
 
   return (
     <div className="page-frame page-stack">
@@ -49,7 +51,13 @@ export default async function SellHistoryPage({ searchParams }: SellHistoryPageP
         </div>
 
         <Suspense fallback={<p role="status">매도 필터를 불러오는 중입니다.</p>}>
-          <HistoryFilters brokerages={brokerages} owners={owners} stocks={stocks} side="SELL" />
+          <HistoryFilters
+            brokerages={brokerages}
+            favoriteBrokeragesByOwner={favoriteBrokeragesByOwner}
+            owners={owners}
+            stocks={stocks}
+            side="SELL"
+          />
         </Suspense>
         <TradeHistory
           side="SELL"

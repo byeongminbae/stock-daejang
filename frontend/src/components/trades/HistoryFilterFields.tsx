@@ -3,10 +3,12 @@ import { type DateRange, DayPicker } from "react-day-picker";
 import { ko } from "react-day-picker/locale";
 import "react-day-picker/style.css";
 import type { Brokerage, Owner } from "@/lib/api-contracts";
+import { BrokerageCombobox } from "./BrokerageCombobox";
 import { HistoryStockCombobox } from "./HistoryStockCombobox";
 import { periodRange } from "./history-date-range";
 import { type BASE_FILTER_KEYS, PERIOD_PRESETS } from "./history-filter-config";
 import styles from "./history-filters.module.css";
+import { OwnerCombobox } from "./OwnerCombobox";
 import type { StockSelection, TradeSide } from "./types";
 
 type FilterKey = (typeof BASE_FILTER_KEYS)[number];
@@ -14,6 +16,7 @@ type FilterValues = Readonly<Record<FilterKey, string>>;
 
 interface HistoryFilterFieldsProps {
   readonly brokerages: readonly Brokerage[];
+  readonly favoriteBrokeragesByOwner?: Readonly<Record<string, readonly Brokerage[]>> | undefined;
   readonly owners: readonly Owner[];
   readonly stocks: readonly StockSelection[];
   readonly values: FilterValues;
@@ -187,6 +190,7 @@ function HistoryDateRange({
 
 export function HistoryFilterFields({
   brokerages,
+  favoriteBrokeragesByOwner = {},
   onFilterChange,
   owners,
   side,
@@ -196,44 +200,19 @@ export function HistoryFilterFields({
   return (
     <>
       <HistoryDateRange values={values} onFilterChange={onFilterChange} />
-      <div className="field">
-        <label className="field-label" htmlFor="filter-owner">
-          소유주
-        </label>
-        <select
-          id="filter-owner"
-          className="control"
-          name="ownerId"
-          value={values.ownerId}
-          onChange={(event) => onFilterChange({ ownerId: event.currentTarget.value })}
-        >
-          <option value="">전체</option>
-          {owners.map((owner) => (
-            <option key={owner.id} value={owner.id}>
-              {owner.name}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="field">
-        <label className="field-label" htmlFor="filter-brokerage">
-          증권사
-        </label>
-        <select
-          id="filter-brokerage"
-          className="control"
-          name="brokerageCode"
-          value={values.brokerageCode}
-          onChange={(event) => onFilterChange({ brokerageCode: event.currentTarget.value })}
-        >
-          <option value="">전체</option>
-          {brokerages.map((brokerage) => (
-            <option key={brokerage.code} value={brokerage.code}>
-              {brokerage.name}
-            </option>
-          ))}
-        </select>
-      </div>
+      <OwnerCombobox
+        allowEmpty
+        onChange={(id) => onFilterChange({ ownerId: id })}
+        owners={owners}
+        value={values.ownerId}
+      />
+      <BrokerageCombobox
+        allowEmpty
+        brokerages={brokerages}
+        favoriteBrokerages={favoriteBrokeragesByOwner[values.ownerId] ?? []}
+        onChange={(code) => onFilterChange({ brokerageCode: code })}
+        value={values.brokerageCode}
+      />
       <HistoryStockCombobox
         initialValue={values.stockNameOrCode}
         onChange={(value) => onFilterChange({ stockNameOrCode: value })}

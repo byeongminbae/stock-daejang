@@ -8,6 +8,7 @@ const navigation = [
   { href: "/record", label: "기록하기" },
   { href: "/buy-history", label: "매수 히스토리" },
   { href: "/sell-history", label: "매도 히스토리" },
+  { href: "/settings", label: "설정" },
 ] as const;
 
 export function AppHeader() {

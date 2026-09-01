@@ -9,12 +9,19 @@ import { useTradeEntryForm } from "./useTradeEntryForm";
 
 interface TradeEntryFormProps {
   readonly brokerages: readonly Brokerage[];
+  readonly favoriteBrokeragesByOwner?: Readonly<Record<string, readonly Brokerage[]>> | undefined;
   readonly owners: readonly Owner[];
   readonly side: TradeSide;
   readonly onSaved?: ((tradeId: string) => void) | undefined;
 }
 
-export function TradeEntryForm({ brokerages, owners, side, onSaved }: TradeEntryFormProps) {
+export function TradeEntryForm({
+  brokerages,
+  favoriteBrokeragesByOwner,
+  owners,
+  side,
+  onSaved,
+}: TradeEntryFormProps) {
   const label = sideLabel(side);
   const form = useTradeEntryForm({
     defaultOwnerId: owners[0]?.id.toString() ?? "",
@@ -32,6 +39,7 @@ export function TradeEntryForm({ brokerages, owners, side, onSaved }: TradeEntry
       </div>
       <TradeEntryFields
         brokerages={brokerages}
+        favoriteBrokeragesByOwner={favoriteBrokeragesByOwner}
         form={form}
         formId={`${side}-create`}
         owners={owners}

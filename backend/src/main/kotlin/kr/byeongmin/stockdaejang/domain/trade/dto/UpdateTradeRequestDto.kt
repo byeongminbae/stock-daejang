@@ -12,14 +12,6 @@ import java.time.OffsetDateTime
 @Schema(description = "기존 매수 또는 매도 거래 수정 요청. 모든 필드는 필수")
 data class UpdateTradeRequestDto(
 	@field:Schema(
-		description = "수정할 거래 ID",
-		minLength = 1,
-		maxLength = 19,
-		example = "1",
-	)
-	val id: Long,
-
-	@field:Schema(
 		description = "선택한 증권사 코드. 숫자 3자리이며 240은 삼성증권입니다.",
 		pattern = BROKERAGE_CODE_PATTERN,
 		example = "240",

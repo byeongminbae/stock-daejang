@@ -72,8 +72,7 @@ class TradeService(
 	}
 
 	@Transactional
-	fun updateTrade(updateTradeRequestDto: UpdateTradeRequestDto): SuccessResponse {
-		val tradeId = updateTradeRequestDto.id
+	fun updateTrade(tradeId: Long, updateTradeRequestDto: UpdateTradeRequestDto): SuccessResponse {
 		// 조회 이후에 걸게되면 T1, T2 중 하나는 최신이 아닌 엔티티일수도 있음
 		tradeQuerydslRepository.lockTradeByTradeId(tradeId)
 

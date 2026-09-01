@@ -17,16 +17,16 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping(value = ["/api/v1/stocks"], produces = [MediaType.APPLICATION_JSON_VALUE])
 @Tag(name = "종목", description = "거래에 입력할 종목명과 종목코드 검색")
 class StockController(
-    private val stockService: StockService
+	private val stockService: StockService
 ) {
-    @GetMapping
-    @Operation(
-        summary = "종목 검색",
-        description = "종목명 또는 종목코드로 국내 종목을 검색합니다. 검색어는 앞뒤 공백을 제거해 처리합니다.",
-    )
-    fun searchStocks(
-        @Valid @ParameterObject getStockSearchRequestDto: GetStockSearchRequestDto,
-    ): SuccessDataResponse<List<StockSearchItemResponseDto>> {
-        return stockService.searchStocks(getStockSearchRequestDto.stockName)
-    }
+	@GetMapping
+	@Operation(
+		summary = "종목 검색",
+		description = "종목명 또는 종목코드로 국내 종목 검색",
+	)
+	fun searchStocks(
+		@Valid @ParameterObject getStockSearchRequestDto: GetStockSearchRequestDto,
+	): SuccessDataResponse<List<StockSearchItemResponseDto>> {
+		return stockService.searchStocks(getStockSearchRequestDto.stockName)
+	}
 }

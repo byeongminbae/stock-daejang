@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 
 import { TradeEntryForm } from "@/components/trades";
-import { listBrokerages, listOwners } from "@/lib/server/stock-daejang-api";
+import {
+  listBrokerages,
+  listFavoriteBrokeragesByOwner,
+  listOwners,
+} from "@/lib/server/stock-daejang-api";
 
 import styles from "./record.module.css";
 
@@ -14,6 +18,7 @@ export const dynamic = "force-dynamic";
 
 export default async function RecordPage() {
   const [brokerages, owners] = await Promise.all([listBrokerages(), listOwners()]);
+  const favoriteBrokeragesByOwner = await listFavoriteBrokeragesByOwner(owners);
 
   return (
     <div className="page-frame page-stack">
@@ -22,8 +27,18 @@ export default async function RecordPage() {
       </header>
 
       <div className={styles.entryGrid}>
-        <TradeEntryForm brokerages={brokerages} owners={owners} side="BUY" />
-        <TradeEntryForm brokerages={brokerages} owners={owners} side="SELL" />
+        <TradeEntryForm
+          brokerages={brokerages}
+          favoriteBrokeragesByOwner={favoriteBrokeragesByOwner}
+          owners={owners}
+          side="BUY"
+        />
+        <TradeEntryForm
+          brokerages={brokerages}
+          favoriteBrokeragesByOwner={favoriteBrokeragesByOwner}
+          owners={owners}
+          side="SELL"
+        />
       </div>
     </div>
   );

@@ -236,10 +236,10 @@ export function useTradeEntryForm({
     };
     try {
       const response = editing
-        ? await ky.patch("/api/v1/trades", {
+        ? await ky.put(`/api/v1/trades/${tradeId}`, {
             throwHttpErrors: false,
             timeout: 10_000,
-            json: { id: Number(tradeId), ...payload },
+            json: payload,
           })
         : await ky.post("/api/v1/trades", {
             throwHttpErrors: false,
