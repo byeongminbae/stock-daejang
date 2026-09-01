@@ -13,14 +13,12 @@ services:
       retries: 10
       start_period: 5s
     volumes:
-      - /volume1/docker/family-stock-ledger/volume:/var/lib/postgresql/data
+      - /volume1/docker/stock-daejang/volume:/var/lib/postgresql/data
     ports:
       - "${POSTGRES_PORT}:5432"
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: ghcr.io/byeongminbae/stock-daejang-backend:latest
     restart: unless-stopped
     environment:
       SPRING_DATASOURCE_URL: "jdbc:postgresql://db:5432/stock_daejang"
@@ -39,9 +37,7 @@ services:
       start_period: 15s
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+    image: ghcr.io/byeongminbae/stock-daejang-frontend:latest
     restart: unless-stopped
     environment:
       INTERNAL_API_BASE_URL: "http://backend:8080"
