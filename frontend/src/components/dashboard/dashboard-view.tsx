@@ -7,6 +7,7 @@ import { useState, useTransition } from "react";
 import { SHOW_BROKERAGE_TOTALS_COOKIE } from "./brokerage-totals-cookie";
 import styles from "./dashboard.module.css";
 import { OwnerSection } from "./owner-section";
+import { StockSummarySection } from "./stock-summary-section";
 import { SummaryStrip } from "./summary-strip";
 import type { DashboardResponse } from "./types";
 
@@ -70,6 +71,8 @@ export function DashboardView({ dashboard, initialShowBrokerageTotals }: Dashboa
           </Link>
         </aside>
       ) : null}
+
+      {isEmpty ? null : <StockSummarySection stockSummaries={dashboard.stockSummaries} />}
 
       <div className={styles.ownerStack} aria-busy={refreshing}>
         {dashboard.owners.map((owner) => (

@@ -35,6 +35,9 @@ data class DashboardResponseDto(
 	)
 	val unrealizedProfit: BigDecimal,
 
+	@field:Schema(description = "종목별 보유 현황. 소유주와 증권사를 가리지 않고 같은 종목을 모두 합산")
+	val stockSummaries: List<DashboardStockSummaryResponseDto>,
+
 	@field:Schema(description = "소유주별 보유 현황")
 	val owners: List<DashboardOwnerResponseDto>,
 
@@ -63,11 +66,17 @@ data class DashboardResponseDto(
 			val stocks = owners.flatMap { owner ->
 				owner.brokerages.flatMap(DashboardBrokerageResponseDto::stocks)
 			}
+			val stockSummaries = stocks
+				.groupBy(DashboardStockResponseDto::stockCode)
+				.values
+				.map(DashboardStockSummaryResponseDto::of)
+				.sortedBy(DashboardStockSummaryResponseDto::stockName)
 			return DashboardResponseDto(
 				stockCount = stockCount,
 				totalBuyAmount = stocks.sumOfDecimal(selector = DashboardStockResponseDto::totalBuyAmount),
 				valuation = stocks.sumOfDecimal(selector = DashboardStockResponseDto::valuation),
 				unrealizedProfit = stocks.sumOfDecimal(selector = DashboardStockResponseDto::unrealizedProfit),
+				stockSummaries = stockSummaries,
 				owners = owners,
 				quoteFetchedAt = quoteFetchedAt,
 				valuationSession = valuationSession,

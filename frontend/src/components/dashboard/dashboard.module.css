@@ -283,6 +283,25 @@
   padding-right: var(--space-5);
 }
 
+.stockSummarySection {
+  margin-top: var(--space-5);
+}
+
+.stockSummaryTable thead th:first-child {
+  width: 24%;
+  padding-left: var(--space-5);
+  text-align: left;
+}
+
+.stockSummaryTable thead th:nth-child(2) {
+  text-align: right;
+}
+
+.stockSummaryTable thead th:last-child,
+.stockSummaryTable tbody td:last-child {
+  padding-right: var(--space-5);
+}
+
 .stockIdentity {
   display: flex;
   align-items: center;

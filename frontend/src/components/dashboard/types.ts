@@ -19,6 +19,16 @@ const dashboardStockSchema = z.strictObject({
   returnRate: financeNumberSchema,
 });
 
+const dashboardStockSummarySchema = z.strictObject({
+  stockCode: z.string().regex(/^[0-9A-Z]{6}$/),
+  stockName: z.string().min(1),
+  quantity: financeNumberSchema,
+  totalBuyAmount: financeNumberSchema,
+  currentPrice: financeNumberSchema,
+  unrealizedProfit: financeNumberSchema,
+  valuation: financeNumberSchema,
+});
+
 const dashboardBrokerageSchema = z.strictObject({
   brokerageCode: z.string().min(1),
   brokerageName: z.string().min(1),
@@ -44,12 +54,14 @@ export const dashboardResponseSchema = z.strictObject({
   totalBuyAmount: financeNumberSchema,
   valuation: financeNumberSchema,
   unrealizedProfit: financeNumberSchema,
+  stockSummaries: z.array(dashboardStockSummarySchema),
   owners: z.array(dashboardOwnerSchema),
   quoteFetchedAt: z.string().nullable(),
   valuationSession: marketSessionSchema.nullable(),
 });
 
 export type DashboardStock = Readonly<z.infer<typeof dashboardStockSchema>>;
+export type DashboardStockSummary = Readonly<z.infer<typeof dashboardStockSummarySchema>>;
 export type DashboardBrokerage = Readonly<
   Omit<z.infer<typeof dashboardBrokerageSchema>, "stocks"> & {
     readonly stocks: readonly DashboardStock[];
@@ -60,10 +72,14 @@ export type DashboardOwner = Readonly<
     readonly brokerages: readonly DashboardBrokerage[];
   }
 >;
-type WithReadonlyOwners<Response> = Response extends { owners: unknown }
+type WithReadonlyOwners<Response> = Response extends {
+  owners: unknown;
+  stockSummaries: unknown;
+}
   ? Readonly<
-      Omit<Response, "owners"> & {
+      Omit<Response, "owners" | "stockSummaries"> & {
         readonly owners: readonly DashboardOwner[];
+        readonly stockSummaries: readonly DashboardStockSummary[];
       }
     >
   : never;

@@ -130,6 +130,7 @@ class StockDaejangApplicationTests {
             "DashboardOwnerResponseDto",
             "DashboardResponseDto",
             "DashboardStockResponseDto",
+            "DashboardStockSummaryResponseDto",
             "StockStatusResponseDto",
             "TradeHistoryResponseDto",
             "TradeHistoryRowResponseDto",
@@ -162,9 +163,10 @@ class StockDaejangApplicationTests {
                 "DashboardOwnerResponseDto",
                 "DashboardBrokerageResponseDto",
                 "DashboardStockResponseDto",
+                "DashboardStockSummaryResponseDto",
             ),
             dashboardSchemas,
-            "공개 대시보드 응답 스키마는 새 네 종류만 존재해야 합니다.",
+            "공개 대시보드 응답 스키마는 새 다섯 종류만 존재해야 합니다.",
         )
         listOf(
             "DashboardSnapshotResponseDto",
@@ -248,8 +250,8 @@ class StockDaejangApplicationTests {
     private fun assertDashboardOpenApiContract(schemas: JsonNode) {
         assertDashboardSchema(
             schemas.path("DashboardResponseDto"),
-            setOf("stockCount", "checkedStockCount", "totalBuyAmount", "valuation", "unrealizedProfit", "owners", "quoteFetchedAt", "valuationSession"),
-            setOf("stockCount", "checkedStockCount", "totalBuyAmount", "valuation", "unrealizedProfit", "owners", "quoteFetchedAt", "valuationSession"),
+            setOf("stockCount", "checkedStockCount", "totalBuyAmount", "valuation", "unrealizedProfit", "stockSummaries", "owners", "quoteFetchedAt", "valuationSession"),
+            setOf("stockCount", "checkedStockCount", "totalBuyAmount", "valuation", "unrealizedProfit", "stockSummaries", "owners", "quoteFetchedAt", "valuationSession"),
         )
         assertDashboardSchema(
             schemas.path("DashboardOwnerResponseDto"),
@@ -265,6 +267,11 @@ class StockDaejangApplicationTests {
             schemas.path("DashboardStockResponseDto"),
             setOf("stockCode", "stockName", "quantity", "averageBuyPrice", "totalBuyAmount", "brokerageWeight", "currentPrice", "valuation", "unrealizedProfit", "returnRate"),
             setOf("stockCode", "stockName", "quantity", "averageBuyPrice", "totalBuyAmount", "brokerageWeight", "currentPrice", "valuation", "unrealizedProfit", "returnRate"),
+        )
+        assertDashboardSchema(
+            schemas.path("DashboardStockSummaryResponseDto"),
+            setOf("stockCode", "stockName", "quantity", "totalBuyAmount", "currentPrice", "unrealizedProfit", "valuation"),
+            setOf("stockCode", "stockName", "quantity", "totalBuyAmount", "currentPrice", "unrealizedProfit", "valuation"),
         )
 
         val root = schemas.path("DashboardResponseDto").path("properties")
@@ -295,6 +302,12 @@ class StockDaejangApplicationTests {
         assertInteger(stock.path("quantity"), "int32")
         listOf("averageBuyPrice", "totalBuyAmount", "brokerageWeight", "currentPrice", "valuation", "unrealizedProfit", "returnRate").forEach {
             assertNumber(stock.path(it))
+        }
+
+        val stockSummary = schemas.path("DashboardStockSummaryResponseDto").path("properties")
+        assertInteger(stockSummary.path("quantity"), "int32")
+        listOf("totalBuyAmount", "currentPrice", "unrealizedProfit", "valuation").forEach {
+            assertNumber(stockSummary.path(it))
         }
     }
 
