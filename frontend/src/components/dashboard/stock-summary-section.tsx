@@ -21,7 +21,7 @@ export function StockSummarySection({ stockSummaries }: StockSummarySectionProps
     >
       <div className={styles.summaryHeading}>
         <div>
-          <h2 id="stock-summary-heading">종목별 현황 총괄</h2>
+          <h2 id="stock-summary-heading">우리집 주식 보유 현황</h2>
         </div>
       </div>
 
