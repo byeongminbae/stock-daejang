@@ -66,7 +66,7 @@ export function OwnerCombobox({
     window.clearTimeout(closeTimerRef.current);
     setShowDefault(true);
     setOpen(true);
-    setActiveIndex(items.length > 0 ? 0 : -1);
+    setActiveIndex(allowEmpty && value === "" ? -1 : items.length > 0 ? 0 : -1);
   };
 
   const choose = (owner: Owner) => {
@@ -114,9 +114,13 @@ export function OwnerCombobox({
       setActiveIndex((index) => (index <= 0 ? items.length - 1 : index - 1));
       return;
     }
-    if (event.key === "Enter" && open && activeItem !== undefined) {
+    if (event.key === "Enter" && open) {
       event.preventDefault();
-      choose(activeItem);
+      if (activeItem !== undefined) {
+        choose(activeItem);
+      } else if (allowEmpty && activeIndex === -1) {
+        clear();
+      }
     }
   };
 
@@ -170,13 +174,17 @@ export function OwnerCombobox({
           onKeyDown={handleKeyDown}
         />
         {open ? (
-          <div id={listId} className={styles.popover} role="listbox">
+          <div
+            id={listId}
+            className={styles.popover}
+            onMouseDown={(event) => event.preventDefault()}
+            role="listbox"
+          >
             {allowEmpty ? (
               <button
-                aria-selected={value === ""}
+                aria-selected={activeIndex === -1}
                 className={styles.option}
                 onClick={clear}
-                onMouseDown={(event) => event.preventDefault()}
                 role="option"
                 type="button"
               >
@@ -193,7 +201,6 @@ export function OwnerCombobox({
                   id={`${baseId}-owner-option-${owner.id}`}
                   key={owner.id}
                   onClick={() => choose(owner)}
-                  onMouseDown={(event) => event.preventDefault()}
                   role="option"
                   type="button"
                 >

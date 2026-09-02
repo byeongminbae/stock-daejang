@@ -147,7 +147,12 @@ export function HistoryStockCombobox({
           onKeyDown={handleKeyDown}
         />
         {open ? (
-          <div id={listId} className={styles.stockPopover} role="listbox">
+          <div
+            id={listId}
+            className={styles.stockPopover}
+            onMouseDown={(event) => event.preventDefault()}
+            role="listbox"
+          >
             {items.length === 0 ? (
               <p className={styles.stockMessage}>
                 {stocks.length === 0
@@ -163,7 +168,6 @@ export function HistoryStockCombobox({
                   role="option"
                   aria-selected={index === activeIndex}
                   className={styles.stockOption}
-                  onMouseDown={(event) => event.preventDefault()}
                   onClick={() => choose(stock)}
                 >
                   <strong>{stock.name}</strong>

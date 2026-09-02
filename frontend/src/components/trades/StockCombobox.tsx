@@ -185,7 +185,7 @@ export function StockCombobox({ value, onChange, error, disabled = false }: Stoc
           placeholder="두 글자 이상 검색"
         />
         {open ? (
-          <div className={styles.popover}>
+          <fieldset className={styles.popover} onMouseDown={(event) => event.preventDefault()}>
             {state === "loading" || state === "refreshing" ? (
               <p className={styles.message}>
                 {state === "refreshing" ? "종목 다시 검색 중" : "종목 검색 중"}
@@ -217,7 +217,6 @@ export function StockCombobox({ value, onChange, error, disabled = false }: Stoc
                       tabIndex={-1}
                       aria-selected={index === activeIndex}
                       className={styles.option}
-                      onMouseDown={(event) => event.preventDefault()}
                       onClick={() => choose(item)}
                     >
                       <strong>{item.name}</strong>
@@ -229,7 +228,7 @@ export function StockCombobox({ value, onChange, error, disabled = false }: Stoc
                   ))
                 : null}
             </div>
-          </div>
+          </fieldset>
         ) : null}
       </div>
       <div id={statusId} className={styles.status} role="status" aria-live="polite">
