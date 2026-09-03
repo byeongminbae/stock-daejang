@@ -31,6 +31,9 @@ fun BigDecimal.toPercentageOf(totalAmount: BigDecimal): BigDecimal {
 	if (hasNoTotalAmount) {
 		return BigDecimal.ZERO
 	}
+	val percentageRatioScale = 4
 	val percentMultiplier = BigDecimal.valueOf(100)
-	return divideRounded(totalAmount).multiply(percentMultiplier).rounded()
+	return this.divide(totalAmount, percentageRatioScale, RoundingMode.HALF_UP)
+		.multiply(percentMultiplier)
+		.rounded()
 }

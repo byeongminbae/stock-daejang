@@ -270,8 +270,8 @@ class StockDaejangApplicationTests {
         )
         assertDashboardSchema(
             schemas.path("DashboardStockSummaryResponseDto"),
-            setOf("stockCode", "stockName", "quantity", "totalBuyAmount", "currentPrice", "unrealizedProfit", "valuation"),
-            setOf("stockCode", "stockName", "quantity", "totalBuyAmount", "currentPrice", "unrealizedProfit", "valuation"),
+            setOf("stockCode", "stockName", "quantity", "totalBuyAmount", "currentPrice", "unrealizedProfit", "valuation", "returnRate"),
+            setOf("stockCode", "stockName", "quantity", "totalBuyAmount", "currentPrice", "unrealizedProfit", "valuation", "returnRate"),
         )
 
         val root = schemas.path("DashboardResponseDto").path("properties")
@@ -306,7 +306,7 @@ class StockDaejangApplicationTests {
 
         val stockSummary = schemas.path("DashboardStockSummaryResponseDto").path("properties")
         assertInteger(stockSummary.path("quantity"), "int32")
-        listOf("totalBuyAmount", "currentPrice", "unrealizedProfit", "valuation").forEach {
+        listOf("totalBuyAmount", "currentPrice", "unrealizedProfit", "valuation", "returnRate").forEach {
             assertNumber(stockSummary.path(it))
         }
     }

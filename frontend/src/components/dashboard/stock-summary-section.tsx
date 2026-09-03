@@ -4,6 +4,7 @@ import styles from "./dashboard.module.css";
 import {
   formatDashboardQuantity,
   formatDashboardWon,
+  formatSignedPercent,
   formatSignedWon,
   profitLabel,
 } from "./format";
@@ -36,6 +37,7 @@ export function StockSummarySection({ stockSummaries }: StockSummarySectionProps
               <th scope="col">현재가</th>
               <th scope="col">평가 손익</th>
               <th scope="col">평가액</th>
+              <th scope="col">수익률</th>
             </tr>
           </thead>
           <tbody>
@@ -71,6 +73,10 @@ export function StockSummarySection({ stockSummaries }: StockSummarySectionProps
                     {formatSignedWon(stock.unrealizedProfit)}
                   </td>
                   <td className="money">{formatDashboardWon(stock.valuation)}</td>
+                  <td className={`money ${profitClass}`}>
+                    <span className="sr-only">{profitState} </span>
+                    {formatSignedPercent(stock.returnRate)}
+                  </td>
                 </tr>
               );
             })}
@@ -125,6 +131,13 @@ export function StockSummarySection({ stockSummaries }: StockSummarySectionProps
                   <div>
                     <dt>평가액</dt>
                     <dd className="money">{formatDashboardWon(stock.valuation)}</dd>
+                  </div>
+                  <div>
+                    <dt>수익률</dt>
+                    <dd className={`money ${profitClass}`}>
+                      <span className="sr-only">{profitState} </span>
+                      {formatSignedPercent(stock.returnRate)}
+                    </dd>
                   </div>
                 </dl>
               </article>

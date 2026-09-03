@@ -3,6 +3,7 @@ package kr.byeongmin.stockdaejang.domain.dashboard.dto
 import io.swagger.v3.oas.annotations.media.Schema
 import kr.byeongmin.stockdaejang.domain.common.util.rounded
 import kr.byeongmin.stockdaejang.domain.common.util.sumOfDecimal
+import kr.byeongmin.stockdaejang.domain.common.util.toPercentageOf
 import java.math.BigDecimal
 
 @Schema(description = "종목별 보유 현황과 평가 합계. 소유주와 증권사를 가리지 않고 같은 종목을 모두 합산")
@@ -49,6 +50,12 @@ data class DashboardStockSummaryResponseDto(
 		example = "997500",
 	)
 	val valuation: BigDecimal,
+
+	@field:Schema(
+		description = "수익률. 퍼센트 단위 숫자",
+		example = "12.08",
+	)
+	val returnRate: BigDecimal,
 ) {
 	companion object {
 		fun of(dashboardStockResponseDtos: List<DashboardStockResponseDto>): DashboardStockSummaryResponseDto {
@@ -66,6 +73,7 @@ data class DashboardStockSummaryResponseDto(
 				currentPrice = dashboardResponseDto.currentPrice,
 				unrealizedProfit = unrealizedProfit,
 				valuation = totalBuyAmount.add(unrealizedProfit).rounded(),
+				returnRate = unrealizedProfit.toPercentageOf(totalBuyAmount)
 			)
 		}
 	}

@@ -27,6 +27,7 @@ const dashboardStockSummarySchema = z.strictObject({
   currentPrice: financeNumberSchema,
   unrealizedProfit: financeNumberSchema,
   valuation: financeNumberSchema,
+  returnRate: financeNumberSchema,
 });
 
 const dashboardBrokerageSchema = z.strictObject({
