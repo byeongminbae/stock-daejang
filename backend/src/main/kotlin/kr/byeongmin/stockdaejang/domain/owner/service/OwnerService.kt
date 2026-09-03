@@ -2,10 +2,12 @@ package kr.byeongmin.stockdaejang.domain.owner.service
 
 import kr.byeongmin.stockdaejang.domain.brokerage.dto.BrokerageResponseDto
 import kr.byeongmin.stockdaejang.domain.brokerage.repository.BrokerageRepository
+import kr.byeongmin.stockdaejang.domain.owner.dto.CreateOwnerRequestDto
 import kr.byeongmin.stockdaejang.domain.owner.dto.OwnerResponseDto
 import kr.byeongmin.stockdaejang.domain.owner.entity.OwnerFavoriteBrokerage
 import kr.byeongmin.stockdaejang.domain.owner.repository.OwnerFavoriteBrokerageRepository
 import kr.byeongmin.stockdaejang.domain.owner.repository.OwnerRepository
+import kr.byeongmin.stockdaejang.domain.trade.repository.TradeRepository
 import kr.byeongmin.stockdaejang.global.error.CommonError
 import kr.byeongmin.stockdaejang.global.exception.BusinessException
 import kr.byeongmin.stockdaejang.global.response.SuccessDataResponse
@@ -17,14 +19,38 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 class OwnerService(
 	private val ownerRepository: OwnerRepository,
+	private val tradeRepository: TradeRepository,
 	private val brokerageRepository: BrokerageRepository,
 	private val ownerFavoriteBrokerageRepository: OwnerFavoriteBrokerageRepository,
 ) {
-	fun getList(): SuccessDataResponse<List<OwnerResponseDto>> {
+	fun getOwnerList(): SuccessDataResponse<List<OwnerResponseDto>> {
 		return SuccessDataResponse(
 			ownerRepository.findAllByOrderByIdAsc()
 				.map(OwnerResponseDto::from)
 		)
+	}
+
+	fun createOwner(createOwnerRequestDto: CreateOwnerRequestDto): SuccessDataResponse<Long> {
+		if (ownerRepository.existsByName(createOwnerRequestDto.name)) {
+			throw BusinessException(CommonError.RESOURCE_CONFLICT)
+		}
+		val owner = createOwnerRequestDto.to()
+		val savedOwner = ownerRepository.save(owner)
+		return SuccessDataResponse(savedOwner.id.ifNullThrow())
+	}
+
+	@Transactional
+	fun deleteOwner(ownerId: Long): SuccessResponse {
+		if (!ownerRepository.existsById(ownerId)) {
+			throw BusinessException(CommonError.RESOURCE_NOT_FOUND)
+		}
+		if (tradeRepository.existsByOwnerId(ownerId)) {
+			throw BusinessException(CommonError.RESOURCE_REFERENCING_OTHER_RESOURCE)
+		}
+
+		ownerFavoriteBrokerageRepository.deleteByOwnerId(ownerId)
+		ownerRepository.deleteById(ownerId)
+		return SuccessResponse()
 	}
 
 	@Transactional(readOnly = true)

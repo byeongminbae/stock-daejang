@@ -2,7 +2,9 @@ package kr.byeongmin.stockdaejang.domain.owner.controller
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.validation.Valid
 import kr.byeongmin.stockdaejang.domain.brokerage.dto.BrokerageResponseDto
+import kr.byeongmin.stockdaejang.domain.owner.dto.CreateOwnerRequestDto
 import kr.byeongmin.stockdaejang.domain.owner.dto.OwnerResponseDto
 import kr.byeongmin.stockdaejang.domain.owner.service.OwnerService
 import kr.byeongmin.stockdaejang.global.response.SuccessDataResponse
@@ -18,8 +20,24 @@ class OwnerController(
 ) {
 	@GetMapping
 	@Operation(summary = "소유주 목록 조회")
-	fun getList(): SuccessDataResponse<List<OwnerResponseDto>> {
-		return ownerService.getList()
+	fun getOwnerList(): SuccessDataResponse<List<OwnerResponseDto>> {
+		return ownerService.getOwnerList()
+	}
+
+	@PostMapping
+	@Operation(summary = "새 소유주 추가")
+	fun createOwner(
+		@Valid @RequestBody createOwnerRequestDto: CreateOwnerRequestDto
+	): SuccessDataResponse<Long> {
+		return ownerService.createOwner(createOwnerRequestDto)
+	}
+
+	@DeleteMapping("/{ownerId}")
+	@Operation(summary = "기존 소유주 제거")
+	fun deleteOwner(
+		@PathVariable ownerId: Long
+	): SuccessResponse {
+		return ownerService.deleteOwner(ownerId)
 	}
 
 	@GetMapping("/{ownerId}/brokerages")

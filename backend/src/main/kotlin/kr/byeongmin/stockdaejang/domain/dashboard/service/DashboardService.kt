@@ -25,7 +25,7 @@ class DashboardService(
 		val stockCodes = positions.map { it.stock.stockCode }.distinct()
 		val marketPricesByStockCode = domesticMarketPriceService.getMarketPrices(MarketStockCodesDto(stockCodes))
 
-		val positionsByOwnerId = positions.groupBy { it.owner.id }
+		val positionsByOwnerId = positions.groupBy { it.owner.id.ifNullThrow() }
 		val owners = positions.map { it.owner }.distinctBy { it.id }
 
 		val ownerResponseDtos = getOwnerResponseDtosOrEmptyList(owners, positionsByOwnerId, marketPricesByStockCode)

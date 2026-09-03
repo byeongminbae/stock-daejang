@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 import { TradeEntryForm } from "@/components/trades";
 import {
@@ -18,6 +19,7 @@ export const dynamic = "force-dynamic";
 
 export default async function RecordPage() {
   const [brokerages, owners] = await Promise.all([listBrokerages(), listOwners()]);
+  if (owners.length === 0) redirect("/settings");
   const favoriteBrokeragesByOwner = await listFavoriteBrokeragesByOwner(owners);
 
   return (

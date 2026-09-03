@@ -109,7 +109,7 @@ data class TradeHistoryRowResponseDto(
 				quantity = trade.quantity,
 				unitPrice = trade.unitPrice,
 				amount = trade.getActualTotalPrice(),
-				ownerId = trade.owner.id,
+				ownerId = trade.owner.id.ifNullThrow(),
 				ownerName = trade.owner.name,
 				brokerageCode = trade.brokerage.code,
 				brokerageName = trade.brokerage.name,

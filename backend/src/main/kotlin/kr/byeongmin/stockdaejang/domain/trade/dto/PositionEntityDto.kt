@@ -13,7 +13,7 @@ data class PositionEntityDto(
 	val stock: Stock,
 	val executedAt: OffsetDateTime,
 ) {
-	val ownerId: Long get() = owner.id
+	val ownerId: Long get() = owner.id.ifNullThrow()
 	val brokerageId: Long get() = brokerage.id.ifNullThrow()
 	val stockCode: String get() = stock.stockCode
 

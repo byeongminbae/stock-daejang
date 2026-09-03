@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 import { HistoryFilters, HistoryPagination, TradeHistory } from "@/components/trades";
@@ -29,6 +30,7 @@ export default async function BuyHistoryPage({ searchParams }: BuyHistoryPagePro
     listOwners(),
     listPurchasedStocks("BUY"),
   ]);
+  if (owners.length === 0) redirect("/settings");
   const showFilteredEmptyState = result.hasFilters && result.rows.length === 0 && stocks.length > 0;
   const favoriteBrokeragesByOwner = await listFavoriteBrokeragesByOwner(owners);
 

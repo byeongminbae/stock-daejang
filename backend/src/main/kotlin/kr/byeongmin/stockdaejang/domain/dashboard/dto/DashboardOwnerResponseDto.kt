@@ -3,6 +3,7 @@ package kr.byeongmin.stockdaejang.domain.dashboard.dto
 import io.swagger.v3.oas.annotations.media.Schema
 import kr.byeongmin.stockdaejang.domain.common.util.sumOfDecimal
 import kr.byeongmin.stockdaejang.domain.owner.entity.Owner
+import kr.byeongmin.stockdaejang.global.util.ifNullThrow
 import java.math.BigDecimal
 
 @Schema(description = "소유주별 보유 종목 현황과 평가 합계")
@@ -54,7 +55,7 @@ data class DashboardOwnerResponseDto(
         ): DashboardOwnerResponseDto {
             val stocks = brokerages.flatMap(DashboardBrokerageResponseDto::stocks)
             return DashboardOwnerResponseDto(
-                ownerId = owner.id,
+                ownerId = owner.id.ifNullThrow(),
                 ownerName = owner.name,
                 stockCount = stocks.distinctBy(DashboardStockResponseDto::stockCode).size,
                 totalBuyAmount = stocks.sumOfDecimal(selector = DashboardStockResponseDto::totalBuyAmount),

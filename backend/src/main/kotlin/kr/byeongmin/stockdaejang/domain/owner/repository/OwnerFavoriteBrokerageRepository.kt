@@ -9,4 +9,6 @@ interface OwnerFavoriteBrokerageRepository : BaseJpaRepository<OwnerFavoriteBrok
     fun existsByOwnerIdAndBrokerageId(ownerId: Long, brokerageId: Long): Boolean
 
     fun deleteByOwnerIdAndBrokerageId(ownerId: Long, brokerageId: Long)
+
+    fun deleteByOwnerId(ownerId: Long)
 }

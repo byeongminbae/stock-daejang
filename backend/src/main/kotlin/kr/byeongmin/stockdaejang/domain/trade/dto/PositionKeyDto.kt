@@ -12,7 +12,7 @@ data class PositionKeyDto(
 	companion object {
 		fun from(trade: Trade): PositionKeyDto {
 			return PositionKeyDto(
-				ownerId = trade.owner.id,
+				ownerId = trade.owner.id.ifNullThrow(),
 				brokerageId = trade.brokerage.id.ifNullThrow(),
 				stockCode = trade.stock.stockCode
 			)
@@ -20,7 +20,7 @@ data class PositionKeyDto(
 
 		fun from(dashboardPosition: DashboardPosition): PositionKeyDto {
 			return PositionKeyDto(
-				ownerId = dashboardPosition.owner.id,
+				ownerId = dashboardPosition.owner.id.ifNullThrow(),
 				brokerageId = dashboardPosition.brokerage.id.ifNullThrow(),
 				stockCode = dashboardPosition.stock.stockCode
 			)

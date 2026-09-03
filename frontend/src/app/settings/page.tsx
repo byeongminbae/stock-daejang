@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { FavoriteBrokeragesSettings } from "@/components/settings/FavoriteBrokeragesSettings";
+import { OwnerSettings } from "@/components/settings/OwnerSettings";
 import {
   listBrokerages,
   listFavoriteBrokeragesByOwner,
@@ -23,6 +24,7 @@ export default async function SettingsPage() {
       <header className="page-intro">
         <h1 className="page-title">설정</h1>
       </header>
+      <OwnerSettings owners={owners} />
       <FavoriteBrokeragesSettings
         brokerages={brokerages}
         favoriteBrokeragesByOwner={favoriteBrokeragesByOwner}
