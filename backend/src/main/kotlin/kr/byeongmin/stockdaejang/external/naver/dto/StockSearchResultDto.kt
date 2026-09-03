@@ -15,11 +15,13 @@ data class StockSearchResultDto(
 	val hasValidStockCode: Boolean
 		get() = Regex(STOCK_CODE_PATTERN).matches(code)
 
-	fun isDomesticStock(): Boolean = isStock &&
+	fun isDomesticStock(): Boolean {
+		return isStock &&
 			isKorean &&
 			hasDomesticStockPage &&
 			hasValidStockCode &&
 			isEtf.isNotNull()
+	}
 
 	companion object {
 		internal fun from(item: NaverSearchResponseDto.ItemDto): StockSearchResultDto {

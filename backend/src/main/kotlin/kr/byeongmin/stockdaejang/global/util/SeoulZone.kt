@@ -6,6 +6,10 @@ import java.time.ZoneId
 
 val SEOUL_ZONE: ZoneId = ZoneId.of("Asia/Seoul")
 
-fun seoulNow(): OffsetDateTime = OffsetDateTime.now(SEOUL_ZONE)
+fun seoulNow(): OffsetDateTime {
+    return OffsetDateTime.now(SEOUL_ZONE)
+}
 
-fun LocalDate.atStartOfSeoulDay(): OffsetDateTime = atStartOfDay(SEOUL_ZONE).toOffsetDateTime()
+fun LocalDate.atStartOfSeoulDay(): OffsetDateTime {
+    return atStartOfDay(SEOUL_ZONE).toOffsetDateTime()
+}

@@ -1,7 +1,7 @@
 package kr.byeongmin.stockdaejang.domain.dashboard.dto
 
 import io.swagger.v3.oas.annotations.media.Schema
-import kr.byeongmin.stockdaejang.domain.common.util.MONEY_MATH_CONTEXT
+import kr.byeongmin.stockdaejang.domain.common.util.rounded
 import kr.byeongmin.stockdaejang.domain.common.util.sumOfDecimal
 import java.math.BigDecimal
 
@@ -65,7 +65,7 @@ data class DashboardStockSummaryResponseDto(
 				totalBuyAmount = totalBuyAmount,
 				currentPrice = dashboardResponseDto.currentPrice,
 				unrealizedProfit = unrealizedProfit,
-				valuation = totalBuyAmount.add(unrealizedProfit, MONEY_MATH_CONTEXT),
+				valuation = totalBuyAmount.add(unrealizedProfit).rounded(),
 			)
 		}
 	}

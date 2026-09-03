@@ -1,7 +1,7 @@
 package kr.byeongmin.stockdaejang.domain.trade.service
 
 import kr.byeongmin.stockdaejang.domain.brokerage.repository.BrokerageRepository
-import kr.byeongmin.stockdaejang.domain.common.util.multiplyRounded
+import kr.byeongmin.stockdaejang.domain.common.util.rounded
 import kr.byeongmin.stockdaejang.domain.dashboard.entity.DashboardPosition
 import kr.byeongmin.stockdaejang.domain.dashboard.repository.DashboardPositionQuerydslRepository
 import kr.byeongmin.stockdaejang.domain.dashboard.repository.DashboardPositionReplacement
@@ -318,11 +318,11 @@ class TradeService(
 	): TradePreviewResponseDto {
 		val quantity = tradePreviewRequestDto.quantity
 		val unitPrice = tradePreviewRequestDto.unitPrice
-		val soldAmount = quantity.multiplyRounded(unitPrice)
+		val soldAmount = quantity.multiply(unitPrice).rounded()
 
 		val expectedProfit =
 			if (tradePreviewRequestDto.side.isSell()) {
-				if (positionSnapshot.isExceedQuantity(quantity)) {
+				if (positionSnapshot.isQuantityExceeded(quantity)) {
 					throw BusinessException(
 						TradeErrorType.INSUFFICIENT_HOLDING,
 						mapOf("quantity" to quantity.toString()),

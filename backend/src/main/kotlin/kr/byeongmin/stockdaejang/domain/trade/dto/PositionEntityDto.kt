@@ -17,8 +17,13 @@ data class PositionEntityDto(
 	val brokerageId: Long get() = brokerage.id.ifNullThrow()
 	val stockCode: String get() = stock.stockCode
 
-	fun toPositionKeyDto(): PositionKeyDto = PositionKeyDto(ownerId, brokerageId, stockCode)
-	fun toPositionKeyAtDto(): PositionKeyAtDto = PositionKeyAtDto(toPositionKeyDto(), executedAt)
+	fun toPositionKeyDto(): PositionKeyDto {
+		return PositionKeyDto(ownerId, brokerageId, stockCode)
+	}
+
+	fun toPositionKeyAtDto(): PositionKeyAtDto {
+		return PositionKeyAtDto(toPositionKeyDto(), executedAt)
+	}
 
 	companion object {
 		fun from(trade: Trade): PositionEntityDto {

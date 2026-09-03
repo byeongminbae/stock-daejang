@@ -29,4 +29,6 @@ fun <T> T?.isNotNull(): Boolean {
     return this != null
 }
 
-fun BigDecimal.isZero(): Boolean = this.compareTo(BigDecimal.ZERO) == 0
+fun BigDecimal.isZero(): Boolean {
+    return this.compareTo(BigDecimal.ZERO) == 0
+}

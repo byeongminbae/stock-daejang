@@ -20,7 +20,7 @@ enum class TradeType {
 	@Schema(description = "매도")
 	SELL {
 		override fun apply(trade: Trade, accumulatedSnapshot: PositionSnapshot): PositionSnapshot {
-			if (accumulatedSnapshot.isExceedQuantity(trade.quantity)) {
+			if (accumulatedSnapshot.isQuantityExceeded(trade.quantity)) {
 				throw BusinessException(
 					TradeErrorType.INSUFFICIENT_HOLDING,
 					mapOf("quantity" to TradeErrorType.INSUFFICIENT_HOLDING.message),
@@ -38,6 +38,11 @@ enum class TradeType {
 
 	abstract fun apply(trade: Trade, accumulatedSnapshot: PositionSnapshot): PositionSnapshot
 
-	fun isBuy(): Boolean = this == BUY
-	fun isSell(): Boolean = this == SELL
+	fun isBuy(): Boolean {
+		return this == BUY
+	}
+
+	fun isSell(): Boolean {
+		return this == SELL
+	}
 }

@@ -12,7 +12,9 @@ data class MarketStockCodesDto(val stockCodes: List<String>) {
         }
     }
 
-    fun isEmpty() = normalizedStockCodes.isEmpty()
+    fun isEmpty(): Boolean {
+        return normalizedStockCodes.isEmpty()
+    }
 
     private companion object {
         const val MAX_STOCK_CODES = 500
