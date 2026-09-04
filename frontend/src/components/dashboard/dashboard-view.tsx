@@ -1,8 +1,9 @@
 "use client";
 
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
+import Button, { type ButtonProps } from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -23,10 +24,17 @@ type DashboardViewProps = Readonly<{
 
 const SHOW_BROKERAGE_TOTALS_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
 
+// 눌러서 활성화시키는(꺼져 있는) 토글은 초록(contained), 다시 누르면 비활성화되는(켜져 있는) 토글은
+// 하얀 바탕(outlined)으로 통일한다.
+function toggleButtonVariant(active: boolean): ButtonProps["variant"] {
+  return active ? "outlined" : "contained";
+}
+
 export function DashboardView({ dashboard, initialShowBrokerageTotals }: DashboardViewProps) {
   const router = useRouter();
   const [refreshing, startRefresh] = useTransition();
   const [showBrokerageTotals, setShowBrokerageTotals] = useState(initialShowBrokerageTotals);
+  const [groupByStock, setGroupByStock] = useState(false);
   const isEmpty = dashboard.stockCount === 0;
 
   function refreshPrices() {
@@ -40,6 +48,10 @@ export function DashboardView({ dashboard, initialShowBrokerageTotals }: Dashboa
       document.cookie = `${SHOW_BROKERAGE_TOTALS_COOKIE}=${next}; path=/; max-age=${SHOW_BROKERAGE_TOTALS_COOKIE_MAX_AGE_SECONDS}; SameSite=Lax`;
       return next;
     });
+  }
+
+  function toggleGroupByStock() {
+    setGroupByStock((current) => !current);
   }
 
   return (
@@ -56,15 +68,24 @@ export function DashboardView({ dashboard, initialShowBrokerageTotals }: Dashboa
           대시보드
         </Typography>
         <Stack direction="row" sx={{ gap: 2 }}>
+          <Tooltip title={groupByStock ? "종목끼리 묶어요를 끄면 다시 사용할 수 있습니다" : ""}>
+            <span>
+              <Button
+                aria-pressed={showBrokerageTotals}
+                disabled={groupByStock}
+                onClick={toggleBrokerageTotals}
+                variant={groupByStock ? "outlined" : toggleButtonVariant(showBrokerageTotals)}
+              >
+                {showBrokerageTotals ? "증권사 합계 숨기기" : "증권사 합계 보기"}
+              </Button>
+            </span>
+          </Tooltip>
           <Button
-            aria-pressed={showBrokerageTotals}
-            onClick={toggleBrokerageTotals}
-            variant="outlined"
+            aria-pressed={groupByStock}
+            onClick={toggleGroupByStock}
+            variant={toggleButtonVariant(groupByStock)}
           >
-            {showBrokerageTotals ? "증권사 합계 숨기기" : "증권사 합계 보기"}
-          </Button>
-          <Button component={Link} href="/record" variant="contained">
-            매수 기록 추가
+            {groupByStock ? "증권사끼리 묶어요" : "종목끼리 묶어요"}
           </Button>
         </Stack>
       </Stack>
@@ -104,6 +125,7 @@ export function DashboardView({ dashboard, initialShowBrokerageTotals }: Dashboa
       <Box aria-busy={refreshing} sx={{ display: "grid", gap: { xs: 5, sm: 6 } }}>
         {dashboard.owners.map((owner, index) => (
           <OwnerSection
+            groupByStock={groupByStock}
             key={owner.ownerId}
             owner={owner}
             ownerIndex={index}

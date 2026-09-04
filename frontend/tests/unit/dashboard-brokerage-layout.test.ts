@@ -57,6 +57,7 @@ const owner: DashboardOwner = {
   totalBuyAmount: 280000,
   valuation: 320000,
   unrealizedProfit: 40000,
+  stockSummaries: [],
   brokerages,
 };
 
@@ -92,6 +93,7 @@ describe("dashboard brokerage layout", () => {
     // When: the owner's dashboard section is rendered with a one-stock owner total.
     const markup = renderToStaticMarkup(
       withTheme(OwnerSection, {
+        groupByStock: false,
         owner: ownerWithDuplicatedStock,
         ownerIndex: 0,
         showBrokerageTotals: true,

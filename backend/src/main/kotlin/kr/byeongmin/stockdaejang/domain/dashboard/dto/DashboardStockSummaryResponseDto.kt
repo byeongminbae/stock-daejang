@@ -58,23 +58,40 @@ data class DashboardStockSummaryResponseDto(
 	val returnRate: BigDecimal,
 ) {
 	companion object {
-		fun of(dashboardStockResponseDtos: List<DashboardStockResponseDto>): DashboardStockSummaryResponseDto {
+		fun from(dashboardStockResponseDtos: List<DashboardStockResponseDto>): DashboardStockSummaryResponseDto {
 			val totalBuyAmount =
 				dashboardStockResponseDtos.sumOfDecimal(selector = DashboardStockResponseDto::totalBuyAmount)
 			val unrealizedProfit =
 				dashboardStockResponseDtos.sumOfDecimal(selector = DashboardStockResponseDto::unrealizedProfit)
+
 			// 같은 종목코드로 묶었으므로 아무거나 선택해도 종목코드/종목명/현재가는 동일
-			val dashboardResponseDto = dashboardStockResponseDtos.first()
+			val dashboardStockResponseDto = dashboardStockResponseDtos.first()
+			val stockCode = dashboardStockResponseDto.stockCode
+			val stockName = dashboardStockResponseDto.stockName
+			val currentPrice = dashboardStockResponseDto.currentPrice
+
 			return DashboardStockSummaryResponseDto(
-				stockCode = dashboardResponseDto.stockCode,
-				stockName = dashboardResponseDto.stockName,
+				stockCode = stockCode,
+				stockName = stockName,
 				quantity = dashboardStockResponseDtos.sumOfDecimal(selector = DashboardStockResponseDto::quantity),
 				totalBuyAmount = totalBuyAmount,
-				currentPrice = dashboardResponseDto.currentPrice,
+				currentPrice = currentPrice,
 				unrealizedProfit = unrealizedProfit,
 				valuation = totalBuyAmount.add(unrealizedProfit).rounded(),
 				returnRate = unrealizedProfit.toPercentageOf(totalBuyAmount)
 			)
+		}
+
+		fun from(
+			dashboardBrokerageResponseDtos: List<DashboardBrokerageResponseDto>
+		): List<DashboardStockSummaryResponseDto> {
+			val stocksByStockCode = dashboardBrokerageResponseDtos
+				.flatMap { it.stocks }
+				.groupBy { it.stockCode }
+
+			return stocksByStockCode.values
+				.map { from(it) }
+				.sortedBy { it.stockName }
 		}
 	}
 }

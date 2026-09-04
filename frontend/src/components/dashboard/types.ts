@@ -47,6 +47,7 @@ const dashboardOwnerSchema = z.strictObject({
   totalBuyAmount: financeNumberSchema,
   valuation: financeNumberSchema,
   unrealizedProfit: financeNumberSchema,
+  stockSummaries: z.array(dashboardStockSummarySchema),
   brokerages: z.array(dashboardBrokerageSchema),
 });
 
@@ -69,8 +70,9 @@ export type DashboardBrokerage = Readonly<
   }
 >;
 export type DashboardOwner = Readonly<
-  Omit<z.infer<typeof dashboardOwnerSchema>, "brokerages"> & {
+  Omit<z.infer<typeof dashboardOwnerSchema>, "brokerages" | "stockSummaries"> & {
     readonly brokerages: readonly DashboardBrokerage[];
+    readonly stockSummaries: readonly DashboardStockSummary[];
   }
 >;
 type WithReadonlyOwners<Response> = Response extends {

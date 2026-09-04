@@ -69,7 +69,7 @@ data class DashboardResponseDto(
 			val stockSummaries = stocks
 				.groupBy(DashboardStockResponseDto::stockCode)
 				.values
-				.map(DashboardStockSummaryResponseDto::of)
+				.map(DashboardStockSummaryResponseDto::from)
 				.sortedBy(DashboardStockSummaryResponseDto::stockName)
 			return DashboardResponseDto(
 				stockCount = stockCount,

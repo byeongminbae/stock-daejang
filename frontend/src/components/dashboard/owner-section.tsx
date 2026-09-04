@@ -15,6 +15,7 @@ import { theme } from "@/theme";
 import { PositionCards } from "./position-cards";
 import { PositionTable } from "./position-table";
 import { sortStocks } from "./sort";
+import { StockSummaryCards, StockSummaryTable } from "./stock-summary-table";
 import type { DashboardBrokerage, DashboardOwner, SortDirection, SortField } from "./types";
 
 const sortLabels: Readonly<Record<SortField, string>> = {
@@ -33,6 +34,7 @@ type OwnerSectionProps = Readonly<{
   owner: DashboardOwner;
   ownerIndex: number;
   showBrokerageTotals: boolean;
+  groupByStock: boolean;
 }>;
 
 function sortedBrokerages(
@@ -46,7 +48,12 @@ function sortedBrokerages(
   }));
 }
 
-export function OwnerSection({ owner, ownerIndex, showBrokerageTotals }: OwnerSectionProps) {
+export function OwnerSection({
+  owner,
+  ownerIndex,
+  showBrokerageTotals,
+  groupByStock,
+}: OwnerSectionProps) {
   const [sortField, setSortField] = useState<SortField>("totalBuyAmount");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const sorted = useMemo(
@@ -95,10 +102,12 @@ export function OwnerSection({ owner, ownerIndex, showBrokerageTotals }: OwnerSe
           </Box>
         </Stack>
 
-        <p aria-live="polite" style={visuallyHidden}>
-          {owner.ownerName} 목록을 {sortLabels[sortField]}{" "}
-          {sortDirection === "asc" ? "오름차순" : "내림차순"}으로 정렬했습니다.
-        </p>
+        {groupByStock ? null : (
+          <p aria-live="polite" style={visuallyHidden}>
+            {owner.ownerName} 목록을 {sortLabels[sortField]}{" "}
+            {sortDirection === "asc" ? "오름차순" : "내림차순"}으로 정렬했습니다.
+          </p>
+        )}
 
         {owner.stockCount === 0 ? (
           <Stack
@@ -116,10 +125,21 @@ export function OwnerSection({ owner, ownerIndex, showBrokerageTotals }: OwnerSe
             <Typography sx={{ m: 0, color: "text.secondary" }}>
               현재 보유 중인 종목이 없습니다.
             </Typography>
-            <Button component={Link} href="/record" variant="outlined">
+            <Button component={Link} href="/record" variant="contained">
               매수 기록 추가
             </Button>
           </Stack>
+        ) : groupByStock ? (
+          <>
+            <StockSummaryTable
+              ariaLabel={`${owner.ownerName}의 종목별 보유 현황`}
+              stockSummaries={owner.stockSummaries}
+            />
+            <StockSummaryCards
+              ariaLabel={`${owner.ownerName}의 종목별 보유 현황`}
+              stockSummaries={owner.stockSummaries}
+            />
+          </>
         ) : (
           <>
             <PositionTable

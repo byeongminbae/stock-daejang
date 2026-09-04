@@ -91,7 +91,7 @@ export function SummaryStrip({ dashboard, refreshing, onRefresh }: SummaryStripP
             aria-busy={refreshing}
             disabled={refreshing}
             onClick={onRefresh}
-            variant="outlined"
+            variant="contained"
           >
             {refreshing ? "가격 확인 중" : "가격 새로고침"}
           </Button>
