@@ -1,5 +1,9 @@
 "use client";
 
+import Box from "@mui/material/Box";
+import ListItemButton from "@mui/material/ListItemButton";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import {
   type ChangeEvent,
   type CompositionEvent,
@@ -10,7 +14,8 @@ import {
   useRef,
   useState,
 } from "react";
-import styles from "./history-filters.module.css";
+
+import { ComboboxPopover } from "./combobox-popover";
 import { type StockSelection, sideLabel, type TradeSide } from "./types";
 
 interface HistoryStockComboboxProps {
@@ -38,6 +43,7 @@ export function HistoryStockCombobox({
   const baseId = useId();
   const inputId = `${baseId}-history-stock`;
   const listId = `${baseId}-history-stock-list`;
+  const anchorRef = useRef<HTMLDivElement>(null);
   const initialStock = stocks.find(
     (stock) => stock.code === initialValue || stock.name === initialValue,
   );
@@ -117,67 +123,64 @@ export function HistoryStockCombobox({
   };
 
   return (
-    <div className={`field ${styles.stockField}`}>
-      <label className="field-label" htmlFor={inputId}>
-        종목명 또는 종목코드
-      </label>
-      <div className={styles.stockAnchor}>
-        <input
-          id={inputId}
-          className="control"
-          role="combobox"
-          aria-autocomplete="list"
-          aria-controls={open ? listId : undefined}
-          aria-activedescendant={
-            open && activeItem !== undefined ? `${baseId}-option-${activeItem.code}` : undefined
-          }
-          aria-expanded={open}
-          autoComplete="off"
-          placeholder={`${label}한 종목 선택`}
-          value={query}
-          onBlur={handleBlur}
-          onChange={handleChange}
-          onClick={openList}
-          onCompositionEnd={handleComposition}
-          onCompositionStart={handleComposition}
-          onFocus={(event) => {
-            event.currentTarget.select();
-            openList();
-          }}
-          onKeyDown={handleKeyDown}
-        />
-        {open ? (
-          <div
-            id={listId}
-            className={styles.stockPopover}
-            onMouseDown={(event) => event.preventDefault()}
-            role="listbox"
-          >
-            {items.length === 0 ? (
-              <p className={styles.stockMessage}>
-                {stocks.length === 0
-                  ? `${label}한 종목이 없습니다.`
-                  : `일치하는 ${label} 종목이 없습니다.`}
-              </p>
-            ) : (
-              items.map((stock, index) => (
-                <button
-                  id={`${baseId}-option-${stock.code}`}
-                  key={stock.code}
-                  type="button"
-                  role="option"
-                  aria-selected={index === activeIndex}
-                  className={styles.stockOption}
-                  onClick={() => choose(stock)}
+    <Box ref={anchorRef} sx={{ minWidth: 0 }}>
+      <TextField
+        aria-activedescendant={
+          open && activeItem !== undefined ? `${baseId}-option-${activeItem.code}` : undefined
+        }
+        aria-autocomplete="list"
+        aria-controls={open ? listId : undefined}
+        aria-expanded={open}
+        autoComplete="off"
+        fullWidth
+        id={inputId}
+        label="종목명 또는 종목코드"
+        onBlur={handleBlur}
+        onChange={handleChange}
+        onClick={openList}
+        onCompositionEnd={handleComposition}
+        onCompositionStart={handleComposition}
+        onFocus={(event) => {
+          event.currentTarget.select();
+          openList();
+        }}
+        onKeyDown={handleKeyDown}
+        placeholder={`${label}한 종목 선택`}
+        role="combobox"
+        value={query}
+        variant="outlined"
+      />
+      {open ? (
+        <ComboboxPopover anchorEl={anchorRef.current} id={listId} open={open} role="listbox">
+          {items.length === 0 ? (
+            <Typography color="textSecondary" sx={{ px: 3, py: 2 }} variant="body2">
+              {stocks.length === 0
+                ? `${label}한 종목이 없습니다.`
+                : `일치하는 ${label} 종목이 없습니다.`}
+            </Typography>
+          ) : (
+            items.map((stock, index) => (
+              <ListItemButton
+                aria-selected={index === activeIndex}
+                id={`${baseId}-option-${stock.code}`}
+                key={stock.code}
+                onClick={() => choose(stock)}
+                role="option"
+                selected={index === activeIndex}
+              >
+                <Box
+                  sx={{ display: "flex", justifyContent: "space-between", width: "100%", gap: 3 }}
                 >
-                  <strong>{stock.name}</strong>
-                  <span>{stock.code}</span>
-                </button>
-              ))
-            )}
-          </div>
-        ) : null}
-      </div>
-    </div>
+                  <span>{stock.name}</span>
+                  <Typography color="textSecondary" variant="body2">
+                    {stock.code}
+                  </Typography>
+                </Box>
+              </ListItemButton>
+            ))
+          )}
+        </ComboboxPopover>
+      ) : null}
+    </Box>
   );
 }

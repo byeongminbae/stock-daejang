@@ -1,24 +1,22 @@
-import styles from "@/components/dashboard/dashboard.module.css";
+import Box from "@mui/material/Box";
+import Skeleton from "@mui/material/Skeleton";
+import { visuallyHidden } from "@/lib/visually-hidden";
 
 export default function AppLoading() {
   return (
-    <div className="page-frame" aria-busy="true" aria-live="polite">
-      <header className="page-header">
-        <div>
-          <div aria-hidden="true" className="page-title">
-            페이지를 불러오고 있습니다
-          </div>
-        </div>
-      </header>
-      <span className="sr-only" role="status">
+    <Box
+      aria-busy="true"
+      aria-live="polite"
+      sx={{ maxWidth: 1440, mx: "auto", px: { xs: 3, sm: 6, lg: 8 }, py: 8 }}
+    >
+      <span role="status" style={visuallyHidden}>
         페이지 불러오는 중
       </span>
-      <div aria-hidden="true" className={styles.ownerStack}>
-        <div className={styles.skeleton} />
-        <div className={styles.skeleton} />
-        <div className={styles.skeleton} />
-        <div className={styles.skeleton} />
-      </div>
-    </div>
+      <Box aria-hidden="true" sx={{ display: "grid", gap: 4 }}>
+        {[0, 1, 2, 3].map((key) => (
+          <Skeleton height={140} key={key} variant="rounded" />
+        ))}
+      </Box>
+    </Box>
   );
 }

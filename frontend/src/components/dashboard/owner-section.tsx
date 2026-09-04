@@ -1,31 +1,37 @@
 "use client";
 
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { visuallyHidden } from "@/lib/visually-hidden";
 
-import styles from "./dashboard.module.css";
+import { theme } from "@/theme";
+
 import { PositionCards } from "./position-cards";
 import { PositionTable } from "./position-table";
 import { sortStocks } from "./sort";
 import type { DashboardBrokerage, DashboardOwner, SortDirection, SortField } from "./types";
 
-const sortOptions: readonly Readonly<{
-  value: SortField;
-  label: string;
-}>[] = [
-  { value: "stockName", label: "종목명" },
-  { value: "quantity", label: "보유 수량" },
-  { value: "averageBuyPrice", label: "매수평균단가" },
-  { value: "totalBuyAmount", label: "매입액" },
-  { value: "brokerageWeight", label: "증권사 비중" },
-  { value: "currentPrice", label: "현재가" },
-  { value: "unrealizedProfit", label: "평가 손익" },
-  { value: "valuation", label: "평가액" },
-  { value: "returnRate", label: "수익률" },
-];
+const sortLabels: Readonly<Record<SortField, string>> = {
+  stockName: "종목명",
+  quantity: "보유 수량",
+  averageBuyPrice: "매수평균단가",
+  totalBuyAmount: "매입액",
+  brokerageWeight: "증권사 비중",
+  currentPrice: "현재가",
+  unrealizedProfit: "평가 손익",
+  valuation: "평가액",
+  returnRate: "수익률",
+};
 
 type OwnerSectionProps = Readonly<{
   owner: DashboardOwner;
+  ownerIndex: number;
   showBrokerageTotals: boolean;
 }>;
 
@@ -40,7 +46,7 @@ function sortedBrokerages(
   }));
 }
 
-export function OwnerSection({ owner, showBrokerageTotals }: OwnerSectionProps) {
+export function OwnerSection({ owner, ownerIndex, showBrokerageTotals }: OwnerSectionProps) {
   const [sortField, setSortField] = useState<SortField>("totalBuyAmount");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const sorted = useMemo(
@@ -48,7 +54,7 @@ export function OwnerSection({ owner, showBrokerageTotals }: OwnerSectionProps) 
     [owner.brokerages, sortDirection, sortField],
   );
   const headingId = `owner-${owner.ownerId}`;
-  const activeLabel = sortOptions.find((option) => option.value === sortField)?.label ?? "매입액";
+  const ownerColor = theme.palette.owner[ownerIndex % theme.palette.owner.length];
 
   function sortFromHeader(field: SortField) {
     if (field === sortField) {
@@ -60,50 +66,78 @@ export function OwnerSection({ owner, showBrokerageTotals }: OwnerSectionProps) 
   }
 
   return (
-    <section
-      className={styles.ownerSection}
-      data-owner={owner.ownerName}
+    <Card
+      component="section"
       aria-labelledby={headingId}
+      data-owner={owner.ownerName}
+      variant="outlined"
     >
-      <div className={styles.ownerHeader}>
-        <div>
-          <p className={styles.ownerEyebrow}>소유주</p>
-          <h2 id={headingId}>{owner.ownerName}</h2>
-          <p>
-            {owner.brokerages.length}개 증권사, {owner.stockCount}개 종목 보유
-          </p>
-        </div>
-      </div>
-
-      <p className="sr-only" aria-live="polite">
-        {owner.ownerName} 목록을 {activeLabel} {sortDirection === "asc" ? "오름차순" : "내림차순"}
-        으로 정렬했습니다.
-      </p>
-
-      {owner.stockCount === 0 ? (
-        <div className={styles.ownerEmpty}>
-          <p>현재 보유 중인 종목이 없습니다.</p>
-          <Link className="button button--secondary" href="/record">
-            매수 기록 추가
-          </Link>
-        </div>
-      ) : (
-        <>
-          <PositionTable
-            owner={owner}
-            brokerages={sorted}
-            sortField={sortField}
-            sortDirection={sortDirection}
-            onSort={sortFromHeader}
-            showBrokerageTotals={showBrokerageTotals}
+      <CardContent sx={{ p: { xs: 4, sm: 5 } }}>
+        <Stack direction="row" sx={{ alignItems: "center", gap: 2.5, mb: 4 }}>
+          <Box
+            aria-hidden="true"
+            sx={{ width: 12, height: 12, borderRadius: "50%", bgcolor: ownerColor, flexShrink: 0 }}
           />
-          <PositionCards
-            owner={owner}
-            brokerages={sorted}
-            showBrokerageTotals={showBrokerageTotals}
-          />
-        </>
-      )}
-    </section>
+          <Box>
+            <Typography
+              component="p"
+              sx={{ fontWeight: 800, letterSpacing: "0.04em", color: "text.secondary" }}
+              variant="body2"
+            >
+              소유주
+            </Typography>
+            <Typography component="h2" id={headingId} variant="h2">
+              {owner.ownerName}
+            </Typography>
+            <Typography sx={{ mt: 0.5, color: "text.secondary" }} variant="body2">
+              {owner.brokerages.length}개 증권사, {owner.stockCount}개 종목 보유
+            </Typography>
+          </Box>
+        </Stack>
+
+        <p aria-live="polite" style={visuallyHidden}>
+          {owner.ownerName} 목록을 {sortLabels[sortField]}{" "}
+          {sortDirection === "asc" ? "오름차순" : "내림차순"}으로 정렬했습니다.
+        </p>
+
+        {owner.stockCount === 0 ? (
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            sx={{
+              alignItems: { xs: "stretch", sm: "center" },
+              justifyContent: "space-between",
+              gap: 3,
+              minHeight: 112,
+              p: 4,
+              borderRadius: 2,
+              bgcolor: "action.hover",
+            }}
+          >
+            <Typography sx={{ m: 0, color: "text.secondary" }}>
+              현재 보유 중인 종목이 없습니다.
+            </Typography>
+            <Button component={Link} href="/record" variant="outlined">
+              매수 기록 추가
+            </Button>
+          </Stack>
+        ) : (
+          <>
+            <PositionTable
+              brokerages={sorted}
+              onSort={sortFromHeader}
+              owner={owner}
+              showBrokerageTotals={showBrokerageTotals}
+              sortDirection={sortDirection}
+              sortField={sortField}
+            />
+            <PositionCards
+              brokerages={sorted}
+              owner={owner}
+              showBrokerageTotals={showBrokerageTotals}
+            />
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 }

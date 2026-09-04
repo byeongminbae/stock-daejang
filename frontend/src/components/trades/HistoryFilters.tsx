@@ -1,8 +1,18 @@
 "use client";
 
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Chip from "@mui/material/Chip";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
+
 import type { Brokerage, Owner } from "@/lib/api-contracts";
+
 import { HistoryFilterFields } from "./HistoryFilterFields";
 import {
   BASE_FILTER_KEYS,
@@ -10,7 +20,6 @@ import {
   FILTER_LABELS,
   ownerFilterName,
 } from "./history-filter-config";
-import styles from "./history-filters.module.css";
 import type { StockSelection, TradeSide } from "./types";
 
 interface HistoryFiltersProps {
@@ -97,64 +106,84 @@ export function HistoryFilters({
   };
 
   return (
-    <section className={`panel ${styles.filters}`}>
-      <p className={styles.filtersHeading}>
-        필터 <span className={styles.count}>{activeFilters.length}개 적용</span>
-      </p>
-      <div className={styles.form} aria-busy={isPending}>
-        <HistoryFilterFields
-          brokerages={brokerages}
-          favoriteBrokeragesByOwner={favoriteBrokeragesByOwner}
-          key={searchParams.toString()}
-          onFilterChange={applyFilter}
-          owners={owners}
-          side={side}
-          stocks={stocks}
-          values={values}
-        />
-        <div className={styles.actions}>
-          <button
-            className="button button--secondary"
-            type="button"
-            onClick={clearAll}
-            disabled={isPending || activeFilters.length === 0}
-          >
-            조건 초기화
-          </button>
-        </div>
-      </div>
-      {error ? (
-        <p className={styles.error} role="alert">
-          {error}
-        </p>
-      ) : null}
-      {activeFilters.length > 0 ? (
-        <fieldset className={styles.chips}>
-          <legend className="sr-only">적용된 필터</legend>
-          {activeFilters.map(({ key, value }) => (
-            <button
-              key={key}
-              className={styles.chip}
-              type="button"
-              onClick={() => removeFilter(key)}
+    <Card component="section" variant="outlined">
+      <CardContent sx={{ p: { xs: 4, sm: 5 } }}>
+        <Stack
+          direction="row"
+          sx={{ alignItems: "center", justifyContent: "space-between", mb: 4 }}
+        >
+          <Typography sx={{ fontWeight: 700 }}>
+            필터{" "}
+            <Typography component="span" color="textSecondary">
+              {activeFilters.length}개 적용
+            </Typography>
+          </Typography>
+        </Stack>
+        <Box aria-busy={isPending}>
+          <HistoryFilterFields
+            brokerages={brokerages}
+            favoriteBrokeragesByOwner={favoriteBrokeragesByOwner}
+            key={searchParams.toString()}
+            onFilterChange={applyFilter}
+            owners={owners}
+            side={side}
+            stocks={stocks}
+            values={values}
+          />
+          <Stack direction="row" sx={{ justifyContent: "flex-end", mt: 4 }}>
+            <Button
+              disabled={isPending || activeFilters.length === 0}
+              onClick={clearAll}
+              variant="outlined"
             >
-              {key === "period" ? "기간" : FILTER_LABELS[key]}:{" "}
-              {key === "ownerId"
-                ? ownerFilterName(owners, value)
-                : key === "brokerageCode"
-                  ? brokerageFilterName(brokerages, value)
-                  : key === "stockNameOrCode"
-                    ? (stocks.find((stock) => stock.code === value)?.name ?? value)
-                    : value}{" "}
-              <span aria-hidden="true">×</span>
-              <span className="sr-only"> 필터 제거</span>
-            </button>
-          ))}
-        </fieldset>
-      ) : null}
-      <p className="sr-only" role="status" aria-live="polite">
-        {isPending ? `${side === "BUY" ? "매수" : "매도"} 검색 결과 갱신 중` : ""}
-      </p>
-    </section>
+              조건 초기화
+            </Button>
+          </Stack>
+        </Box>
+        {error ? (
+          <Alert role="alert" severity="error" sx={{ mt: 3 }}>
+            {error}
+          </Alert>
+        ) : null}
+        {activeFilters.length > 0 ? (
+          <Stack
+            aria-label="적용된 필터"
+            component="fieldset"
+            direction="row"
+            sx={{ flexWrap: "wrap", gap: 1.5, mt: 4, p: 0, border: 0 }}
+          >
+            {activeFilters.map(({ key, value }) => (
+              <Chip
+                key={key}
+                label={`${key === "period" ? "기간" : FILTER_LABELS[key]}: ${
+                  key === "ownerId"
+                    ? ownerFilterName(owners, value)
+                    : key === "brokerageCode"
+                      ? brokerageFilterName(brokerages, value)
+                      : key === "stockNameOrCode"
+                        ? (stocks.find((stock) => stock.code === value)?.name ?? value)
+                        : value
+                }`}
+                onDelete={() => removeFilter(key)}
+              />
+            ))}
+          </Stack>
+        ) : null}
+        <Typography
+          aria-live="polite"
+          component="p"
+          role="status"
+          sx={{
+            position: "absolute",
+            width: 1,
+            height: 1,
+            overflow: "hidden",
+            clip: "rect(0,0,0,0)",
+          }}
+        >
+          {isPending ? `${side === "BUY" ? "매수" : "매도"} 검색 결과 갱신 중` : ""}
+        </Typography>
+      </CardContent>
+    </Card>
   );
 }

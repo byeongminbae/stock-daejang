@@ -1,11 +1,17 @@
 "use client";
 
+import Box from "@mui/material/Box";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Chip from "@mui/material/Chip";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import ky, { type KyResponse } from "ky";
 import { useState } from "react";
 import { z } from "zod";
+
 import { BrokerageCombobox } from "@/components/trades/BrokerageCombobox";
 import type { Brokerage, Owner } from "@/lib/api-contracts";
-import styles from "./favorite-brokerages-settings.module.css";
 
 const errorResponseSchema = z.object({
   success: z.literal(false),
@@ -78,38 +84,46 @@ function OwnerFavoritesRow({ owner, brokerages, initialFavorites }: OwnerFavorit
     );
 
   return (
-    <div className={styles.row}>
-      <span className={styles.ownerName}>{owner.name}</span>
-      <div className={styles.comboboxSlot}>
-        <BrokerageCombobox
-          brokerages={addableBrokerages}
-          disabled={pending}
-          favoriteBrokerages={[]}
-          hideLabel
-          key={favorites.length}
-          onChange={(code) => {
-            const brokerage = addableBrokerages.find((item) => item.code === code);
-            if (brokerage) void addFavorite(brokerage);
-          }}
-          placeholder="증권사 추가"
-          value=""
-        />
-      </div>
-      <div className={styles.chips}>
-        {favorites.map((brokerage) => (
-          <button
-            className={styles.chip}
-            disabled={pending}
-            key={brokerage.code}
-            onClick={() => void removeFavorite(brokerage.code)}
-            type="button"
-          >
-            {brokerage.name} <span aria-hidden="true">×</span>
-          </button>
-        ))}
-      </div>
-      {error ? <p className={styles.error}>{error}</p> : null}
-    </div>
+    <Box
+      sx={{
+        py: 3,
+        borderTop: "1px solid",
+        borderColor: "divider",
+        "&:first-of-type": { pt: 0, borderTop: "none" },
+      }}
+    >
+      <Typography sx={{ fontWeight: 700, mb: 2 }}>{owner.name}</Typography>
+      <BrokerageCombobox
+        brokerages={addableBrokerages}
+        disabled={pending}
+        favoriteBrokerages={[]}
+        hideLabel
+        key={favorites.length}
+        onChange={(code) => {
+          const brokerage = addableBrokerages.find((item) => item.code === code);
+          if (brokerage) void addFavorite(brokerage);
+        }}
+        placeholder="증권사 추가"
+        value=""
+      />
+      {favorites.length > 0 ? (
+        <Stack direction="row" sx={{ flexWrap: "wrap", gap: 2, mt: 3 }}>
+          {favorites.map((brokerage) => (
+            <Chip
+              disabled={pending}
+              key={brokerage.code}
+              label={brokerage.name}
+              onDelete={() => void removeFavorite(brokerage.code)}
+            />
+          ))}
+        </Stack>
+      ) : null}
+      {error ? (
+        <Typography color="error" sx={{ mt: 2 }} variant="body2">
+          {error}
+        </Typography>
+      ) : null}
+    </Box>
   );
 }
 
@@ -125,18 +139,22 @@ export function FavoriteBrokeragesSettings({
   favoriteBrokeragesByOwner,
 }: FavoriteBrokeragesSettingsProps) {
   return (
-    <section aria-labelledby="favorite-brokerages-heading" className="panel">
-      <h2 id="favorite-brokerages-heading">자주 쓰는 증권사</h2>
-      <div className={styles.ownerRows}>
-        {owners.map((owner) => (
-          <OwnerFavoritesRow
-            brokerages={brokerages}
-            initialFavorites={favoriteBrokeragesByOwner[owner.id.toString()] ?? []}
-            key={owner.id}
-            owner={owner}
-          />
-        ))}
-      </div>
-    </section>
+    <Card component="section" aria-labelledby="favorite-brokerages-heading" variant="outlined">
+      <CardContent sx={{ p: { xs: 4, sm: 5 } }}>
+        <Typography component="h2" id="favorite-brokerages-heading" sx={{ mb: 4 }} variant="h2">
+          자주 쓰는 증권사
+        </Typography>
+        <Box>
+          {owners.map((owner) => (
+            <OwnerFavoritesRow
+              brokerages={brokerages}
+              initialFavorites={favoriteBrokeragesByOwner[owner.id.toString()] ?? []}
+              key={owner.id}
+              owner={owner}
+            />
+          ))}
+        </Box>
+      </CardContent>
+    </Card>
   );
 }

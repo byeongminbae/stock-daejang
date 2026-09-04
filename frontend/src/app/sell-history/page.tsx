@@ -1,7 +1,11 @@
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
+import { PageContainer } from "@/components/page-container";
 import { HistoryFilters, HistoryPagination, TradeHistory } from "@/components/trades";
 import {
   listBrokerages,
@@ -35,24 +39,27 @@ export default async function SellHistoryPage({ searchParams }: SellHistoryPageP
   const favoriteBrokeragesByOwner = await listFavoriteBrokeragesByOwner(owners);
 
   return (
-    <div className="page-frame page-stack">
-      <header className="page-intro">
-        <h1 className="page-title">매도 히스토리</h1>
-      </header>
+    <PageContainer stack>
+      <Typography component="h1" variant="h1">
+        매도 히스토리
+      </Typography>
 
-      <section className="history-section" aria-labelledby="sell-history-title">
-        <div className="section-heading">
-          <div>
-            <h2 id="sell-history-title">매도 기록 검색</h2>
-          </div>
-          <p className="results-heading" role="status" aria-live="polite">
+      <Box component="section" aria-labelledby="sell-history-title">
+        <Stack
+          direction="row"
+          sx={{ alignItems: "flex-end", justifyContent: "space-between", gap: 3, mb: 3 }}
+        >
+          <Typography component="h2" id="sell-history-title" variant="h2">
+            매도 기록 검색
+          </Typography>
+          <Typography aria-live="polite" color="textSecondary" role="status" variant="body2">
             {result.hasFilters
               ? `검색 결과 ${result.total.toLocaleString("ko-KR")}건`
               : `전체 ${result.total.toLocaleString("ko-KR")}건`}
-          </p>
-        </div>
+          </Typography>
+        </Stack>
 
-        <Suspense fallback={<p role="status">매도 필터를 불러오는 중입니다.</p>}>
+        <Suspense fallback={<Typography role="status">매도 필터를 불러오는 중입니다.</Typography>}>
           <HistoryFilters
             brokerages={brokerages}
             favoriteBrokeragesByOwner={favoriteBrokeragesByOwner}
@@ -70,9 +77,11 @@ export default async function SellHistoryPage({ searchParams }: SellHistoryPageP
           owners={owners}
         />
         <Suspense fallback={null}>
-          <HistoryPagination page={result.currentPage} totalPages={result.totalPages} />
+          <Box sx={{ mt: 4 }}>
+            <HistoryPagination page={result.currentPage} totalPages={result.totalPages} />
+          </Box>
         </Suspense>
-      </section>
-    </div>
+      </Box>
+    </PageContainer>
   );
 }

@@ -1,13 +1,19 @@
+import { ThemeProvider } from "@mui/material/styles";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { SummaryStrip } from "../../src/components/dashboard/summary-strip";
+import { theme } from "../../src/theme";
+
+function withTheme(props: Parameters<typeof SummaryStrip>[0]) {
+  return createElement(ThemeProvider, { theme }, createElement(SummaryStrip, props));
+}
 
 describe("dashboard summary", () => {
   it("shows the Korean market session immediately after the holding count", () => {
     // Given: the evaluated positions use the regular market session.
-    const summary = createElement(SummaryStrip, {
+    const summary = withTheme({
       dashboard: {
         stockCount: 1,
         totalBuyAmount: 0,
@@ -33,7 +39,7 @@ describe("dashboard summary", () => {
 
   it("keeps only quote metadata nullable for an empty dashboard", () => {
     // Given: the empty dashboard has zero-valued finance fields and no quote metadata.
-    const summary = createElement(SummaryStrip, {
+    const summary = withTheme({
       dashboard: {
         stockCount: 0,
         totalBuyAmount: 0,
@@ -53,14 +59,16 @@ describe("dashboard summary", () => {
 
     // Then: metadata uses its empty state while financial values remain concrete zeroes.
     expect(markup).toContain("조회 시각 없음");
-    expect(markup).toMatch(/<dt>평가 기준<\/dt><dd[^>]*>-<\/dd>/u);
+    expect(markup).toMatch(
+      /<dt[^>]*>평가 기준<\/dt>(?:<style[^>]*>.*?<\/style>)?<dd[^>]*>-<\/dd>/su,
+    );
     expect(markup.match(/0원/gu)).toHaveLength(3);
     expect(markup).not.toContain("일부 가격을 불러오지 못해");
   });
 
   it("counts each stock once across owners and brokerages", () => {
     // Given: two owners hold Samsung Electronics across four brokerage positions.
-    const summary = createElement(SummaryStrip, {
+    const summary = withTheme({
       dashboard: {
         stockCount: 1,
         totalBuyAmount: 280000,
@@ -79,7 +87,9 @@ describe("dashboard summary", () => {
     const markup = renderToStaticMarkup(summary);
 
     // Then: both the holding total and quote coverage use the one unique stock code.
-    expect(markup).toMatch(/<dt>보유 종목<\/dt><dd>1개<\/dd>/u);
+    expect(markup).toMatch(
+      /<dt[^>]*>보유 종목<\/dt>(?:<style[^>]*>.*?<\/style>)?<dd[^>]*>1개<\/dd>/su,
+    );
     expect(markup).toContain("1/1개 종목 가격 확인");
   });
 });

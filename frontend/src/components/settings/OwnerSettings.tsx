@@ -1,17 +1,24 @@
 "use client";
 
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import IconButton from "@mui/material/IconButton";
+import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import ky from "ky";
 import { useRouter } from "next/navigation";
 import type { FormEvent } from "react";
 import { useId, useState } from "react";
 import { z } from "zod";
 
-import { Button } from "@/components/ui/button";
-import { StatusMessage } from "@/components/ui/status-message";
 import type { Owner } from "@/lib/api-contracts";
 
 import { OwnerDeleteConfirmationDialog } from "./OwnerDeleteConfirmationDialog";
-import styles from "./owner-settings.module.css";
 
 const errorResponseSchema = z.object({
   success: z.literal(false),
@@ -119,60 +126,88 @@ export function OwnerSettings({ owners: initialOwners }: OwnerSettingsProps) {
   };
 
   return (
-    <section aria-labelledby="owner-settings-heading" className="panel">
-      <h2 id="owner-settings-heading">소유주 관리</h2>
-      <form className={styles.addForm} onSubmit={(event) => void handleAddSubmit(event)}>
-        <div className={`field ${styles.nameField}`}>
-          <label className="field-label" htmlFor={nameInputId}>
-            새 소유주 이름
-          </label>
-          <input
-            className="control"
+    <Card component="section" aria-labelledby="owner-settings-heading" variant="outlined">
+      <CardContent sx={{ p: { xs: 4, sm: 5 } }}>
+        <Typography component="h2" id="owner-settings-heading" sx={{ mb: 4 }} variant="h2">
+          소유주 관리
+        </Typography>
+        <Stack
+          component="form"
+          direction={{ xs: "column", sm: "row" }}
+          onSubmit={(event) => void handleAddSubmit(event)}
+          sx={{ alignItems: "stretch", gap: 3 }}
+        >
+          <TextField
             disabled={adding}
+            fullWidth
             id={nameInputId}
+            label="새 소유주 이름"
             onChange={(event) => setName(event.currentTarget.value)}
             placeholder="예: 병민"
             value={name}
           />
-        </div>
-        <Button disabled={name.trim().length === 0} isBusy={adding} type="submit">
-          추가
-        </Button>
-      </form>
-      {addError ? <StatusMessage tone="error">{addError}</StatusMessage> : null}
+          <Button
+            disabled={name.trim().length === 0 || adding}
+            sx={{ flexShrink: 0 }}
+            type="submit"
+            variant="contained"
+          >
+            {adding ? "추가 중" : "추가"}
+          </Button>
+        </Stack>
+        {addError ? (
+          <Alert severity="error" sx={{ mt: 3 }}>
+            {addError}
+          </Alert>
+        ) : null}
 
-      {owners.length > 0 ? (
-        <ul className={styles.ownerList}>
-          {owners.map((owner) => (
-            <li className={styles.ownerItem} key={owner.id}>
-              <span className={styles.ownerName}>{owner.name}</span>
-              <Button
-                onClick={() => {
-                  setDeleteError("");
-                  setPendingDelete(owner);
+        {owners.length > 0 ? (
+          <Stack component="ul" sx={{ mt: 4, mx: 0, mb: 0, p: 0, listStyle: "none", gap: 2 }}>
+            {owners.map((owner) => (
+              <Box
+                component="li"
+                key={owner.id}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  p: 3,
+                  borderRadius: 2,
+                  bgcolor: "action.hover",
                 }}
-                variant="danger"
               >
-                삭제
-              </Button>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className={styles.empty}>등록된 소유주가 없습니다.</p>
-      )}
+                <Typography sx={{ fontWeight: 600 }}>{owner.name}</Typography>
+                <IconButton
+                  aria-label={`${owner.name} 삭제`}
+                  color="error"
+                  onClick={() => {
+                    setDeleteError("");
+                    setPendingDelete(owner);
+                  }}
+                >
+                  <DeleteOutlineIcon />
+                </IconButton>
+              </Box>
+            ))}
+          </Stack>
+        ) : (
+          <Typography color="textSecondary" sx={{ mt: 4 }}>
+            등록된 소유주가 없습니다.
+          </Typography>
+        )}
 
-      <OwnerDeleteConfirmationDialog
-        deleting={deleting}
-        error={deleteError}
-        onCancel={() => {
-          if (deleting) return;
-          setPendingDelete(null);
-          setDeleteError("");
-        }}
-        onConfirm={() => void confirmDelete()}
-        owner={pendingDelete}
-      />
-    </section>
+        <OwnerDeleteConfirmationDialog
+          deleting={deleting}
+          error={deleteError}
+          onCancel={() => {
+            if (deleting) return;
+            setPendingDelete(null);
+            setDeleteError("");
+          }}
+          onConfirm={() => void confirmDelete()}
+          owner={pendingDelete}
+        />
+      </CardContent>
+    </Card>
   );
 }

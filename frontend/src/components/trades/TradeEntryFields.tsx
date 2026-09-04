@@ -1,4 +1,10 @@
-import { Button } from "@/components/ui/button";
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+
 import type { Brokerage, Owner } from "@/lib/api-contracts";
 
 import { BrokerageCombobox } from "./BrokerageCombobox";
@@ -7,7 +13,6 @@ import { formatInteger, formatWon, numericSign } from "./format";
 import { isIntegerDraft } from "./integer-input";
 import { OwnerCombobox } from "./OwnerCombobox";
 import { StockCombobox } from "./StockCombobox";
-import styles from "./trade-entry-form.module.css";
 import { sideLabel, type TradeSide } from "./types";
 import type { TradeFieldName, useTradeEntryForm } from "./useTradeEntryForm";
 
@@ -17,7 +22,7 @@ interface TradeEntryFieldsProps {
   readonly favoriteBrokeragesByOwner?: Readonly<Record<string, readonly Brokerage[]>> | undefined;
   readonly form: ReturnType<typeof useTradeEntryForm>;
   readonly formId: string;
-  readonly onCancel?: () => void;
+  readonly onCancel?: (() => void) | undefined;
   readonly owners: readonly Owner[];
   readonly side: TradeSide;
   readonly submitLabel: string;
@@ -38,91 +43,117 @@ export function TradeEntryFields({
   const fieldError = (name: TradeFieldName) => form.errors[name];
   const id = (name: string) => `${formId}-${name}`;
   const expectedProfitSign = form.expectedProfit === null ? null : numericSign(form.expectedProfit);
-  const expectedProfitClass =
-    expectedProfitSign === 1 ? "positive" : expectedProfitSign === -1 ? "negative" : "";
+  const expectedProfitColor =
+    expectedProfitSign === 1 ? "gain.main" : expectedProfitSign === -1 ? "loss.main" : undefined;
+  const executedAtLabelId = id("executed-at-label");
 
   const summary = (
-    <>
-      <div className={styles.output}>
-        <span>{label}액</span>
-        <output className="money">{form.amount === null ? "-" : formatWon(form.amount)}</output>
-      </div>
+    <Stack sx={{ gap: 3, mt: compact ? 3 : 0 }}>
+      <Box>
+        <Typography color="textSecondary" variant="body2">
+          {label}액
+        </Typography>
+        <Typography
+          component="output"
+          sx={{ fontWeight: 700, fontVariantNumeric: "tabular-nums" }}
+          variant="h3"
+        >
+          {form.amount === null ? "-" : formatWon(form.amount)}
+        </Typography>
+      </Box>
       {side === "SELL" ? (
-        <div className={styles.output}>
-          <span>{form.editing ? "손익 재계산" : "예상 손익"}</span>
+        <Box>
+          <Typography color="textSecondary" variant="body2">
+            {form.editing ? "손익 재계산" : "예상 손익"}
+          </Typography>
           {form.editing ? (
-            <small>저장 시 거래 시각 순으로 이 매도와 이후 손익을 다시 계산합니다.</small>
+            <Typography color="textSecondary" variant="body2">
+              저장 시 거래 시각 순으로 이 매도와 이후 손익을 다시 계산합니다.
+            </Typography>
           ) : (
-            <output className={`money${expectedProfitClass ? ` ${expectedProfitClass}` : ""}`}>
+            <Typography
+              component="output"
+              sx={{
+                fontWeight: 700,
+                fontVariantNumeric: "tabular-nums",
+                color: expectedProfitColor,
+              }}
+              variant="h3"
+            >
               {form.previewUnavailable
                 ? "조회 실패"
                 : form.expectedProfit === null
                   ? "-"
                   : formatWon(form.expectedProfit)}
-            </output>
+            </Typography>
           )}
           {!form.editing && form.preview ? (
-            <small>
+            <Typography color="textSecondary" sx={{ mt: 0.5 }} variant="body2">
               보유 {formatInteger(form.preview.heldQuantity)}주 · 평균{" "}
               {form.preview.averageBuyPrice ? formatWon(form.preview.averageBuyPrice) : "-"}
-            </small>
+            </Typography>
           ) : null}
-        </div>
+        </Box>
       ) : null}
-      <div className={`${styles.actions}${onCancel ? ` ${styles.dialogActions}` : ""}`}>
+      <Stack direction="row" sx={{ gap: 2, justifyContent: onCancel ? "flex-end" : "flex-start" }}>
         {onCancel ? (
-          <Button disabled={form.submitting} onClick={onCancel} variant="secondary">
+          <Button disabled={form.submitting} onClick={onCancel} variant="outlined">
             취소
           </Button>
         ) : null}
-        <Button busyLabel="저장 중" isBusy={form.submitting} type="submit">
-          {submitLabel}
+        <Button disabled={form.submitting} type="submit" variant="contained">
+          {form.submitting ? "저장 중" : submitLabel}
         </Button>
-      </div>
-    </>
+      </Stack>
+    </Stack>
   );
 
   return (
     <>
       {form.message ? (
-        <div
+        <Alert
           ref={form.summaryRef}
+          severity={form.messageTone === "error" ? "error" : "success"}
+          sx={{ mb: 4 }}
           tabIndex={-1}
-          className={form.messageTone === "error" ? styles.alert : styles.success}
-          role={form.messageTone === "error" ? "alert" : "status"}
         >
           {form.message}
-        </div>
+        </Alert>
       ) : null}
-      <form
-        className={`${styles.form}${compact ? ` ${styles.compactForm}` : ""}`}
-        id={formId}
-        onSubmit={form.handleSubmit}
+      <Box
         aria-busy={form.submitting}
+        component="form"
+        id={formId}
         noValidate
+        onSubmit={form.handleSubmit}
+        sx={{
+          display: "grid",
+          gap: 4,
+          gridTemplateColumns: compact ? "1fr" : { xs: "1fr", sm: "1fr 1fr" },
+        }}
       >
-        <div className="field">
-          <span className="field-label" id={id("executed-at-label")}>
+        <Box sx={{ gridColumn: compact ? undefined : "1 / -1" }}>
+          <Typography id={executedAtLabelId} sx={{ mb: 1.5, fontWeight: 700 }} variant="body2">
             {label} 일시
-          </span>
+          </Typography>
           <DateTimeInput
             aria-describedby={`${id("datetime-hint")}${fieldError("executedAt") ? ` ${id("datetime-error")}` : ""}`}
             aria-invalid={fieldError("executedAt") ? true : undefined}
-            aria-labelledby={id("executed-at-label")}
+            aria-labelledby={executedAtLabelId}
             disabled={form.submitting}
             id={id("executed-at")}
             onChange={form.setExecutedAt}
             value={form.executedAt}
           />
-          <p id={id("datetime-hint")} className="field-hint">
-            한국시간 기준, YYYY-MM-DD HH:mm
-          </p>
+          <Typography color="textSecondary" id={id("datetime-hint")} sx={{ mt: 1 }} variant="body2">
+            한국시간 기준
+          </Typography>
           {fieldError("executedAt") ? (
-            <p id={id("datetime-error")} className="field-error">
+            <Typography color="error" id={id("datetime-error")} sx={{ mt: 0.5 }} variant="body2">
               {fieldError("executedAt")}
-            </p>
+            </Typography>
           ) : null}
-        </div>
+        </Box>
         <OwnerCombobox
           disabled={form.submitting}
           onChange={form.setOwnerId}
@@ -137,62 +168,46 @@ export function TradeEntryFields({
           onChange={form.setBrokerageCode}
           value={form.brokerageCode}
         />
-        <div className={styles.stock}>
+        <Box sx={{ gridColumn: compact ? undefined : "1 / -1" }}>
           <StockCombobox
             disabled={form.submitting}
             error={fieldError("stock")}
             onChange={form.setStock}
             value={form.stock}
           />
-        </div>
-        <div className="field">
-          <label className="field-label" htmlFor={id("quantity")}>
-            {label} 수량
-          </label>
-          <input
-            aria-describedby={fieldError("quantity") ? id("quantity-error") : undefined}
-            aria-invalid={fieldError("quantity") ? true : undefined}
-            className="control"
-            disabled={form.submitting}
-            id={id("quantity")}
-            onChange={(event) => {
-              const value = event.currentTarget.value;
-              if (isIntegerDraft(value)) form.setQuantity(value);
-            }}
-            type="text"
-            value={form.quantity}
-          />
-          {fieldError("quantity") ? (
-            <p id={id("quantity-error")} className="field-error">
-              {fieldError("quantity")}
-            </p>
-          ) : null}
-        </div>
-        <div className="field">
-          <label className="field-label" htmlFor={id("price")}>
-            {label} 당시 단가
-          </label>
-          <input
-            aria-describedby={fieldError("unitPrice") ? id("price-error") : undefined}
-            aria-invalid={fieldError("unitPrice") ? true : undefined}
-            className="control"
-            disabled={form.submitting}
-            id={id("price")}
-            onChange={(event) => {
-              const value = event.currentTarget.value;
-              if (isIntegerDraft(value)) form.setUnitPrice(value);
-            }}
-            type="text"
-            value={form.unitPrice}
-          />
-          {fieldError("unitPrice") ? (
-            <p id={id("price-error")} className="field-error">
-              {fieldError("unitPrice")}
-            </p>
-          ) : null}
-        </div>
-        {compact ? summary : <div className={styles.summary}>{summary}</div>}
-      </form>
+        </Box>
+        <TextField
+          disabled={form.submitting}
+          error={Boolean(fieldError("quantity"))}
+          fullWidth
+          helperText={fieldError("quantity")}
+          id={id("quantity")}
+          inputMode="numeric"
+          label={`${label} 수량`}
+          onChange={(event) => {
+            const value = event.currentTarget.value;
+            if (isIntegerDraft(value)) form.setQuantity(value);
+          }}
+          slotProps={fieldError("quantity") ? { formHelperText: { role: "alert" } } : undefined}
+          value={form.quantity}
+        />
+        <TextField
+          disabled={form.submitting}
+          error={Boolean(fieldError("unitPrice"))}
+          fullWidth
+          helperText={fieldError("unitPrice")}
+          id={id("price")}
+          inputMode="numeric"
+          label={`${label} 당시 단가`}
+          onChange={(event) => {
+            const value = event.currentTarget.value;
+            if (isIntegerDraft(value)) form.setUnitPrice(value);
+          }}
+          slotProps={fieldError("unitPrice") ? { formHelperText: { role: "alert" } } : undefined}
+          value={form.unitPrice}
+        />
+        <Box sx={{ gridColumn: compact ? undefined : "1 / -1" }}>{summary}</Box>
+      </Box>
     </>
   );
 }

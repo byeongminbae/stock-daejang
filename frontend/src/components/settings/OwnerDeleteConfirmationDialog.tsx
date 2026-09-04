@@ -1,12 +1,16 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import Alert from "@mui/material/Alert";
+import Button from "@mui/material/Button";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogTitle from "@mui/material/DialogTitle";
+import TextField from "@mui/material/TextField";
+import { useId, useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { StatusMessage } from "@/components/ui/status-message";
 import type { Owner } from "@/lib/api-contracts";
-
-import styles from "./owner-settings.module.css";
 
 interface OwnerDeleteConfirmationDialogProps {
   readonly deleting: boolean;
@@ -23,14 +27,9 @@ export function OwnerDeleteConfirmationDialog({
   onCancel,
   onConfirm,
 }: OwnerDeleteConfirmationDialogProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
   const [confirmationText, setConfirmationText] = useState("");
   const isConfirmed = confirmationText === "삭제";
-  const open = owner !== null;
-  const titleId = useId();
-  const descriptionId = useId();
   const confirmationInputId = useId();
-  const confirmationHintId = useId();
 
   const cancelDeletion = () => {
     setConfirmationText("");
@@ -43,67 +42,55 @@ export function OwnerDeleteConfirmationDialog({
     onConfirm();
   };
 
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (dialog === null) return;
-
-    if (open && !dialog.open) dialog.showModal();
-    if (!open && dialog.open) dialog.close();
-  }, [open]);
-
   return (
-    <dialog
-      aria-describedby={descriptionId}
-      aria-labelledby={titleId}
-      aria-modal="true"
-      className={styles.confirmationDialog}
-      onCancel={(event) => {
-        event.preventDefault();
+    <Dialog
+      onClose={(_event, reason) => {
+        if (reason === "backdropClick" && deleting) return;
         cancelDeletion();
       }}
-      ref={dialogRef}
+      open={owner !== null}
     >
-      {owner ? (
-        <div className={styles.confirmationContent}>
-          <h3 id={titleId}>소유주 삭제</h3>
-          <p id={descriptionId}>
+      <DialogTitle>소유주 삭제</DialogTitle>
+      <DialogContent>
+        {owner ? (
+          <DialogContentText sx={{ mb: 4 }}>
             <strong>{owner.name}</strong> 소유주를 삭제할까요? 삭제하면 되돌릴 수 없습니다.
-          </p>
-          <div className="field">
-            <label className="field-label" htmlFor={confirmationInputId}>
-              삭제 확인
-            </label>
-            <input
-              aria-describedby={confirmationHintId}
-              autoComplete="off"
-              autoFocus
-              className="control"
-              id={confirmationInputId}
-              onChange={(event) => setConfirmationText(event.currentTarget.value)}
-              spellCheck={false}
-              type="text"
-              value={confirmationText}
-            />
-            <p className="field-hint" id={confirmationHintId}>
+          </DialogContentText>
+        ) : null}
+        <TextField
+          autoComplete="off"
+          autoFocus
+          fullWidth
+          helperText={
+            <>
               계속하려면 <strong>삭제</strong>를 정확히 입력해 주세요.
-            </p>
-          </div>
-          {error ? <StatusMessage tone="error">{error}</StatusMessage> : null}
-          <div className={styles.confirmationActions}>
-            <Button onClick={cancelDeletion} variant="secondary">
-              취소
-            </Button>
-            <Button
-              disabled={!isConfirmed}
-              isBusy={deleting}
-              onClick={confirmDeletion}
-              variant="danger"
-            >
-              삭제
-            </Button>
-          </div>
-        </div>
-      ) : null}
-    </dialog>
+            </>
+          }
+          id={confirmationInputId}
+          label="삭제 확인"
+          onChange={(event) => setConfirmationText(event.currentTarget.value)}
+          spellCheck={false}
+          value={confirmationText}
+        />
+        {error ? (
+          <Alert severity="error" sx={{ mt: 3 }}>
+            {error}
+          </Alert>
+        ) : null}
+      </DialogContent>
+      <DialogActions sx={{ p: 3, pt: 0 }}>
+        <Button onClick={cancelDeletion} variant="outlined">
+          취소
+        </Button>
+        <Button
+          color="error"
+          disabled={!isConfirmed || deleting}
+          onClick={confirmDeletion}
+          variant="contained"
+        >
+          {deleting ? "삭제 중" : "삭제"}
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 }

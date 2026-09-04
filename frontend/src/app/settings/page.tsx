@@ -1,5 +1,8 @@
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
 
+import { PageContainer } from "@/components/page-container";
 import { FavoriteBrokeragesSettings } from "@/components/settings/FavoriteBrokeragesSettings";
 import { OwnerSettings } from "@/components/settings/OwnerSettings";
 import {
@@ -20,16 +23,24 @@ export default async function SettingsPage() {
   const favoriteBrokeragesByOwner = await listFavoriteBrokeragesByOwner(owners);
 
   return (
-    <div className="page-frame page-stack">
-      <header className="page-intro">
-        <h1 className="page-title">설정</h1>
-      </header>
-      <OwnerSettings owners={owners} />
-      <FavoriteBrokeragesSettings
-        brokerages={brokerages}
-        favoriteBrokeragesByOwner={favoriteBrokeragesByOwner}
-        owners={owners}
-      />
-    </div>
+    <PageContainer stack>
+      <Typography component="h1" variant="h1">
+        설정
+      </Typography>
+      <Box
+        sx={{
+          display: "grid",
+          gap: { xs: 5, sm: 6 },
+          gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" },
+        }}
+      >
+        <OwnerSettings owners={owners} />
+        <FavoriteBrokeragesSettings
+          brokerages={brokerages}
+          favoriteBrokeragesByOwner={favoriteBrokeragesByOwner}
+          owners={owners}
+        />
+      </Box>
+    </PageContainer>
   );
 }

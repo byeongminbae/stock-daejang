@@ -1,14 +1,20 @@
-import { type CSSProperties, useCallback, useEffect, useId, useRef, useState } from "react";
-import { type DateRange, DayPicker } from "react-day-picker";
-import { ko } from "react-day-picker/locale";
-import "react-day-picker/style.css";
+"use client";
+
+import Box from "@mui/material/Box";
+import Chip from "@mui/material/Chip";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { ko } from "date-fns/locale";
+
 import type { Brokerage, Owner } from "@/lib/api-contracts";
+
 import { BrokerageCombobox } from "./BrokerageCombobox";
-import calendarStyles from "./calendar-popover.module.css";
 import { HistoryStockCombobox } from "./HistoryStockCombobox";
 import { periodRange } from "./history-date-range";
 import { type BASE_FILTER_KEYS, PERIOD_PRESETS } from "./history-filter-config";
-import styles from "./history-filters.module.css";
 import { OwnerCombobox } from "./OwnerCombobox";
 import type { StockSelection, TradeSide } from "./types";
 
@@ -44,9 +50,9 @@ function toDateKey(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-function fromDateKey(key: string): Date | undefined {
+function fromDateKey(key: string): Date | null {
   const [year, month, day] = key.split("-").map(Number);
-  if (!year || !month || !day) return undefined;
+  if (!year || !month || !day) return null;
   return new Date(year, month - 1, day);
 }
 
@@ -54,138 +60,51 @@ function HistoryDateRange({
   values,
   onFilterChange,
 }: Pick<HistoryFilterFieldsProps, "values" | "onFilterChange">) {
-  const [open, setOpen] = useState(false);
-  const [pendingRange, setPendingRange] = useState<DateRange | undefined>(undefined);
-  const anchorRef = useRef<HTMLDivElement>(null);
-  const hasPickedOnceRef = useRef(false);
-  const pendingRangeRef = useRef<DateRange | undefined>(undefined);
-  const triggerId = useId();
-  const activePreset = open ? "기간선택" : selectedPeriod(values.from, values.to);
-
-  const committedRange: DateRange | undefined = values.from
-    ? { from: fromDateKey(values.from), to: values.to ? fromDateKey(values.to) : undefined }
-    : undefined;
-
-  const rangeLabel =
-    values.from || values.to
-      ? `${values.from || "시작일"} ~ ${values.to || "종료일"}`
-      : "날짜 선택";
-
-  const commitRange = useCallback(
-    (range: DateRange | undefined) => {
-      onFilterChange({
-        from: range?.from ? toDateKey(range.from) : "",
-        to: range?.to ? toDateKey(range.to) : "",
-      });
-    },
-    [onFilterChange],
-  );
-
-  const setPending = (range: DateRange | undefined) => {
-    pendingRangeRef.current = range;
-    setPendingRange(range);
-  };
-
-  const openCalendar = () => {
-    hasPickedOnceRef.current = false;
-    setPending(undefined);
-    setOpen(true);
-  };
-
-  const closeCalendar = useCallback(() => {
-    if (pendingRangeRef.current?.from) commitRange(pendingRangeRef.current);
-    setOpen(false);
-  }, [commitRange]);
+  const activePreset = selectedPeriod(values.from, values.to);
 
   const applyPeriod = (preset: (typeof PERIOD_PRESETS)[number]) => {
-    if (preset === "기간선택") {
-      openCalendar();
-      return;
-    }
+    if (preset === "기간선택") return;
     const range = periodRange(preset);
     onFilterChange({ from: range.from, to: range.to });
   };
 
-  const handleSelect = (range: DateRange | undefined) => {
-    setPending(range);
-    if (hasPickedOnceRef.current && range?.from && range?.to) {
-      commitRange(range);
-      setOpen(false);
-      return;
-    }
-    hasPickedOnceRef.current = true;
-  };
-
-  useEffect(() => {
-    if (!open) return;
-    const closeOnOutsideClick = (event: PointerEvent) => {
-      if (anchorRef.current && !anchorRef.current.contains(event.target as Node)) closeCalendar();
-    };
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") closeCalendar();
-    };
-    document.addEventListener("pointerdown", closeOnOutsideClick);
-    document.addEventListener("keydown", closeOnEscape);
-    return () => {
-      document.removeEventListener("pointerdown", closeOnOutsideClick);
-      document.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [open, closeCalendar]);
-
   return (
-    <fieldset className={styles.dateRange}>
-      <legend>기간</legend>
-      <div className={styles.periodPresets}>
-        {PERIOD_PRESETS.map((preset) => (
-          <button
-            className="button button--secondary"
-            key={preset}
-            type="button"
+    <Box>
+      <Typography sx={{ mb: 1.5, fontWeight: 700 }} variant="body2">
+        기간
+      </Typography>
+      <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1.5, mb: 3 }}>
+        {PERIOD_PRESETS.filter((preset) => preset !== "기간선택").map((preset) => (
+          <Chip
             aria-pressed={activePreset === preset}
+            clickable
+            color={activePreset === preset ? "primary" : "default"}
+            key={preset}
+            label={preset}
             onClick={() => applyPeriod(preset)}
-          >
-            {preset}
-          </button>
+            variant={activePreset === preset ? "filled" : "outlined"}
+          />
         ))}
-      </div>
-      <div className={`${styles.dateTrigger} ${calendarStyles.anchor}`} ref={anchorRef}>
-        <button
-          aria-expanded={open}
-          aria-haspopup="dialog"
-          className="control"
-          id={triggerId}
-          onClick={() => (open ? closeCalendar() : openCalendar())}
-          type="button"
-        >
-          {rangeLabel}
-        </button>
-        {open ? (
-          <div aria-label="날짜 범위 선택" className={calendarStyles.popover} role="dialog">
-            <DayPicker
-              defaultMonth={committedRange?.from ?? committedRange?.to ?? new Date()}
-              locale={ko}
-              mode="range"
-              onSelect={handleSelect}
-              selected={pendingRange}
-              style={
-                {
-                  "--rdp-accent-color": "var(--color-brand)",
-                  "--rdp-accent-background-color": "var(--color-brand-soft)",
-                  "--rdp-today-color": "var(--color-brand)",
-                  "--rdp-day-height": "2.25rem",
-                  "--rdp-day-width": "2.25rem",
-                  "--rdp-day_button-height": "2rem",
-                  "--rdp-day_button-width": "2rem",
-                  "--rdp-nav-height": "2rem",
-                  "--rdp-nav_button-height": "1.75rem",
-                  "--rdp-nav_button-width": "1.75rem",
-                } as CSSProperties
-              }
-            />
-          </div>
-        ) : null}
-      </div>
-    </fieldset>
+      </Stack>
+      <LocalizationProvider adapterLocale={ko} dateAdapter={AdapterDateFns}>
+        <Stack direction={{ xs: "column", sm: "row" }} sx={{ gap: 2 }}>
+          <DatePicker
+            format="yyyy-MM-dd"
+            label="시작일"
+            onChange={(date) => onFilterChange({ from: date ? toDateKey(date) : "" })}
+            slotProps={{ textField: { fullWidth: true } }}
+            value={values.from ? fromDateKey(values.from) : null}
+          />
+          <DatePicker
+            format="yyyy-MM-dd"
+            label="종료일"
+            onChange={(date) => onFilterChange({ to: date ? toDateKey(date) : "" })}
+            slotProps={{ textField: { fullWidth: true } }}
+            value={values.to ? fromDateKey(values.to) : null}
+          />
+        </Stack>
+      </LocalizationProvider>
+    </Box>
   );
 }
 
@@ -199,8 +118,10 @@ export function HistoryFilterFields({
   values,
 }: HistoryFilterFieldsProps) {
   return (
-    <>
-      <HistoryDateRange values={values} onFilterChange={onFilterChange} />
+    <Box sx={{ display: "grid", gap: 4, gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" } }}>
+      <Box sx={{ gridColumn: "1 / -1" }}>
+        <HistoryDateRange values={values} onFilterChange={onFilterChange} />
+      </Box>
       <OwnerCombobox
         allowEmpty
         onChange={(id) => onFilterChange({ ownerId: id })}
@@ -214,12 +135,14 @@ export function HistoryFilterFields({
         onChange={(code) => onFilterChange({ brokerageCode: code })}
         value={values.brokerageCode}
       />
-      <HistoryStockCombobox
-        initialValue={values.stockNameOrCode}
-        onChange={(value) => onFilterChange({ stockNameOrCode: value })}
-        side={side}
-        stocks={stocks}
-      />
-    </>
+      <Box sx={{ gridColumn: "1 / -1" }}>
+        <HistoryStockCombobox
+          initialValue={values.stockNameOrCode}
+          onChange={(value) => onFilterChange({ stockNameOrCode: value })}
+          side={side}
+          stocks={stocks}
+        />
+      </Box>
+    </Box>
   );
 }

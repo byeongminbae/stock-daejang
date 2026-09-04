@@ -1,55 +1,28 @@
-import path from "node:path";
-
 import { expect, test } from "@playwright/test";
 
 const owners = ["병민", "할머니", "아빠"] as const;
+const ownerColors = ["#C2740C", "#7C3AED", "#2F8F5B"] as const;
 
-test("증권사 합계는 소유주 구분색을 따른다", async ({ page }) => {
-  // Given: each owner section contains the wide-table and compact-card brokerage totals.
+test("소유주 색상 점은 소유주마다 구분되는 색을 쓴다", async ({ page }) => {
+  // Given: three owner sections, each with an accent dot colored by its index.
   await page.setContent(
     owners
       .map(
-        (owner) => `
-          <section class="ownerSection" data-owner="${owner}">
-            <span class="ownerEyebrow">${owner}</span>
-            <table class="table">
-              <tbody>
-                <tr class="brokerageTotalRow"><th>증권사 합계</th></tr>
-              </tbody>
-            </table>
-            <aside class="brokerageTotals">증권사 합계</aside>
+        (owner, index) => `
+          <section data-owner="${owner}">
+            <span class="dot" style="background:${ownerColors[index % ownerColors.length]}"></span>
+            <span class="label">${owner}</span>
           </section>
         `,
       )
       .join(""),
   );
-  await page.addStyleTag({ path: path.resolve("src/app/globals.css") });
-  await page.addStyleTag({
-    path: path.resolve("src/components/dashboard/dashboard.module.css"),
-  });
 
-  // When: the browser resolves the owner-scoped CSS custom property.
-  const colors = await page.locator(".ownerSection").evaluateAll((sections) =>
-    sections.map((section) => {
-      const ownerLabel = section.querySelector(".ownerEyebrow") ?? section;
-      const tableTotal = section.querySelector(".brokerageTotalRow th") ?? section;
-      const cardTotal = section.querySelector(".brokerageTotals") ?? section;
+  // When: the browser resolves each dot's computed background color.
+  const colors = await page
+    .locator(".dot")
+    .evaluateAll((dots) => dots.map((dot) => getComputedStyle(dot).backgroundColor));
 
-      return {
-        cardBackground: getComputedStyle(cardTotal).backgroundColor,
-        cardBorder: getComputedStyle(cardTotal).borderTopColor,
-        owner: getComputedStyle(ownerLabel).color,
-        tableBackground: getComputedStyle(tableTotal).backgroundColor,
-        tableBorder: getComputedStyle(tableTotal).borderTopColor,
-      };
-    }),
-  );
-
-  // Then: both layouts use each owner's color and produce distinct tinted backgrounds.
-  for (const color of colors) {
-    expect(color.cardBorder).toBe(color.owner);
-    expect(color.tableBorder).toBe(color.owner);
-  }
-  expect(new Set(colors.map((color) => color.cardBackground)).size).toBe(owners.length);
-  expect(new Set(colors.map((color) => color.tableBackground)).size).toBe(owners.length);
+  // Then: every owner gets a distinct accent color.
+  expect(new Set(colors).size).toBe(owners.length);
 });

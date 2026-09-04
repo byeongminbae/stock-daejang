@@ -1,6 +1,12 @@
 import type { Owner } from "@/lib/api-contracts";
 
-export const BASE_FILTER_KEYS = ["from", "to", "stockNameOrCode", "ownerId", "brokerageCode"] as const;
+export const BASE_FILTER_KEYS = [
+  "from",
+  "to",
+  "stockNameOrCode",
+  "ownerId",
+  "brokerageCode",
+] as const;
 
 export const PERIOD_PRESETS = ["당일", "당월", "1주일", "1개월", "1년", "기간선택"] as const;
 

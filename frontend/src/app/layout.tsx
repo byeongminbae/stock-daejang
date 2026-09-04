@@ -1,8 +1,11 @@
+import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import type { ReactNode } from "react";
 
 import { AppHeader } from "@/components/app-header";
+import { AppThemeProvider } from "@/components/app-theme-provider";
+import { SkipLink } from "@/components/skip-link";
 
 import "./globals.css";
 
@@ -29,13 +32,19 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="ko">
       <body>
-        <a className="skip-link" href="#main-content">
-          본문으로 건너뛰기
-        </a>
-        <AppHeader />
-        <main className="app-main" id="main-content" tabIndex={-1}>
-          {children}
-        </main>
+        <AppRouterCacheProvider options={{ key: "mui" }}>
+          <AppThemeProvider>
+            <SkipLink />
+            <AppHeader />
+            <main
+              id="main-content"
+              tabIndex={-1}
+              style={{ minHeight: "calc(100dvh - 64px)", outline: "none" }}
+            >
+              {children}
+            </main>
+          </AppThemeProvider>
+        </AppRouterCacheProvider>
         {showDevelopmentTools ? (
           <>
             <Script

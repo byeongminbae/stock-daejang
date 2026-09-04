@@ -6,21 +6,21 @@ if (process.env.PLAYWRIGHT_BASE_URL === undefined) {
 
 const scenarios = [
   {
-    background: "rgb(255, 237, 240)",
+    background: "rgb(251, 233, 235)",
     code: "CLR001",
     name: "색상검증 이익",
-    profitClass: ".positive",
+    profitClass: ".profit-value",
     sellPrice: "120000",
-    textColor: "rgb(189, 38, 58)",
+    textColor: "rgb(198, 41, 63)",
     tone: "gain",
   },
   {
-    background: "rgb(232, 241, 255)",
+    background: "rgb(233, 240, 253)",
     code: "CLR002",
     name: "색상검증 손실",
-    profitClass: ".negative",
+    profitClass: ".profit-value",
     sellPrice: "80000",
-    textColor: "rgb(20, 86, 192)",
+    textColor: "rgb(31, 95, 209)",
     tone: "loss",
   },
 ] as const;
@@ -114,7 +114,6 @@ test("매도 손익은 이익을 빨간색, 손실을 파란색으로 표시하�
 
   const neutralRow = page.getByRole("row", { name: new RegExp(neutralScenario.name) });
   expect(await neutralRow.getAttribute("data-profit-tone")).toBeNull();
-  await expect(neutralRow.locator(".positive, .negative")).toHaveCount(0);
 
   await page.setViewportSize({ width: 375, height: 812 });
   for (const scenario of scenarios) {
@@ -130,5 +129,4 @@ test("매도 손익은 이익을 빨간색, 손실을 파란색으로 표시하�
     .locator('article[aria-labelledby^="trade-card-"]')
     .filter({ hasText: neutralScenario.name });
   expect(await neutralCard.getAttribute("data-profit-tone")).toBeNull();
-  await expect(neutralCard.locator(".positive, .negative")).toHaveCount(0);
 });

@@ -1,4 +1,5 @@
-import { createElement } from "react";
+import { ThemeProvider } from "@mui/material/styles";
+import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
@@ -10,6 +11,11 @@ import type {
   DashboardOwner,
   DashboardStock,
 } from "../../src/components/dashboard/types";
+import { theme } from "../../src/theme";
+
+function withTheme<P extends object>(component: (props: P) => ReactNode, props: P) {
+  return createElement(ThemeProvider, { theme }, createElement(component, props));
+}
 
 const samsungStock: DashboardStock = {
   stockCode: "005930",
@@ -85,8 +91,9 @@ describe("dashboard brokerage layout", () => {
 
     // When: the owner's dashboard section is rendered with a one-stock owner total.
     const markup = renderToStaticMarkup(
-      createElement(OwnerSection, {
+      withTheme(OwnerSection, {
         owner: ownerWithDuplicatedStock,
+        ownerIndex: 0,
         showBrokerageTotals: true,
       }),
     );
@@ -98,7 +105,7 @@ describe("dashboard brokerage layout", () => {
 
   it("renders brokerage as a compact table column", () => {
     // Given: one brokerage containing two aggregated stock positions.
-    const table = createElement(PositionTable, {
+    const table = withTheme(PositionTable, {
       owner,
       brokerages,
       sortField: "stockName",
@@ -112,7 +119,7 @@ describe("dashboard brokerage layout", () => {
 
     // Then: brokerage occupies one row-spanning column instead of a full-width band.
     expect(markup).toContain(">증권사</th>");
-    expect(markup).toMatch(/<th[^>]*rowSpan="2"[^>]*scope="rowgroup"/u);
+    expect(markup).toMatch(/<th[^>]*scope="rowgroup"[^>]*rowSpan="2"/u);
     expect(markup).not.toContain('colSpan="9" scope="rowgroup"');
     expect(markup).toContain("삼성증권 합계 (2종목)");
     expect(markup).toContain("증권사 비중");
@@ -122,14 +129,14 @@ describe("dashboard brokerage layout", () => {
 
   it("renders brokerage metadata inside every compact stock card", () => {
     // Given: two stock cards from the same brokerage.
-    const cards = createElement(PositionCards, { owner, brokerages, showBrokerageTotals: true });
+    const cards = withTheme(PositionCards, { owner, brokerages, showBrokerageTotals: true });
 
     // When: the compact dashboard cards are rendered.
     const markup = renderToStaticMarkup(cards);
 
     // Then: each card identifies its brokerage without an oversized brokerage section.
     expect(markup).toContain('aria-label="병민의 삼성증권 보유 종목 현황"');
-    expect(markup.match(/<strong>삼성증권<\/strong>/gu)).toHaveLength(2);
+    expect(markup.match(/증권사<\/dt><dd[^>]*>삼성증권<\/dd>/gu)).toHaveLength(2);
     expect(markup).toContain("삼성증권 합계 (2종목)");
     expect(markup).toContain("증권사 비중");
     expect(markup).toContain("20.00%");

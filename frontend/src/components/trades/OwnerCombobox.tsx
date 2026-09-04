@@ -1,5 +1,12 @@
 "use client";
 
+import ClearIcon from "@mui/icons-material/Clear";
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import InputAdornment from "@mui/material/InputAdornment";
+import ListItemButton from "@mui/material/ListItemButton";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import {
   type ChangeEvent,
   type CompositionEvent,
@@ -10,8 +17,10 @@ import {
   useRef,
   useState,
 } from "react";
+
 import type { Owner } from "@/lib/api-contracts";
-import styles from "./stock-combobox.module.css";
+
+import { ComboboxPopover } from "./combobox-popover";
 
 interface OwnerComboboxProps {
   readonly owners: readonly Owner[];
@@ -39,7 +48,7 @@ export function OwnerCombobox({
   const baseId = useId();
   const inputId = `${baseId}-owner`;
   const listId = `${baseId}-owner-list`;
-  const errorId = `${baseId}-owner-error`;
+  const anchorRef = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(-1);
   const [open, setOpen] = useState(false);
@@ -141,81 +150,81 @@ export function OwnerCombobox({
   };
 
   return (
-    <div className={styles.field}>
-      <label className="field-label" htmlFor={inputId}>
-        소유주
-      </label>
-      <div className={styles.anchor}>
-        <input
-          id={inputId}
-          className="control"
-          role="combobox"
-          aria-autocomplete="list"
-          aria-controls={open ? listId : undefined}
-          aria-activedescendant={
-            open && activeItem ? `${baseId}-owner-option-${activeItem.id}` : undefined
-          }
-          aria-expanded={open}
-          aria-describedby={error ? errorId : undefined}
-          aria-invalid={error ? true : undefined}
-          autoComplete="off"
-          disabled={disabled}
-          placeholder="소유주 선택"
-          value={query}
-          onBlur={handleBlur}
-          onChange={handleChange}
-          onClick={openList}
-          onCompositionEnd={handleComposition}
-          onCompositionStart={handleComposition}
-          onFocus={(event) => {
-            event.currentTarget.select();
-            openList();
-          }}
-          onKeyDown={handleKeyDown}
-        />
-        {open ? (
-          <div
-            id={listId}
-            className={styles.popover}
-            onMouseDown={(event) => event.preventDefault()}
-            role="listbox"
-          >
-            {allowEmpty ? (
-              <button
-                aria-selected={activeIndex === -1}
-                className={styles.option}
-                onClick={clear}
+    <Box ref={anchorRef} sx={{ minWidth: 0 }}>
+      <TextField
+        aria-activedescendant={
+          open && activeItem ? `${baseId}-owner-option-${activeItem.id}` : undefined
+        }
+        aria-autocomplete="list"
+        aria-controls={open ? listId : undefined}
+        aria-expanded={open}
+        autoComplete="off"
+        disabled={disabled}
+        error={Boolean(error)}
+        fullWidth
+        helperText={error}
+        id={inputId}
+        label="소유주"
+        onBlur={handleBlur}
+        onChange={handleChange}
+        onClick={openList}
+        onCompositionEnd={handleComposition}
+        onCompositionStart={handleComposition}
+        onFocus={(event) => {
+          event.currentTarget.select();
+          openList();
+        }}
+        onKeyDown={handleKeyDown}
+        placeholder="소유주 선택"
+        role="combobox"
+        slotProps={{
+          input: {
+            endAdornment:
+              allowEmpty && value !== "" ? (
+                <InputAdornment position="end">
+                  <IconButton aria-label="선택 해제" edge="end" onClick={clear} size="small">
+                    <ClearIcon fontSize="small" />
+                  </IconButton>
+                </InputAdornment>
+              ) : undefined,
+          },
+          formHelperText: { role: "alert" },
+        }}
+        value={query}
+        variant="outlined"
+      />
+      {open ? (
+        <ComboboxPopover anchorEl={anchorRef.current} id={listId} open={open} role="listbox">
+          {allowEmpty ? (
+            <ListItemButton
+              aria-selected={activeIndex === -1}
+              onClick={clear}
+              role="option"
+              selected={activeIndex === -1}
+            >
+              전체
+            </ListItemButton>
+          ) : null}
+          {items.length === 0 ? (
+            <Typography color="textSecondary" sx={{ px: 3, py: 2 }} variant="body2">
+              일치하는 소유주가 없습니다.
+            </Typography>
+          ) : (
+            items.map((owner, index) => (
+              <ListItemButton
+                aria-selected={index === activeIndex}
+                id={`${baseId}-owner-option-${owner.id}`}
+                key={owner.id}
+                onClick={() => choose(owner)}
                 role="option"
-                type="button"
+                selected={index === activeIndex}
               >
-                전체
-              </button>
-            ) : null}
-            {items.length === 0 ? (
-              <p className={styles.message}>일치하는 소유주가 없습니다.</p>
-            ) : (
-              items.map((owner, index) => (
-                <button
-                  aria-selected={index === activeIndex}
-                  className={styles.option}
-                  id={`${baseId}-owner-option-${owner.id}`}
-                  key={owner.id}
-                  onClick={() => choose(owner)}
-                  role="option"
-                  type="button"
-                >
-                  <strong>{owner.name}</strong>
-                </button>
-              ))
-            )}
-          </div>
-        ) : null}
-      </div>
-      {error ? (
-        <p className="field-error" id={errorId}>
-          {error}
-        </p>
+                {owner.name}
+              </ListItemButton>
+            ))
+          )}
+        </ComboboxPopover>
       ) : null}
-    </div>
+    </Box>
   );
 }

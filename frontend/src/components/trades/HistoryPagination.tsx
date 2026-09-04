@@ -1,8 +1,10 @@
 "use client";
 
+import Box from "@mui/material/Box";
+import Pagination from "@mui/material/Pagination";
+import PaginationItem from "@mui/material/PaginationItem";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import styles from "./trade-history.module.css";
 
 interface HistoryPaginationProps {
   readonly page: number;
@@ -23,25 +25,18 @@ export function HistoryPagination({ page, totalPages }: HistoryPaginationProps) 
   };
 
   return (
-    <nav className={styles.pagination} aria-label="거래 내역 페이지">
-      {page > 1 ? (
-        <Link className="button button--secondary" href={hrefFor(page - 1)} rel="prev">
-          이전
-        </Link>
-      ) : (
-        <span />
-      )}
-      <span>
-        <strong>{page.toLocaleString("ko-KR")}</strong> / {totalPages.toLocaleString("ko-KR")}{" "}
-        페이지
-      </span>
-      {page < totalPages ? (
-        <Link className="button button--secondary" href={hrefFor(page + 1)} rel="next">
-          다음
-        </Link>
-      ) : (
-        <span />
-      )}
-    </nav>
+    <Box
+      aria-label="거래 내역 페이지"
+      component="nav"
+      sx={{ display: "flex", justifyContent: "center" }}
+    >
+      <Pagination
+        count={totalPages}
+        page={page}
+        renderItem={(item) => (
+          <PaginationItem component={Link} href={hrefFor(item.page ?? 1)} {...item} />
+        )}
+      />
+    </Box>
   );
 }

@@ -1,5 +1,13 @@
 "use client";
 
+import ClearIcon from "@mui/icons-material/Clear";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import InputAdornment from "@mui/material/InputAdornment";
+import ListItemButton from "@mui/material/ListItemButton";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import ky from "ky";
 import {
   type ChangeEvent,
@@ -11,7 +19,8 @@ import {
   useState,
 } from "react";
 import { z } from "zod";
-import styles from "./stock-combobox.module.css";
+
+import { ComboboxPopover } from "./combobox-popover";
 import type { StockSelection } from "./types";
 
 const searchResponseSchema = z.object({
@@ -38,8 +47,8 @@ export function StockCombobox({ value, onChange, error, disabled = false }: Stoc
   const baseId = useId();
   const inputId = `${baseId}-stock`;
   const listId = `${baseId}-list`;
-  const errorId = `${baseId}-error`;
   const statusId = `${baseId}-status`;
+  const anchorRef = useRef<HTMLDivElement>(null);
   const composingRef = useRef(false);
   const requestSequenceRef = useRef(0);
   const [query, setQuery] = useState("");
@@ -149,7 +158,7 @@ export function StockCombobox({ value, onChange, error, disabled = false }: Stoc
   };
 
   const activeItem = activeIndex >= 0 ? items[activeIndex] : undefined;
-  const describedBy = [error ? errorId : null, statusId].filter(Boolean).join(" ");
+  const describedBy = [error ? `${inputId}-helper-text` : null, statusId].filter(Boolean).join(" ");
   const searchStatus =
     state === "error"
       ? "종목 검색에 실패했습니다. 다시 시도해 주세요."
@@ -158,105 +167,117 @@ export function StockCombobox({ value, onChange, error, disabled = false }: Stoc
         : "";
 
   return (
-    <div className={styles.field}>
-      <label className="field-label" htmlFor={inputId}>
-        종목명
-      </label>
-      <div className={styles.anchor}>
-        <input
-          id={inputId}
-          className="control"
-          role="combobox"
-          aria-autocomplete="list"
-          aria-expanded={open}
-          aria-controls={open ? listId : undefined}
-          aria-activedescendant={
-            open && activeItem ? `${baseId}-option-${activeItem.code}` : undefined
-          }
-          aria-describedby={describedBy}
-          aria-invalid={error ? true : undefined}
-          autoComplete="off"
-          disabled={disabled}
-          value={value?.name ?? query}
-          onChange={handleInput}
-          onKeyDown={handleKeyDown}
-          onCompositionStart={handleComposition}
-          onCompositionEnd={handleComposition}
-          placeholder="두 글자 이상 검색"
-        />
-        {open ? (
-          <fieldset className={styles.popover} onMouseDown={(event) => event.preventDefault()}>
-            {state === "loading" || state === "refreshing" ? (
-              <p className={styles.message}>
-                {state === "refreshing" ? "종목 다시 검색 중" : "종목 검색 중"}
-              </p>
-            ) : null}
-            {state === "ready" && items.length === 0 ? (
-              <p className={styles.message}>검색 결과가 없습니다.</p>
-            ) : null}
-            {state === "error" ? (
-              <div className={styles.message}>
-                <p>종목을 불러오지 못했습니다.</p>
-                <button
-                  className="button button--ghost"
-                  type="button"
-                  onClick={() => setRetryKey((key) => key + 1)}
-                >
-                  다시 시도
-                </button>
-              </div>
-            ) : null}
-            <div id={listId} className={styles.list} role="listbox">
-              {items.length > 0
-                ? items.map((item, index) => (
-                    <button
-                      id={`${baseId}-option-${item.code}`}
-                      key={item.code}
-                      type="button"
-                      role="option"
-                      tabIndex={-1}
-                      aria-selected={index === activeIndex}
-                      className={styles.option}
-                      onClick={() => choose(item)}
-                    >
-                      <strong>{item.name}</strong>
-                      <span>
-                        {item.code} · {item.market}
-                        {item.isEtf ? " · ETF" : ""}
-                      </span>
-                    </button>
-                  ))
-                : null}
-            </div>
-          </fieldset>
-        ) : null}
-      </div>
-      <div id={statusId} className={styles.status} role="status" aria-live="polite">
+    <Box ref={anchorRef} sx={{ minWidth: 0 }}>
+      <TextField
+        aria-activedescendant={
+          open && activeItem ? `${baseId}-option-${activeItem.code}` : undefined
+        }
+        aria-autocomplete="list"
+        aria-controls={open ? listId : undefined}
+        aria-describedby={describedBy || undefined}
+        aria-expanded={open}
+        autoComplete="off"
+        disabled={disabled}
+        error={Boolean(error)}
+        fullWidth
+        helperText={error}
+        id={inputId}
+        label="종목명"
+        onChange={handleInput}
+        onCompositionEnd={handleComposition}
+        onCompositionStart={handleComposition}
+        onKeyDown={handleKeyDown}
+        placeholder="두 글자 이상 검색"
+        role="combobox"
+        slotProps={{
+          input: {
+            endAdornment:
+              state === "loading" || state === "refreshing" ? (
+                <InputAdornment position="end">
+                  <CircularProgress size={18} />
+                </InputAdornment>
+              ) : undefined,
+          },
+          formHelperText: { role: "alert" },
+        }}
+        value={value?.name ?? query}
+        variant="outlined"
+      />
+      <Box
+        aria-live="polite"
+        id={statusId}
+        role="status"
+        sx={{
+          position: "absolute",
+          width: 1,
+          height: 1,
+          overflow: "hidden",
+          clip: "rect(0,0,0,0)",
+        }}
+      >
         {searchStatus}
-      </div>
+      </Box>
       {value ? (
-        <div className={styles.selection}>
-          <span>
+        <Box sx={{ mt: 1.5, display: "flex", alignItems: "center", gap: 2 }}>
+          <Typography variant="body2">
             선택: <strong>{value.name}</strong> <code>{value.code}</code>
-          </span>
-          <button
-            type="button"
-            className="button button--ghost"
+          </Typography>
+          <Button
+            disabled={disabled}
             onClick={() => {
               onChange(null);
               setQuery("");
             }}
-            disabled={disabled}
+            size="small"
+            startIcon={<ClearIcon fontSize="small" />}
           >
             선택 해제
-          </button>
-        </div>
+          </Button>
+        </Box>
       ) : null}
-      {error ? (
-        <p id={errorId} className="field-error">
-          {error}
-        </p>
+      {open ? (
+        <ComboboxPopover anchorEl={anchorRef.current} id={listId} open={open} role="listbox">
+          {state === "loading" || state === "refreshing" ? (
+            <Typography color="textSecondary" sx={{ px: 3, py: 2 }} variant="body2">
+              {state === "refreshing" ? "종목 다시 검색 중" : "종목 검색 중"}
+            </Typography>
+          ) : null}
+          {state === "ready" && items.length === 0 ? (
+            <Typography color="textSecondary" sx={{ px: 3, py: 2 }} variant="body2">
+              검색 결과가 없습니다.
+            </Typography>
+          ) : null}
+          {state === "error" ? (
+            <Box sx={{ px: 3, py: 2 }}>
+              <Typography color="textSecondary" variant="body2">
+                종목을 불러오지 못했습니다.
+              </Typography>
+              <Button onClick={() => setRetryKey((key) => key + 1)} size="small" sx={{ mt: 1 }}>
+                다시 시도
+              </Button>
+            </Box>
+          ) : null}
+          {items.map((item, index) => (
+            <ListItemButton
+              aria-selected={index === activeIndex}
+              id={`${baseId}-option-${item.code}`}
+              key={item.code}
+              onClick={() => choose(item)}
+              role="option"
+              selected={index === activeIndex}
+              tabIndex={-1}
+            >
+              <Box sx={{ display: "flex", justifyContent: "space-between", width: "100%", gap: 3 }}>
+                <span>{item.name}</span>
+                <Typography color="textSecondary" variant="body2">
+                  {item.code} · {item.market}
+                  {item.isEtf ? " · ETF" : ""}
+                </Typography>
+              </Box>
+            </ListItemButton>
+          ))}
+        </ComboboxPopover>
       ) : null}
-    </div>
+    </Box>
   );
 }

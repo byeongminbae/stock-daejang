@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import Dialog from "@mui/material/Dialog";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogTitle from "@mui/material/DialogTitle";
+
 import type { Brokerage, Owner } from "@/lib/api-contracts";
 
 import { isoInstantToSeoulDateTimeLocal } from "./format";
 import { TradeEntryFields } from "./TradeEntryFields";
-import styles from "./trade-history.module.css";
 import { sideLabel, type TradeHistoryRow, type TradeSide } from "./types";
 import { useTradeEntryForm } from "./useTradeEntryForm";
 
@@ -72,37 +75,21 @@ export function TradeEditDialog({
   row,
   side,
 }: TradeEditDialogProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
   const label = sideLabel(side);
-  const titleId = `${side}-edit-title`;
-  const descriptionId = `${side}-edit-description`;
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (dialog === null) return;
-    if (open && !dialog.open) dialog.showModal();
-    if (!open && dialog.open) dialog.close();
-  }, [open]);
 
   return (
-    <dialog
-      aria-describedby={descriptionId}
-      aria-labelledby={titleId}
-      aria-modal="true"
-      className={styles.editDialog}
-      onCancel={(event) => {
-        event.preventDefault();
-        onCancel();
-      }}
-      ref={dialogRef}
+    <Dialog
+      fullWidth
+      maxWidth="sm"
+      onClose={onCancel}
+      open={open}
+      slotProps={{ paper: { sx: { p: 1 } } }}
     >
-      <div className={styles.editContent}>
-        <div>
-          <h3 id={titleId}>{label} 기록 수정</h3>
-          <p id={descriptionId}>
-            기록의 거래일시, 종목, 소유주, 증권사, 수량, 단가를 수정할 수 있습니다.
-          </p>
-        </div>
+      <DialogTitle>{label} 기록 수정</DialogTitle>
+      <DialogContent>
+        <DialogContentText sx={{ mb: 3 }}>
+          기록의 거래일시, 종목, 소유주, 증권사, 수량, 단가를 수정할 수 있습니다.
+        </DialogContentText>
         {row ? (
           <TradeEditForm
             brokerages={brokerages}
@@ -114,7 +101,7 @@ export function TradeEditDialog({
             side={side}
           />
         ) : null}
-      </div>
-    </dialog>
+      </DialogContent>
+    </Dialog>
   );
 }

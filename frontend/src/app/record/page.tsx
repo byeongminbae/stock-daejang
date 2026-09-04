@@ -1,14 +1,15 @@
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
+import { PageContainer } from "@/components/page-container";
 import { TradeEntryForm } from "@/components/trades";
 import {
   listBrokerages,
   listFavoriteBrokeragesByOwner,
   listOwners,
 } from "@/lib/server/stock-daejang-api";
-
-import styles from "./record.module.css";
 
 export const metadata: Metadata = {
   title: "기록하기",
@@ -23,12 +24,18 @@ export default async function RecordPage() {
   const favoriteBrokeragesByOwner = await listFavoriteBrokeragesByOwner(owners);
 
   return (
-    <div className="page-frame page-stack">
-      <header className="page-intro">
-        <h1 className="page-title">기록하기</h1>
-      </header>
+    <PageContainer stack>
+      <Typography component="h1" variant="h1">
+        기록하기
+      </Typography>
 
-      <div className={styles.entryGrid}>
+      <Box
+        sx={{
+          display: "grid",
+          gap: { xs: 5, sm: 6 },
+          gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" },
+        }}
+      >
         <TradeEntryForm
           brokerages={brokerages}
           favoriteBrokeragesByOwner={favoriteBrokeragesByOwner}
@@ -41,7 +48,7 @@ export default async function RecordPage() {
           owners={owners}
           side="SELL"
         />
-      </div>
-    </div>
+      </Box>
+    </PageContainer>
   );
 }
