@@ -147,14 +147,16 @@ export function TradeHistoryTable({
           </TableRow>
         </TableHead>
         <TableBody>
-          {rows.map((row) => {
+          {rows.map((row, index) => {
             const tone = side === "SELL" ? profitTone(row.profit) : undefined;
+            const zebra =
+              side === "SELL" ? undefined : index % 2 === 1 ? "action.hover" : "transparent";
             return (
               <TableRow
                 data-profit-tone={tone}
                 hover
                 key={row.id}
-                sx={{ bgcolor: profitBackground(tone) }}
+                sx={{ bgcolor: profitBackground(tone) ?? zebra }}
               >
                 {selectionMode ? (
                   <TableCell padding="checkbox">
