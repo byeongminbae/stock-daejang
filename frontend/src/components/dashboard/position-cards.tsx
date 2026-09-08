@@ -27,13 +27,11 @@ function profitColor(state: string): "gain.main" | "loss.main" | undefined {
 function MetricField({
   label,
   value,
-  omitted,
   srPrefix,
   color,
 }: Readonly<{
   label: string;
-  value?: string;
-  omitted?: string;
+  value: string;
   srPrefix?: string;
   color?: "gain.main" | "loss.main" | undefined;
 }>) {
@@ -46,14 +44,8 @@ function MetricField({
         component="dd"
         sx={{ m: 0, fontWeight: color ? 700 : 500, fontVariantNumeric: "tabular-nums", color }}
       >
-        {omitted ? (
-          <span style={visuallyHidden}>{omitted}</span>
-        ) : (
-          <>
-            {srPrefix ? <span style={visuallyHidden}>{srPrefix} </span> : null}
-            {value}
-          </>
-        )}
+        {srPrefix ? <span style={visuallyHidden}>{srPrefix} </span> : null}
+        {value}
       </Typography>
     </Box>
   );
@@ -70,17 +62,13 @@ function PositionTotalMetrics({
       component="dl"
       sx={{ mx: 0, mb: 0, mt: 3, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}
     >
-      <MetricField label="보유 수량" omitted="보유 수량은 합산하지 않습니다" />
-      <MetricField label="매수평균단가" omitted="매수평균단가는 합산하지 않습니다" />
-      <MetricField label="현재가" omitted="현재가는 합산하지 않습니다" />
+      <MetricField label="평가액" value={formatDashboardWon(aggregate.valuation)} />
       <MetricField
         color={color}
         label="평가 손익"
         srPrefix={profitState}
         value={formatSignedWon(aggregate.unrealizedProfit)}
       />
-      <MetricField label="평가액" value={formatDashboardWon(aggregate.valuation)} />
-      <MetricField label="수익률" omitted="수익률은 합산하지 않습니다" />
     </Box>
   );
 }
