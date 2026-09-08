@@ -145,10 +145,7 @@ export function PositionCards({ owner, brokerages }: PositionCardsProps) {
                   }}
                 >
                   <MetricField label="보유 수량" value={formatDashboardQuantity(stock.quantity)} />
-                  <MetricField
-                    label="매수평균단가"
-                    value={formatDashboardWon(stock.averageBuyPrice)}
-                  />
+                  <MetricField label="평균단가" value={formatDashboardWon(stock.averageBuyPrice)} />
                   <MetricField label="현재가" value={formatDashboardWon(stock.currentPrice)} />
                   <MetricField label="평가액" value={formatDashboardWon(stock.valuation)} />
                   <Box sx={{ gridColumn: "1 / -1" }}>

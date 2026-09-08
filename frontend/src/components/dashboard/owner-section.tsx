@@ -21,7 +21,7 @@ import type { DashboardBrokerage, DashboardOwner, SortDirection, SortField } fro
 const sortLabels: Readonly<Record<SortField, string>> = {
   stockName: "종목명",
   quantity: "보유 수량",
-  averageBuyPrice: "매수평균단가",
+  averageBuyPrice: "평균단가",
   totalBuyAmount: "매입액",
   brokerageWeight: "증권사 비중",
   currentPrice: "현재가",

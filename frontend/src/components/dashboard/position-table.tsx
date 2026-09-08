@@ -25,7 +25,7 @@ import type { DashboardBrokerage, DashboardOwner, SortDirection, SortField } fro
 const columns: readonly Readonly<{ field: SortField; label: string }>[] = [
   { field: "stockName", label: "종목" },
   { field: "quantity", label: "보유 수량" },
-  { field: "averageBuyPrice", label: "매수평균단가" },
+  { field: "averageBuyPrice", label: "평균단가" },
   { field: "totalBuyAmount", label: "매입액" },
   { field: "brokerageWeight", label: "증권사 비중" },
   { field: "currentPrice", label: "현재가" },
@@ -62,7 +62,7 @@ function PositionTotalCells({
         <span style={visuallyHidden}>보유 수량은 합산하지 않습니다</span>
       </TableCell>
       <TableCell {...numericCell}>
-        <span style={visuallyHidden}>매수평균단가는 합산하지 않습니다</span>
+        <span style={visuallyHidden}>평균단가는 합산하지 않습니다</span>
       </TableCell>
       <TableCell {...numericCell}>{formatDashboardWon(aggregate.totalBuyAmount)}</TableCell>
       <TableCell {...numericCell}>
