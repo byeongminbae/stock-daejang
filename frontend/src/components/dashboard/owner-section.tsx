@@ -150,11 +150,7 @@ export function OwnerSection({
               sortDirection={sortDirection}
               sortField={sortField}
             />
-            <PositionCards
-              brokerages={sorted}
-              owner={owner}
-              showBrokerageTotals={showBrokerageTotals}
-            />
+            <PositionCards brokerages={sorted} owner={owner} />
           </>
         )}
       </CardContent>

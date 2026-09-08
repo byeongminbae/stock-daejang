@@ -31,6 +31,7 @@ function StatTile({
   return (
     <Box
       sx={{
+        minWidth: 0,
         p: 4,
         borderRadius: 2,
         bgcolor: tone === "gain" ? "gain.light" : tone === "loss" ? "loss.light" : "action.hover",
@@ -71,15 +72,15 @@ export function SummaryStrip({ dashboard, refreshing, onRefresh }: SummaryStripP
     <Card component="section" aria-labelledby="portfolio-summary" variant="outlined">
       <CardContent sx={{ p: { xs: 4, sm: 5 } }}>
         <Stack
-          direction={{ xs: "column", sm: "row" }}
+          direction="row"
           sx={{
-            alignItems: { xs: "flex-start", sm: "center" },
+            alignItems: "center",
             justifyContent: "space-between",
             gap: 3,
             mb: 4,
           }}
         >
-          <Box>
+          <Box sx={{ minWidth: 0 }}>
             <Typography component="h1" id="portfolio-summary" variant="h2">
               전체 보유 현황
             </Typography>
@@ -91,6 +92,7 @@ export function SummaryStrip({ dashboard, refreshing, onRefresh }: SummaryStripP
             aria-busy={refreshing}
             disabled={refreshing}
             onClick={onRefresh}
+            sx={{ flexShrink: 0 }}
             variant="contained"
           >
             {refreshing ? "가격 확인 중" : "가격 새로고침"}
@@ -104,14 +106,22 @@ export function SummaryStrip({ dashboard, refreshing, onRefresh }: SummaryStripP
             m: 0,
             display: "grid",
             gap: 3,
-            gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(3, 1fr)", lg: "repeat(5, 1fr)" },
+            gridTemplateColumns: {
+              xs: "repeat(2, minmax(0, 1fr))",
+              sm: "repeat(3, minmax(0, 1fr))",
+              lg: "repeat(5, minmax(0, 1fr))",
+            },
           }}
         >
           <StatTile label="보유 종목" value={`${stockCount}개`} />
           <StatTile label="평가 기준" value={quoteMetadata.valuationBasis} />
-          <StatTile label="전체 매입액" value={formatDashboardWon(totalBuyAmount)} />
-          <StatTile label="전체 평가액" value={formatDashboardWon(valuation)} />
-          <Box sx={{ gridColumn: { xs: "1 / -1", sm: "auto" } }}>
+          <Box sx={{ minWidth: 0, gridColumn: { xs: "1 / -1", sm: "auto" } }}>
+            <StatTile label="전체 매입액" value={formatDashboardWon(totalBuyAmount)} />
+          </Box>
+          <Box sx={{ minWidth: 0, gridColumn: { xs: "1 / -1", sm: "auto" } }}>
+            <StatTile label="전체 평가액" value={formatDashboardWon(valuation)} />
+          </Box>
+          <Box sx={{ minWidth: 0, gridColumn: { xs: "1 / -1", sm: "auto" } }}>
             <StatTile
               label="평가 손익"
               tone={profitTone}

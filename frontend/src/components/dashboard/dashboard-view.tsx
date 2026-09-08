@@ -1,5 +1,7 @@
 "use client";
 
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button, { type ButtonProps } from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
@@ -57,9 +59,9 @@ export function DashboardView({ dashboard, initialShowBrokerageTotals }: Dashboa
   return (
     <PageContainer stack>
       <Stack
-        direction={{ xs: "column", sm: "row" }}
+        direction="row"
         sx={{
-          alignItems: { xs: "stretch", sm: "flex-end" },
+          alignItems: "center",
           justifyContent: "space-between",
           gap: 4,
         }}
@@ -67,13 +69,14 @@ export function DashboardView({ dashboard, initialShowBrokerageTotals }: Dashboa
         <Typography component="h1" variant="h1">
           대시보드
         </Typography>
-        <Stack direction="row" sx={{ gap: 2 }}>
+        <Stack direction="row" sx={{ flexWrap: "wrap", gap: 2, justifyContent: "flex-end" }}>
           <Tooltip title={groupByStock ? "종목끼리 묶어요를 끄면 다시 사용할 수 있습니다" : ""}>
             <span>
               <Button
                 aria-pressed={showBrokerageTotals}
                 disabled={groupByStock}
                 onClick={toggleBrokerageTotals}
+                sx={{ display: { xs: "none", lg: "inline-flex" } }}
                 variant={groupByStock ? "outlined" : toggleButtonVariant(showBrokerageTotals)}
               >
                 {showBrokerageTotals ? "증권사 합계 숨기기" : "증권사 합계 보기"}
@@ -121,6 +124,17 @@ export function DashboardView({ dashboard, initialShowBrokerageTotals }: Dashboa
       ) : null}
 
       {isEmpty ? null : <StockSummarySection stockSummaries={dashboard.stockSummaries} />}
+
+      {isEmpty || groupByStock ? null : (
+        <Alert
+          icon={<InfoOutlinedIcon fontSize="inherit" />}
+          severity="info"
+          sx={{ display: { xs: "flex", lg: "none" } }}
+          variant="filled"
+        >
+          화면이 좁아 몇몇 항목은 생략했어요. 자세히 보려면 PC에서 확인해주세요.
+        </Alert>
+      )}
 
       <Box aria-busy={refreshing} sx={{ display: "grid", gap: { xs: 5, sm: 6 } }}>
         {dashboard.owners.map((owner, index) => (
