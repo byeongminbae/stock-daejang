@@ -107,6 +107,14 @@ const seoulNextDayStart = (date: string): string => {
   return seoulDayStart(iso);
 };
 
+export function hasHistoryFilterValue(
+  rawSearchParams: Readonly<Record<string, string | string[] | undefined>>,
+  key: "ownerId" | "brokerageCode",
+): boolean {
+  const value = rawSearchParams[key];
+  return typeof value === "string" && value !== "";
+}
+
 export function listTradeHistory(
   side: "BUY" | "SELL",
   rawSearchParams: Readonly<Record<string, string | string[] | undefined>>,

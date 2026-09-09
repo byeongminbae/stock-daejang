@@ -154,7 +154,9 @@ export function StockCombobox({ value, onChange, error, disabled = false }: Stoc
 
   const handleComposition = (event: CompositionEvent<HTMLInputElement>) => {
     composingRef.current = event.type !== "compositionend";
-    if (event.type === "compositionend") setQuery(event.currentTarget.value);
+    if (event.type === "compositionend") {
+      setQuery((event.target as HTMLInputElement).value);
+    }
   };
 
   const activeItem = activeIndex >= 0 ? items[activeIndex] : undefined;

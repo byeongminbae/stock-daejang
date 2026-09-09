@@ -23,6 +23,8 @@ interface TradeHistoryProps {
   readonly rows: readonly TradeHistoryRow[];
   readonly total: number;
   readonly hasFilters?: boolean;
+  readonly hideOwnerColumn?: boolean;
+  readonly hideBrokerageColumn?: boolean;
   readonly owners: readonly Owner[];
 }
 
@@ -32,6 +34,8 @@ export function TradeHistory({
   rows,
   total,
   hasFilters = false,
+  hideOwnerColumn = false,
+  hideBrokerageColumn = false,
   owners,
 }: TradeHistoryProps) {
   const label = sideLabel(side);
@@ -133,6 +137,8 @@ export function TradeHistory({
         ) : null}
         <TradeHistoryTable
           deleting={deletion.deleting}
+          hideBrokerageColumn={hideBrokerageColumn}
+          hideOwnerColumn={hideOwnerColumn}
           onEdit={openEdit}
           onToggle={deletion.toggleSelection}
           rows={rows}
@@ -142,6 +148,8 @@ export function TradeHistory({
         />
         <TradeHistoryCards
           deleting={deletion.deleting}
+          hideBrokerageColumn={hideBrokerageColumn}
+          hideOwnerColumn={hideOwnerColumn}
           onEdit={openEdit}
           onToggle={deletion.toggleSelection}
           rows={rows}

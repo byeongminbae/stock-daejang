@@ -8,6 +8,7 @@ import { Suspense } from "react";
 import { PageContainer } from "@/components/page-container";
 import { HistoryFilters, HistoryPagination, TradeHistory } from "@/components/trades";
 import {
+  hasHistoryFilterValue,
   listBrokerages,
   listFavoriteBrokeragesByOwner,
   listOwners,
@@ -73,6 +74,8 @@ export default async function BuyHistoryPage({ searchParams }: BuyHistoryPagePro
           rows={result.rows}
           total={result.total}
           hasFilters={showFilteredEmptyState}
+          hideOwnerColumn={hasHistoryFilterValue(rawSearchParams, "ownerId")}
+          hideBrokerageColumn={hasHistoryFilterValue(rawSearchParams, "brokerageCode")}
           brokerages={brokerages}
           owners={owners}
         />

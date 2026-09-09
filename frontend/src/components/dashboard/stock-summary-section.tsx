@@ -17,7 +17,7 @@ export function StockSummarySection({ stockSummaries }: StockSummarySectionProps
         sx={{ pb: 0 }}
         title={
           <Typography component="h2" id="stock-summary-heading" variant="h2">
-            우리집 주식 보유 현황
+            종목별 보유 현황
           </Typography>
         }
       />

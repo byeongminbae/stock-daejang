@@ -9,9 +9,10 @@ Next.js App Router pages and the backend API relay route. All route files are Se
 ## Key Files
 | File | Description |
 |------|--------------|
-| `layout.tsx` | Root layout with `<html>`, `<body>`, `AppHeader`, metadata, and viewport config; includes development tools (react-scan, react-grab) in dev mode |
-| `page.tsx` | Dashboard (home route `/`): fetches `DashboardView`, respects `SHOW_BROKERAGE_TOTALS_COOKIE` for broker-totals toggle, includes dev preview at `/?preview=components` |
-| `error.tsx` | Error boundary (Client Component) for dashboard load failures; offers a retry button |
+| `layout.tsx` | Root layout with `<html>`, `<body>`, `AppHeader`, metadata, and viewport config |
+| `error.tsx` | Generic error boundary (Client Component) for any route without a more specific one; offers a retry button |
+| `(dashboard)/page.tsx` | Dashboard (home route `/`): fetches `DashboardView`, respects `SHOW_BROKERAGE_TOTALS_COOKIE` for broker-totals toggle, includes dev preview at `/?preview=components` |
+| `(dashboard)/error.tsx` | Error boundary scoped to the dashboard route only (route group); dashboard-specific copy, offers a retry button |
 | `loading.tsx` | Loading skeleton for dashboard, spans multiple owner rows with skeleton placeholders |
 | `globals.css` | Global styles for the app (page frame, button, status messages, etc.) |
 | `api/v1/[...path]/route.ts` | Catch-all relay route; forwards `GET`/`POST`/`PUT`/`PATCH`/`DELETE` to backend via `lib/server/api-gateway.ts` |

@@ -7,6 +7,15 @@ const seoulDisplayFormatter = new Intl.DateTimeFormat("ko-KR", {
   dateStyle: "medium",
   timeStyle: "short",
 });
+const seoulCompactPartsFormatter = new Intl.DateTimeFormat("ko-KR", {
+  timeZone: "Asia/Seoul",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: true,
+});
 const seoulInputFormatter = new Intl.DateTimeFormat("en-CA", {
   timeZone: "Asia/Seoul",
   year: "numeric",
@@ -43,6 +52,17 @@ export const formatSeoulDateTime = (value: string): string => {
     return value;
   }
   return seoulDisplayFormatter.format(date);
+};
+
+export const formatSeoulDateTimeCompact = (value: string): string => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+  const parts = seoulCompactPartsFormatter.formatToParts(date);
+  const read = (type: Intl.DateTimeFormatPartTypes): string =>
+    parts.find((part) => part.type === type)?.value ?? "";
+  return `${read("year")}.${read("month")}.${read("day")} ${read("dayPeriod")} ${read("hour")}:${read("minute")}`;
 };
 
 export const isoInstantToSeoulDateTimeLocal = (value: string): string => {

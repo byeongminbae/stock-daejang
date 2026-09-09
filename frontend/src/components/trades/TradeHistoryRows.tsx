@@ -12,7 +12,13 @@ import Typography from "@mui/material/Typography";
 
 import { stockImageUrl } from "@/lib/stock-image";
 
-import { formatInteger, formatSeoulDateTime, formatWon, numericSign } from "./format";
+import {
+  formatInteger,
+  formatSeoulDateTime,
+  formatSeoulDateTimeCompact,
+  formatWon,
+  numericSign,
+} from "./format";
 import { sideLabel, type TradeHistoryRow, type TradeSide } from "./types";
 
 interface ProfitProps {
@@ -87,6 +93,8 @@ function SelectionCheckbox({ checked, disabled, row, onToggle }: SelectionCheckb
 
 interface TradeHistoryRowsProps {
   readonly deleting: boolean;
+  readonly hideOwnerColumn: boolean;
+  readonly hideBrokerageColumn: boolean;
   readonly rows: readonly TradeHistoryRow[];
   readonly selectedIds: ReadonlySet<string>;
   readonly selectionMode: boolean;
@@ -121,6 +129,8 @@ function StockIdentity({
 
 export function TradeHistoryTable({
   deleting,
+  hideOwnerColumn,
+  hideBrokerageColumn,
   onEdit,
   onToggle,
   rows,
@@ -136,8 +146,8 @@ export function TradeHistoryTable({
           <TableRow>
             {selectionMode ? <TableCell padding="checkbox">선택</TableCell> : null}
             <TableCell>{label} 일시</TableCell>
-            <TableCell>소유주</TableCell>
-            <TableCell>증권사</TableCell>
+            {hideOwnerColumn ? null : <TableCell>소유주</TableCell>}
+            {hideBrokerageColumn ? null : <TableCell>증권사</TableCell>}
             <TableCell>종목명</TableCell>
             <TableCell align="right">수량</TableCell>
             <TableCell align="right">당시 단가</TableCell>
@@ -171,8 +181,8 @@ export function TradeHistoryTable({
                 <TableCell sx={{ whiteSpace: "nowrap" }}>
                   <time dateTime={row.executedAt}>{formatSeoulDateTime(row.executedAt)}</time>
                 </TableCell>
-                <TableCell>{row.ownerName}</TableCell>
-                <TableCell>{row.brokerageName}</TableCell>
+                {hideOwnerColumn ? null : <TableCell>{row.ownerName}</TableCell>}
+                {hideBrokerageColumn ? null : <TableCell>{row.brokerageName}</TableCell>}
                 <TableCell component="th" scope="row">
                   <StockIdentity code={row.stockCode} name={row.stockName} />
                 </TableCell>
@@ -212,6 +222,8 @@ export function TradeHistoryTable({
 
 export function TradeHistoryCards({
   deleting,
+  hideOwnerColumn,
+  hideBrokerageColumn,
   onEdit,
   onToggle,
   rows,
@@ -245,14 +257,25 @@ export function TradeHistoryCards({
             >
               <Stack
                 direction="row"
-                sx={{ alignItems: "flex-start", justifyContent: "space-between", gap: 2 }}
+                sx={{ alignItems: "center", justifyContent: "space-between", gap: 2 }}
               >
-                <StockIdentity
-                  code={row.stockCode}
-                  headingId={`trade-card-${row.id}`}
-                  name={row.stockName}
-                />
-                <Stack sx={{ alignItems: "flex-end", gap: 1 }}>
+                <Box sx={{ minWidth: 0 }}>
+                  <StockIdentity
+                    code={row.stockCode}
+                    headingId={`trade-card-${row.id}`}
+                    name={row.stockName}
+                  />
+                  <Typography
+                    color="textSecondary"
+                    sx={{ mt: 0.5, whiteSpace: "nowrap" }}
+                    variant="body2"
+                  >
+                    <time dateTime={row.executedAt}>
+                      {formatSeoulDateTimeCompact(row.executedAt)}
+                    </time>
+                  </Typography>
+                </Box>
+                <Box sx={{ flexShrink: 0 }}>
                   {selectionMode ? (
                     <SelectionCheckbox
                       checked={selectedIds.has(row.id)}
@@ -269,10 +292,7 @@ export function TradeHistoryCards({
                       수정
                     </Button>
                   )}
-                  <Typography color="textSecondary" variant="body2">
-                    <time dateTime={row.executedAt}>{formatSeoulDateTime(row.executedAt)}</time>
-                  </Typography>
-                </Stack>
+                </Box>
               </Stack>
               <Box
                 component="dl"
@@ -285,22 +305,26 @@ export function TradeHistoryCards({
                   gap: 2,
                 }}
               >
-                <Box>
-                  <Typography color="textSecondary" component="dt" variant="body2">
-                    소유주
-                  </Typography>
-                  <Typography component="dd" sx={{ m: 0 }}>
-                    {row.ownerName}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography color="textSecondary" component="dt" variant="body2">
-                    증권사
-                  </Typography>
-                  <Typography component="dd" sx={{ m: 0 }}>
-                    {row.brokerageName}
-                  </Typography>
-                </Box>
+                {hideOwnerColumn ? null : (
+                  <Box>
+                    <Typography color="textSecondary" component="dt" variant="body2">
+                      소유주
+                    </Typography>
+                    <Typography component="dd" sx={{ m: 0 }}>
+                      {row.ownerName}
+                    </Typography>
+                  </Box>
+                )}
+                {hideBrokerageColumn ? null : (
+                  <Box>
+                    <Typography color="textSecondary" component="dt" variant="body2">
+                      증권사
+                    </Typography>
+                    <Typography component="dd" sx={{ m: 0 }}>
+                      {row.brokerageName}
+                    </Typography>
+                  </Box>
+                )}
                 <Box>
                   <Typography color="textSecondary" component="dt" variant="body2">
                     {label} 수량

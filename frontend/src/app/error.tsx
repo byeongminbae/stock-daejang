@@ -6,12 +6,12 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 
-type DashboardErrorProps = Readonly<{
+type AppErrorProps = Readonly<{
   error: Error & { digest?: string };
   reset: () => void;
 }>;
 
-export default function DashboardError({ reset }: DashboardErrorProps) {
+export default function AppError({ reset }: AppErrorProps) {
   return (
     <Box sx={{ maxWidth: 1440, mx: "auto", px: { xs: 3, sm: 6, lg: 8 }, py: 8 }}>
       <Paper
@@ -33,14 +33,14 @@ export default function DashboardError({ reset }: DashboardErrorProps) {
               sx={{ color: "primary.main", fontWeight: 800, letterSpacing: "0.04em" }}
               variant="body2"
             >
-              DASHBOARD ERROR
+              ERROR
             </Typography>
             <Typography component="h1" sx={{ mt: 1, mb: 2 }} variant="h1">
-              보유 현황을 불러오지 못했습니다
+              문제가 발생했습니다
             </Typography>
             <Typography sx={{ color: "text.secondary", maxWidth: "72ch" }}>
-              데이터 또는 현재가를 불러오는 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.
-              입력된 거래 기록은 변경되지 않았습니다.
+              요청을 처리하는 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요. 입력한 내용은
+              저장되지 않았을 수 있습니다.
             </Typography>
           </Box>
           <Button onClick={reset} size="large" variant="contained">
