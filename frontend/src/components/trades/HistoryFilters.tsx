@@ -12,6 +12,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import type { Brokerage, Owner } from "@/lib/api-contracts";
+import { visuallyHidden } from "@/lib/visually-hidden";
 
 import { HistoryFilterFields } from "./HistoryFilterFields";
 import {
@@ -169,18 +170,7 @@ export function HistoryFilters({
             ))}
           </Stack>
         ) : null}
-        <Typography
-          aria-live="polite"
-          component="p"
-          role="status"
-          sx={{
-            position: "absolute",
-            width: 1,
-            height: 1,
-            overflow: "hidden",
-            clip: "rect(0,0,0,0)",
-          }}
-        >
+        <Typography aria-live="polite" component="p" role="status" style={visuallyHidden}>
           {isPending ? `${side === "BUY" ? "매수" : "매도"} 검색 결과 갱신 중` : ""}
         </Typography>
       </CardContent>

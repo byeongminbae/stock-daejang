@@ -11,6 +11,7 @@ import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 
 import { stockImageUrl } from "@/lib/stock-image";
+import { visuallyHidden } from "@/lib/visually-hidden";
 
 import {
   formatInteger,
@@ -56,16 +57,7 @@ function Profit({ value }: ProfitProps) {
       component="span"
       sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums", color: profitColor(value) }}
     >
-      <Box
-        component="span"
-        sx={{
-          position: "absolute",
-          width: 1,
-          height: 1,
-          overflow: "hidden",
-          clip: "rect(0,0,0,0)",
-        }}
-      >
+      <Box component="span" style={visuallyHidden}>
         {negative ? "손실" : zero ? "손익 없음" : "이익"}{" "}
       </Box>
       {visible}

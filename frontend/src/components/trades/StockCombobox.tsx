@@ -20,6 +20,8 @@ import {
 } from "react";
 import { z } from "zod";
 
+import { visuallyHidden } from "@/lib/visually-hidden";
+
 import { ComboboxPopover } from "./combobox-popover";
 import type { StockSelection } from "./types";
 
@@ -205,18 +207,7 @@ export function StockCombobox({ value, onChange, error, disabled = false }: Stoc
         value={value?.name ?? query}
         variant="outlined"
       />
-      <Box
-        aria-live="polite"
-        id={statusId}
-        role="status"
-        sx={{
-          position: "absolute",
-          width: 1,
-          height: 1,
-          overflow: "hidden",
-          clip: "rect(0,0,0,0)",
-        }}
-      >
+      <Box aria-live="polite" id={statusId} role="status" style={visuallyHidden}>
         {searchStatus}
       </Box>
       {value ? (
